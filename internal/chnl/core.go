@@ -16,8 +16,8 @@ type Key = string
 
 // aka ChanTp
 type Spec struct {
-	Key  string
-	Link sym.ADT
+	ChnlPH ph.ADT
+	RoleQN sym.ADT
 }
 
 // aka Z
@@ -39,24 +39,6 @@ type Repo interface {
 	SelectRefs(data.Source) ([]Ref, error)
 	SelectByID(data.Source, id.ADT) (Root, error)
 	SelectByIDs(data.Source, []id.ADT) ([]Root, error)
-}
-
-func CollectCtx(roots []Root) []id.ADT {
-	var stIDs []id.ADT
-	for _, r := range roots {
-		if r.StateID == nil {
-			continue
-		}
-		stIDs = append(stIDs, *r.StateID)
-	}
-	return stIDs
-}
-
-func Subst(cur ID, pat ID, new ID) ID {
-	if cur == pat {
-		return new
-	}
-	return cur
 }
 
 // goverter:variables

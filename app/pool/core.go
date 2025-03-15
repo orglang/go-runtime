@@ -97,6 +97,12 @@ type LiabMod struct {
 	EP        proc.Chnl
 }
 
+type PartSpec struct {
+	PoolID  id.ADT
+	SigID   id.ADT
+	ChnlIDs []id.ADT
+}
+
 type TranSpec struct {
 	PoolID id.ADT
 	ProcID id.ADT
@@ -108,6 +114,8 @@ type API interface {
 	Create(Spec) (Root, error)
 	Retrieve(id.ADT) (SubSnap, error)
 	RetreiveRefs() ([]Ref, error)
+	Involve(PartSpec) (proc.Chnl, error)
+	Take(TranSpec) error
 }
 
 // for compilation purposes
@@ -157,6 +165,10 @@ func (s *service) Create(spec Spec) (_ Root, err error) {
 	return root, nil
 }
 
+func (s *service) Involve(spec PartSpec) (proc.Chnl, error) {
+	return proc.Chnl{}, nil
+}
+
 func (s *service) Take(spec TranSpec) (err error) {
 	ctx := context.Background()
 	// initial values
@@ -164,7 +176,7 @@ func (s *service) Take(spec TranSpec) (err error) {
 	procID := spec.ProcID
 	termSpec := spec.Term
 	for termSpec != nil {
-		var procSnap proc.Snap
+		var procSnap proc.Cfg
 		s.operator.Implicit(ctx, func(ds data.Source) {
 			procSnap, err = s.pools.SelectProc(ds, procID)
 		})
@@ -241,7 +253,7 @@ func (s *service) Take(spec TranSpec) (err error) {
 
 func (s *service) takeWith(
 	procEnv proc.Env,
-	procCfg proc.Snap,
+	procCfg proc.Cfg,
 	ts step.Term,
 ) (
 	tranSpec TranSpec,
@@ -264,7 +276,7 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, sndrLock)
 		rcvrStep, ok := procCfg.Steps[viaChnl.ChnlID]
 		if !ok {
-			err := step.ErrMissingInCfg(viaChnl.ChnlID)
+			err := step.ErrMissingInCfg2(viaChnl.ChnlID)
 			s.log.Error("taking failed", viaAttr)
 			return TranSpec{}, proc.Mod{}, err
 		}
@@ -325,7 +337,7 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, rcvrLock)
 		sndrStep, ok := procCfg.Steps[viaChnl.ChnlID]
 		if !ok {
-			err := step.ErrMissingInCfg(viaChnl.ChnlID)
+			err := step.ErrMissingInCfg2(viaChnl.ChnlID)
 			s.log.Error("taking failed", viaAttr)
 			return TranSpec{}, proc.Mod{}, err
 		}
@@ -403,7 +415,7 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, sndrLock)
 		rcvrStep, ok := procCfg.Steps[viaChnl.ChnlID]
 		if !ok {
-			err := step.ErrMissingInCfg(viaChnl.ChnlID)
+			err := step.ErrMissingInCfg2(viaChnl.ChnlID)
 			s.log.Error("taking failed", viaAttr)
 			return TranSpec{}, proc.Mod{}, err
 		}
@@ -507,7 +519,7 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, rcvrLock)
 		sndrStep, ok := procCfg.Steps[viaChnl.ChnlID]
 		if !ok {
-			err := step.ErrMissingInCfg(viaChnl.ChnlID)
+			err := step.ErrMissingInCfg2(viaChnl.ChnlID)
 			s.log.Error("taking failed", viaAttr)
 			return TranSpec{}, proc.Mod{}, err
 		}
@@ -581,7 +593,7 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, sndrLock)
 		rcvrStep, ok := procCfg.Steps[viaChnl.ChnlID]
 		if !ok {
-			err := step.ErrMissingInCfg(viaChnl.ChnlID)
+			err := step.ErrMissingInCfg2(viaChnl.ChnlID)
 			s.log.Error("taking failed", viaAttr)
 			return TranSpec{}, proc.Mod{}, err
 		}
@@ -664,7 +676,7 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, rcvrLock)
 		sndrStep, ok := procCfg.Steps[viaChnl.ChnlID]
 		if !ok {
-			err := step.ErrMissingInCfg(viaChnl.ChnlID)
+			err := step.ErrMissingInCfg2(viaChnl.ChnlID)
 			s.log.Error("taking failed", viaAttr)
 			return TranSpec{}, proc.Mod{}, err
 		}
@@ -801,7 +813,7 @@ func (s *service) takeWith(
 		}
 		viaStep, ok := procCfg.Steps[viaChnl.ChnlID]
 		if !ok {
-			err := step.ErrMissingInCfg(viaChnl.ChnlID)
+			err := step.ErrMissingInCfg2(viaChnl.ChnlID)
 			s.log.Error("taking failed", viaAttr)
 			return TranSpec{}, proc.Mod{}, err
 		}
@@ -977,7 +989,7 @@ func (s *service) checkState(
 	poolID id.ADT,
 	procEnv proc.Env,
 	procCtx state.Context,
-	procCfg proc.Snap,
+	procCfg proc.Cfg,
 	termSpec step.Term,
 ) error {
 	ch, ok := procCfg.Chnls[termSpec.Via()]
@@ -995,7 +1007,7 @@ func (s *service) checkProvider(
 	poolID id.ADT,
 	procEnv proc.Env,
 	procCtx state.Context,
-	procCfg proc.Snap,
+	procCfg proc.Cfg,
 	ts step.Term,
 ) error {
 	switch termSpec := ts.(type) {
@@ -1184,7 +1196,7 @@ func (s *service) checkClient(
 	poolID id.ADT,
 	procEnv proc.Env,
 	procCtx state.Context,
-	procCfg proc.Snap,
+	procCfg proc.Cfg,
 	ts step.Term,
 ) error {
 	switch termSpec := ts.(type) {
@@ -1395,7 +1407,7 @@ type Repo interface {
 	SelectRefs(data.Source) ([]Ref, error)
 	SelectSubs(data.Source, id.ADT) (SubSnap, error)
 	SelectAssets(data.Source, id.ADT) (AssetSnap, error)
-	SelectProc(data.Source, id.ADT) (proc.Snap, error)
+	SelectProc(data.Source, id.ADT) (proc.Cfg, error)
 	UpdateProc(data.Source, proc.Mod) error
 	UpdateAssets(data.Source, AssetMod) error
 	Transfer(source data.Source, giver id.ADT, taker id.ADT, pids []chnl.ID) error

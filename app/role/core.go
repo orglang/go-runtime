@@ -21,7 +21,7 @@ type QN = sym.ADT
 type Title = string
 
 type Spec struct {
-	FQN   sym.ADT
+	QN    sym.ADT
 	State state.Spec
 }
 
@@ -35,7 +35,7 @@ type Snap struct {
 	ID    id.ADT
 	Rev   rev.ADT
 	Title string
-	FQN   sym.ADT
+	QN    sym.ADT
 	State state.Spec
 	// Parts   []Ref
 }
@@ -112,9 +112,9 @@ func (s *service) Incept(fqn sym.ADT) (_ Ref, err error) {
 
 func (s *service) Create(spec Spec) (_ Snap, err error) {
 	ctx := context.Background()
-	fqnAttr := slog.Any("fqn", spec.FQN)
+	fqnAttr := slog.Any("fqn", spec.QN)
 	s.log.Debug("creation started", fqnAttr, slog.Any("spec", spec))
-	newAlias := alias.Root{Sym: spec.FQN, ID: id.New(), Rev: rev.Initial()}
+	newAlias := alias.Root{Sym: spec.QN, ID: id.New(), Rev: rev.Initial()}
 	newState := state.ConvertSpecToRoot(spec.State)
 	newRoot := Root{
 		ID:      newAlias.ID,
@@ -146,7 +146,7 @@ func (s *service) Create(spec Spec) (_ Snap, err error) {
 		ID:    newRoot.ID,
 		Rev:   newRoot.Rev,
 		Title: newRoot.Title,
-		FQN:   newAlias.Sym,
+		QN:    newAlias.Sym,
 		State: state.ConvertRootToSpec(newState),
 	}, nil
 }

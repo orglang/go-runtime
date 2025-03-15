@@ -41,7 +41,7 @@ func (p *presenterEcho) PostOne(c echo.Context) error {
 		return err
 	}
 	fqn := sym.CovertFromString(dto.NS).New(dto.Name)
-	snap, err := p.api.Create(Spec{FQN: fqn, State: state.OneSpec{}})
+	snap, err := p.api.Create(Spec{QN: fqn, State: state.OneSpec{}})
 	if err != nil {
 		p.log.Error("role creation failed")
 		return err

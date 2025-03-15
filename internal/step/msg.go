@@ -5,7 +5,6 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
-	"smecalculus/rolevod/lib/ak"
 	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/id"
 	"smecalculus/rolevod/lib/ph"
@@ -88,7 +87,7 @@ func (dto TermMsg) Validate() error {
 }
 
 type CloseMsg struct {
-	A ph.Msg `json:"a"`
+	A string `json:"a"`
 }
 
 func (dto CloseMsg) Validate() error {
@@ -98,7 +97,7 @@ func (dto CloseMsg) Validate() error {
 }
 
 type WaitMsg struct {
-	X    ph.Msg  `json:"x"`
+	X    string  `json:"x"`
 	Cont TermMsg `json:"cont"`
 }
 
@@ -110,8 +109,8 @@ func (dto WaitMsg) Validate() error {
 }
 
 type SendMsg struct {
-	A ph.Msg `json:"a"`
-	B ph.Msg `json:"b"`
+	A string `json:"a"`
+	B string `json:"b"`
 }
 
 func (dto SendMsg) Validate() error {
@@ -122,8 +121,8 @@ func (dto SendMsg) Validate() error {
 }
 
 type RecvMsg struct {
-	X    ph.Msg  `json:"x"`
-	Y    ph.Msg  `json:"y"`
+	X    string  `json:"x"`
+	Y    string  `json:"y"`
 	Cont TermMsg `json:"cont"`
 }
 
@@ -136,7 +135,7 @@ func (dto RecvMsg) Validate() error {
 }
 
 type LabMsg struct {
-	A     ph.Msg `json:"a"`
+	A     string `json:"a"`
 	Label string `json:"label"`
 }
 
@@ -148,7 +147,7 @@ func (dto LabMsg) Validate() error {
 }
 
 type CaseMsg struct {
-	X   ph.Msg      `json:"x"`
+	X   string      `json:"x"`
 	Brs []BranchMsg `json:"branches"`
 }
 
@@ -176,7 +175,7 @@ func (dto BranchMsg) Validate() error {
 }
 
 type SpawnMsg struct {
-	PE   ph.Msg   `json:"pe"`
+	PE   string   `json:"pe"`
 	CEs  []string `json:"ces"`
 	Cont TermMsg  `json:"cont"`
 	Sig  string   `json:"sig_id"`
@@ -192,8 +191,8 @@ func (dto SpawnMsg) Validate() error {
 }
 
 type FwdMsg struct {
-	C ph.Msg `json:"c"`
-	D ph.Msg `json:"d"`
+	C string `json:"c"`
+	D string `json:"d"`
 }
 
 func (dto FwdMsg) Validate() error {
@@ -308,14 +307,6 @@ func MsgFromTerm(t Term) TermMsg {
 				D: ph.MsgFromPH(term.Y),
 			},
 		}
-	case CTASpec:
-		return TermMsg{
-			K: CTA,
-			CTA: &CTAMsg{
-				Sig: term.Sig.String(),
-				AK:  ak.ConvertToString(term.AK),
-			},
-		}
 	default:
 		panic(ErrTermTypeUnexpected(term))
 	}
@@ -418,16 +409,6 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 			return nil, err
 		}
 		return FwdSpec{X: c, Y: d}, nil
-	case CTA:
-		key, err := ak.ConvertFromString(dto.CTA.AK)
-		if err != nil {
-			return nil, err
-		}
-		sigID, err := id.ConvertFromString(dto.CTA.Sig)
-		if err != nil {
-			return nil, err
-		}
-		return CTASpec{AK: key, Sig: sigID}, nil
 	default:
 		panic(ErrUnexpectedTermKind(dto.K))
 	}

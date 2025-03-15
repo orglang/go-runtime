@@ -96,6 +96,6 @@ func (p *presenterEcho) GetOne(c echo.Context) error {
 		p.log.Error("view rendering failed")
 		return err
 	}
-	p.log.Log(ctx, core.LevelTrace, "root getting succeeded", slog.Any("id", snap.ID))
+	p.log.Log(ctx, core.LevelTrace, "root getting succeeded", slog.Any("id", snap.SigID))
 	return c.HTMLBlob(http.StatusOK, html)
 }

@@ -16,7 +16,7 @@ import (
 )
 
 // aka Configuration
-type Snap struct {
+type Cfg struct {
 	ProcID id.ADT
 	Chnls  map[ph.ADT]Chnl
 	Steps  map[chnl.ID]step.Root
@@ -37,6 +37,7 @@ type Chnl struct {
 	StateID id.ADT
 	// provider
 	PoolID id.ADT
+	ProcID id.ADT
 }
 
 type EP struct {

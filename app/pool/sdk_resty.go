@@ -3,6 +3,7 @@ package pool
 import (
 	"github.com/go-resty/resty/v2"
 
+	"smecalculus/rolevod/internal/proc"
 	"smecalculus/rolevod/lib/id"
 )
 
@@ -33,9 +34,9 @@ func (cl *clientResty) Create(spec Spec) (Root, error) {
 	return MsgToRoot(res)
 }
 
-func (c *clientResty) Retrieve(rid id.ADT) (SubSnap, error) {
+func (cl *clientResty) Retrieve(rid id.ADT) (SubSnap, error) {
 	var res SnapMsg
-	_, err := c.resty.R().
+	_, err := cl.resty.R().
 		SetResult(&res).
 		SetPathParam("id", rid.String()).
 		Get("/pools/{id}")
@@ -45,7 +46,15 @@ func (c *clientResty) Retrieve(rid id.ADT) (SubSnap, error) {
 	return MsgToSnap(res)
 }
 
-func (c *clientResty) RetreiveRefs() ([]Ref, error) {
+func (cl *clientResty) RetreiveRefs() ([]Ref, error) {
 	refs := []Ref{}
 	return refs, nil
+}
+
+func (cl *clientResty) Involve(PartSpec) (proc.Chnl, error) {
+	return proc.Chnl{}, nil
+}
+
+func (cl *clientResty) Take(TranSpec) error {
+	return nil
 }

@@ -22,12 +22,9 @@ type QN = sym.ADT
 type Name = string
 
 type Spec struct {
-	// Fully Qualified Name
-	FQN sym.ADT
-	// Providable Endpoint
-	PE chnl.Spec
-	// Consumable Endpoints
-	CEs []chnl.Spec
+	QN sym.ADT
+	Ys []chnl.Spec // vals
+	X  chnl.Spec   // via
 }
 
 type Ref struct {
@@ -46,7 +43,7 @@ type Snap struct {
 
 // aka ExpDec or ExpDecDef without expression
 type Root struct {
-	ID    id.ADT
+	SigID id.ADT
 	Rev   rev.ADT
 	Title string
 	Ys2   []chnl.Spec
@@ -55,6 +52,7 @@ type Root struct {
 	X     EP
 }
 
+// aka ChanTp
 type EP struct {
 	ChnlPH ph.ADT
 	RoleQN sym.ADT
@@ -89,7 +87,7 @@ func (s *service) Incept(fqn sym.ADT) (_ Ref, err error) {
 	fqnAttr := slog.Any("fqn", fqn)
 	s.log.Debug("inception started", fqnAttr)
 	newAlias := alias.Root{Sym: fqn, ID: id.New(), Rev: rev.Initial()}
-	newRoot := Root{ID: newAlias.ID, Rev: newAlias.Rev, Title: newAlias.Sym.Name()}
+	newRoot := Root{SigID: newAlias.ID, Rev: newAlias.Rev, Title: newAlias.Sym.Name()}
 	s.operator.Explicit(ctx, func(ds data.Source) error {
 		err = s.aliases.Insert(ds, newAlias)
 		if err != nil {
@@ -105,20 +103,20 @@ func (s *service) Incept(fqn sym.ADT) (_ Ref, err error) {
 		s.log.Error("inception failed", fqnAttr)
 		return Ref{}, err
 	}
-	s.log.Debug("inception succeeded", fqnAttr, slog.Any("id", newRoot.ID))
+	s.log.Debug("inception succeeded", fqnAttr, slog.Any("id", newRoot.SigID))
 	return ConvertRootToRef(newRoot), nil
 }
 
 func (s *service) Create(spec Spec) (_ Root, err error) {
 	ctx := context.Background()
-	fqnAttr := slog.Any("fqn", spec.FQN)
+	fqnAttr := slog.Any("fqn", spec.QN)
 	s.log.Debug("creation started", fqnAttr, slog.Any("spec", spec))
 	root := Root{
-		ID:    id.New(),
+		SigID: id.New(),
 		Rev:   rev.Initial(),
-		Title: spec.FQN.Name(),
-		X2:    spec.PE,
-		Ys2:   spec.CEs,
+		Title: spec.QN.Name(),
+		X2:    spec.X,
+		Ys2:   spec.Ys,
 	}
 	s.operator.Explicit(ctx, func(ds data.Source) error {
 		err = s.sigs.Insert(ds, root)
@@ -131,7 +129,7 @@ func (s *service) Create(spec Spec) (_ Root, err error) {
 		s.log.Error("creation failed", fqnAttr)
 		return Root{}, err
 	}
-	s.log.Debug("creation succeeded", fqnAttr, slog.Any("id", root.ID))
+	s.log.Debug("creation succeeded", fqnAttr, slog.Any("id", root.SigID))
 	return root, nil
 }
 
@@ -170,9 +168,9 @@ type Repo interface {
 func CollectEnv(sigs []Root) []role.QN {
 	roleFQNs := []role.QN{}
 	for _, sig := range sigs {
-		roleFQNs = append(roleFQNs, sig.X2.Link)
+		roleFQNs = append(roleFQNs, sig.X2.RoleQN)
 		for _, ce := range sig.Ys2 {
-			roleFQNs = append(roleFQNs, ce.Link)
+			roleFQNs = append(roleFQNs, ce.RoleQN)
 		}
 	}
 	return roleFQNs

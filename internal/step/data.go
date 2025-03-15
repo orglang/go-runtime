@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	"smecalculus/rolevod/lib/ak"
 	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/id"
 	"smecalculus/rolevod/lib/ph"
@@ -40,32 +39,32 @@ type specData struct {
 }
 
 type closeData struct {
-	A ph.Data `json:"a"`
+	A string `json:"a"`
 }
 
 type waitData struct {
-	X    ph.Data  `json:"x"`
+	X    string   `json:"x"`
 	Cont specData `json:"cont"`
 }
 
 type sendData struct {
-	A ph.Data `json:"a"`
-	B ph.Data `json:"b"`
+	A string `json:"a"`
+	B string `json:"b"`
 }
 
 type recvData struct {
-	X    ph.Data  `json:"x"`
-	Y    ph.Data  `json:"y"`
+	X    string   `json:"x"`
+	Y    string   `json:"y"`
 	Cont specData `json:"cont"`
 }
 
 type labData struct {
-	A ph.Data `json:"a"`
-	L string  `json:"l"`
+	A string `json:"a"`
+	L string `json:"l"`
 }
 
 type caseData struct {
-	X   ph.Data      `json:"x"`
+	X   string       `json:"x"`
 	Brs []branchData `json:"brs"`
 }
 
@@ -75,8 +74,8 @@ type branchData struct {
 }
 
 type fwdData struct {
-	C ph.Data `json:"c"`
-	D ph.Data `json:"d"`
+	C string `json:"c"`
+	D string `json:"d"`
 }
 
 type ctaData struct {
@@ -216,14 +215,6 @@ func dataFromTerm(t Term) (specData, error) {
 		return dataFromCont(term)
 	case FwdSpec:
 		return dataFromValue(term), nil
-	case CTASpec:
-		return specData{
-			K: cta,
-			CTA: &ctaData{
-				Sig: term.Sig.String(),
-				AK:  term.AK.String(),
-			},
-		}, nil
 	default:
 		panic(ErrTermTypeUnexpected(term))
 	}
@@ -245,16 +236,6 @@ func dataToTerm(dto specData) (Term, error) {
 		return dataToCont(dto)
 	case fwd:
 		return dataToValue(dto)
-	case cta:
-		key, err := ak.ConvertFromString(dto.CTA.AK)
-		if err != nil {
-			return nil, err
-		}
-		sig, err := id.ConvertFromString(dto.CTA.Sig)
-		if err != nil {
-			return nil, err
-		}
-		return CTASpec{Sig: sig, AK: key}, nil
 	default:
 		panic(errUnexpectedTermKind(dto.K))
 	}

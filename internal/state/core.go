@@ -250,11 +250,6 @@ type EP struct {
 	C Root
 }
 
-type EP2 struct {
-	ChnlPH  ph.ADT
-	StateID id.ADT
-}
-
 type Repo interface {
 	Insert(data.Source, Root) error
 	SelectAll(data.Source) ([]Ref, error)

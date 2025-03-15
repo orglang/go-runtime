@@ -1,17 +1,11 @@
 package ph
 
-import (
-	"fmt"
-)
-
 var (
 	Nil ADT
 )
 
-type ADT interface {
-	PH()
-}
+type ADT string
 
-func errUnexpectedType(ph ADT) error {
-	return fmt.Errorf("unexpected placeholder type: %T", ph)
+func New(s string) ADT {
+	return ADT(s)
 }

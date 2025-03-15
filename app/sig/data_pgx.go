@@ -29,7 +29,7 @@ func newRepo() Repo {
 
 func (r *repoPgx) Insert(source data.Source, root Root) error {
 	ds := data.MustConform[data.SourcePgx](source)
-	idAttr := slog.Any("id", root.ID)
+	idAttr := slog.Any("id", root.SigID)
 	dto, err := DataFromRoot(root)
 	if err != nil {
 		r.log.Error("model mapping failed", idAttr)
@@ -127,7 +127,7 @@ func (r *repoPgx) SelectEnv(source data.Source, ids []ID) (map[ID]Root, error) {
 	}
 	env := make(map[ID]Root, len(sigs))
 	for _, s := range sigs {
-		env[s.ID] = s
+		env[s.SigID] = s
 	}
 	return env, nil
 }

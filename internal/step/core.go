@@ -3,7 +3,6 @@ package step
 import (
 	"fmt"
 
-	"smecalculus/rolevod/lib/ak"
 	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/data"
 	"smecalculus/rolevod/lib/id"
@@ -193,23 +192,14 @@ func (s CaseSpec) Via() ph.ADT { return s.X }
 
 func (CaseSpec) cont() {}
 
-type CTASpec struct {
-	AK  ak.ADT
-	Sig id.ADT
-}
-
-func (s CTASpec) Via() ph.ADT { return s.Sig }
-
-func (s CTASpec) act() {}
-
 // aka ExpName
 type LinkSpec struct {
-	PE  chnl.ID
-	CEs []chnl.ID
-	Sig sym.ADT
+	PE    chnl.ID
+	CEs   []chnl.ID
+	SigQN sym.ADT
 }
 
-func (s LinkSpec) Via() ph.ADT { return s.PE }
+func (s LinkSpec) Via() ph.ADT { return "" }
 
 // аналог SendSpec, но без продолжения с новым via
 type FwdSpec struct {
@@ -354,95 +344,6 @@ func collectEnvRec(t Term, env []id.ADT) []id.ADT {
 	}
 }
 
-func CollectCtx(pe chnl.ID, t Term) []chnl.ID {
-	return collectCEsRec(pe, t, nil)
-}
-
-func collectCEsRec(pe chnl.ID, t Term, ces []chnl.ID) []chnl.ID {
-	switch term := t.(type) {
-	case WaitSpec:
-		x, ok := term.X.(chnl.ID)
-		if ok && x != pe {
-			ces = append(ces, x)
-		}
-		return collectCEsRec(pe, term.Cont, ces)
-	case SendSpec:
-		a, ok := term.X.(chnl.ID)
-		if ok && a != pe {
-			ces = append(ces, a)
-		}
-		b, ok := term.Y.(chnl.ID)
-		if ok {
-			ces = append(ces, b)
-		}
-		return ces
-	case RecvSpec:
-		x, ok := term.X.(chnl.ID)
-		if ok && x != pe {
-			ces = append(ces, x)
-		}
-		y, ok := term.Y.(chnl.ID)
-		if ok {
-			ces = append(ces, y)
-		}
-		return collectCEsRec(pe, term.Cont, ces)
-	case LabSpec:
-		a, ok := term.X.(chnl.ID)
-		if ok && a != pe {
-			ces = append(ces, a)
-		}
-		return ces
-	case CaseSpec:
-		x, ok := term.X.(chnl.ID)
-		if ok && x != pe {
-			ces = append(ces, x)
-		}
-		for _, cont := range term.Conts {
-			ces = collectCEsRec(pe, cont, ces)
-		}
-		return ces
-	case FwdSpec:
-		d, ok := term.Y.(chnl.ID)
-		if ok {
-			ces = append(ces, d)
-		}
-		return ces
-	case SpawnSpec:
-		return collectCEsRec(pe, term.Cont, append(ces, term.Ys2...))
-	default:
-		return ces
-	}
-}
-
-func Subst(t Term, ph ph.ADT, val chnl.ID) Term {
-	if t == nil {
-		return nil
-	}
-	switch term := t.(type) {
-	case CloseSpec:
-		if ph == term.X {
-			term.X = val
-		}
-		return term
-	case WaitSpec:
-		if ph == term.X {
-			term.X = val
-		}
-		term.Cont = Subst(term.Cont, ph, val)
-		return term
-	case SendSpec:
-		if ph == term.X {
-			term.X = val
-		}
-		if ph == term.Y {
-			term.Y = val
-		}
-		return term
-	default:
-		panic(ErrTermTypeUnexpected(t))
-	}
-}
-
 func ErrDoesNotExist(want ID) error {
 	return fmt.Errorf("root doesn't exist: %v", want)
 }
@@ -488,5 +389,9 @@ func ErrContTypeUnexpected2(got Cont) error {
 }
 
 func ErrMissingInCfg(want ph.ADT) error {
+	return fmt.Errorf("channel missing in cfg: %v", want)
+}
+
+func ErrMissingInCfg2(want id.ADT) error {
 	return fmt.Errorf("channel missing in cfg: %v", want)
 }

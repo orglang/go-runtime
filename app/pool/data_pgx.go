@@ -69,43 +69,43 @@ func (r *repoPgx) SelectAssets(source data.Source, poolID id.ADT) (AssetSnap, er
 	return DataToAssetSnap(dto)
 }
 
-func (r *repoPgx) SelectProc(source data.Source, procID id.ADT) (proc.Snap, error) {
+func (r *repoPgx) SelectProc(source data.Source, procID id.ADT) (proc.Cfg, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("procID", procID)
 	chnlRows, err := ds.Conn.Query(ds.Ctx, selectChnls, procID.String())
 	if err != nil {
 		r.log.Error("execution failed", idAttr, slog.String("q", selectChnls))
-		return proc.Snap{}, err
+		return proc.Cfg{}, err
 	}
 	defer chnlRows.Close()
 	chnlDtos, err := pgx.CollectRows(chnlRows, pgx.RowToStructByName[epData])
 	if err != nil {
 		r.log.Error("collection failed", idAttr, slog.Any("t", reflect.TypeOf(chnlDtos)))
-		return proc.Snap{}, err
+		return proc.Cfg{}, err
 	}
 	chnls, err := DataToEPs(chnlDtos)
 	if err != nil {
 		r.log.Error("mapping failed", idAttr)
-		return proc.Snap{}, err
+		return proc.Cfg{}, err
 	}
 	stepRows, err := ds.Conn.Query(ds.Ctx, selectSteps, procID.String())
 	if err != nil {
 		r.log.Error("execution failed", idAttr, slog.String("q", selectSteps))
-		return proc.Snap{}, err
+		return proc.Cfg{}, err
 	}
 	defer stepRows.Close()
 	stepDtos, err := pgx.CollectRows(stepRows, pgx.RowToStructByName[step.RootData])
 	if err != nil {
 		r.log.Error("collection failed", idAttr, slog.Any("t", reflect.TypeOf(stepDtos)))
-		return proc.Snap{}, err
+		return proc.Cfg{}, err
 	}
 	steps, err := step.DataToRoots(stepDtos)
 	if err != nil {
 		r.log.Error("mapping failed", idAttr)
-		return proc.Snap{}, err
+		return proc.Cfg{}, err
 	}
 	r.log.Debug("selection succeeded", idAttr)
-	return proc.Snap{
+	return proc.Cfg{
 		Chnls: core.IndexBy(proc.ChnlPH, chnls),
 		Steps: core.IndexBy(step.ChnlID, steps),
 	}, nil
