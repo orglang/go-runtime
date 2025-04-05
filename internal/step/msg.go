@@ -47,7 +47,7 @@ const (
 	Recv  = TermKind("recv")
 	Lab   = TermKind("lab")
 	Case  = TermKind("case")
-	CTA   = TermKind("cta")
+	Call  = TermKind("call")
 	Link  = TermKind("link")
 	Spawn = TermKind("spawn")
 	Fwd   = TermKind("fwd")
@@ -55,7 +55,7 @@ const (
 
 var termKindRequired = []validation.Rule{
 	validation.Required,
-	validation.In(Close, Wait, Send, Recv, Lab, Case, Spawn, Fwd, CTA),
+	validation.In(Close, Wait, Send, Recv, Lab, Case, Spawn, Fwd, Call),
 }
 
 type TermMsg struct {
@@ -68,7 +68,7 @@ type TermMsg struct {
 	Case  *CaseMsg  `json:"case,omitempty"`
 	Spawn *SpawnMsg `json:"spawn,omitempty"`
 	Fwd   *FwdMsg   `json:"fwd,omitempty"`
-	CTA   *CTAMsg   `json:"cta,omitempty"`
+	Call  *CallMsg  `json:"call,omitempty"`
 }
 
 func (dto TermMsg) Validate() error {
@@ -82,17 +82,17 @@ func (dto TermMsg) Validate() error {
 		validation.Field(&dto.Case, validation.Required.When(dto.K == Case)),
 		validation.Field(&dto.Spawn, validation.Required.When(dto.K == Spawn)),
 		validation.Field(&dto.Fwd, validation.Required.When(dto.K == Fwd)),
-		validation.Field(&dto.CTA, validation.Required.When(dto.K == CTA)),
+		validation.Field(&dto.Call, validation.Required.When(dto.K == Call)),
 	)
 }
 
 type CloseMsg struct {
-	A string `json:"a"`
+	X string `json:"a"`
 }
 
 func (dto CloseMsg) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.A, validation.Required),
+		validation.Field(&dto.X, validation.Required),
 	)
 }
 
@@ -109,14 +109,14 @@ func (dto WaitMsg) Validate() error {
 }
 
 type SendMsg struct {
-	A string `json:"a"`
-	B string `json:"b"`
+	X string `json:"a"`
+	Y string `json:"b"`
 }
 
 func (dto SendMsg) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.A, validation.Required),
-		validation.Field(&dto.B, validation.Required),
+		validation.Field(&dto.X, validation.Required),
+		validation.Field(&dto.Y, validation.Required),
 	)
 }
 
@@ -135,13 +135,13 @@ func (dto RecvMsg) Validate() error {
 }
 
 type LabMsg struct {
-	A     string `json:"a"`
+	X     string `json:"a"`
 	Label string `json:"label"`
 }
 
 func (dto LabMsg) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.A, validation.Required),
+		validation.Field(&dto.X, validation.Required),
 		validation.Field(&dto.Label, core.NameRequired...),
 	)
 }
@@ -174,25 +174,41 @@ func (dto BranchMsg) Validate() error {
 	)
 }
 
+type CallMsg struct {
+	X     string   `json:"x"`
+	SigPH string   `json:"sig_ph"`
+	Ys    []string `json:"ys"`
+	Cont  *TermMsg `json:"cont"`
+}
+
+func (dto CallMsg) Validate() error {
+	return validation.ValidateStruct(&dto,
+		validation.Field(&dto.X, validation.Required),
+		validation.Field(&dto.SigPH, id.Required...),
+		validation.Field(&dto.Ys, core.CtxOptional...),
+		// validation.Field(&dto.Cont, validation.Required),
+	)
+}
+
 type SpawnMsg struct {
+	X     string   `json:"x"`
 	SigID string   `json:"sig_id"`
-	X     string   `json:"pe"`
-	Ys    []string `json:"ces"`
+	Ys    []string `json:"ys"`
 	Cont  *TermMsg `json:"cont"`
 }
 
 func (dto SpawnMsg) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.SigID, id.Required...),
 		validation.Field(&dto.X, validation.Required),
+		validation.Field(&dto.SigID, id.Required...),
 		validation.Field(&dto.Ys, core.CtxOptional...),
 		// validation.Field(&dto.Cont, validation.Required),
 	)
 }
 
 type FwdMsg struct {
-	X string `json:"c"`
-	Y string `json:"d"`
+	X string `json:"x"`
+	Y string `json:"y"`
 }
 
 func (dto FwdMsg) Validate() error {
@@ -202,22 +218,9 @@ func (dto FwdMsg) Validate() error {
 	)
 }
 
-type CTAMsg struct {
-	AK  string `json:"access_key"`
-	Sig string `json:"sig_id"`
-}
-
-func (dto CTAMsg) Validate() error {
-	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.AK, id.Required...),
-		validation.Field(&dto.Sig, id.Required...),
-	)
-}
-
 // goverter:variables
 // goverter:output:format assign-variable
 // goverter:extend smecalculus/rolevod/lib/id:Convert.*
-// goverter:extend smecalculus/rolevod/internal/chnl:Msg.*
 // goverter:extend MsgFromTerm
 // goverter:extend MsgToTerm
 // goverter:extend MsgFromTermNilable
@@ -241,7 +244,7 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Close,
 			Close: &CloseMsg{
-				A: ph.ConvertToString(term.X),
+				X: ph.ConvertToString(term.X),
 			},
 		}
 	case WaitSpec:
@@ -256,8 +259,8 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Send,
 			Send: &SendMsg{
-				A: ph.ConvertToString(term.X),
-				B: ph.ConvertToString(term.Y),
+				X: ph.ConvertToString(term.X),
+				Y: ph.ConvertToString(term.Y),
 			},
 		}
 	case RecvSpec:
@@ -273,7 +276,7 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Lab,
 			Lab: &LabMsg{
-				A:     ph.ConvertToString(term.X),
+				X:     ph.ConvertToString(term.X),
 				Label: string(term.L),
 			},
 		}
@@ -293,8 +296,18 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Spawn,
 			Spawn: &SpawnMsg{
-				SigID: id.ConvertToString(term.SigID),
 				X:     ph.ConvertToString(term.X),
+				SigID: id.ConvertToString(term.SigID),
+				Ys:    ph.ConvertToStrings(term.Ys),
+				Cont:  MsgFromTermNilable(term.Cont),
+			},
+		}
+	case CallSpec:
+		return TermMsg{
+			K: Call,
+			Call: &CallMsg{
+				X:     ph.ConvertToString(term.X),
+				SigPH: ph.ConvertToString(term.SigPH),
 				Ys:    ph.ConvertToStrings(term.Ys),
 				Cont:  MsgFromTermNilable(term.Cont),
 			},
@@ -322,11 +335,11 @@ func MsgToTermNilable(dto *TermMsg) (Term, error) {
 func MsgToTerm(dto TermMsg) (Term, error) {
 	switch dto.K {
 	case Close:
-		a, err := ph.ConvertFromString(dto.Close.A)
+		x, err := ph.ConvertFromString(dto.Close.X)
 		if err != nil {
 			return nil, err
 		}
-		return CloseSpec{X: a}, nil
+		return CloseSpec{X: x}, nil
 	case Wait:
 		x, err := ph.ConvertFromString(dto.Wait.X)
 		if err != nil {
@@ -338,15 +351,15 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 		}
 		return WaitSpec{X: x, Cont: cont}, nil
 	case Send:
-		a, err := ph.ConvertFromString(dto.Send.A)
+		x, err := ph.ConvertFromString(dto.Send.X)
 		if err != nil {
 			return nil, err
 		}
-		b, err := ph.ConvertFromString(dto.Send.B)
+		y, err := ph.ConvertFromString(dto.Send.Y)
 		if err != nil {
 			return nil, err
 		}
-		return SendSpec{X: a, Y: b}, nil
+		return SendSpec{X: x, Y: y}, nil
 	case Recv:
 		x, err := ph.ConvertFromString(dto.Recv.X)
 		if err != nil {
@@ -362,11 +375,11 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 		}
 		return RecvSpec{X: x, Y: y, Cont: cont}, nil
 	case Lab:
-		a, err := ph.ConvertFromString(dto.Lab.A)
+		x, err := ph.ConvertFromString(dto.Lab.X)
 		if err != nil {
 			return nil, err
 		}
-		return LabSpec{X: a, L: core.Label(dto.Lab.Label)}, nil
+		return LabSpec{X: x, L: core.Label(dto.Lab.Label)}, nil
 	case Case:
 		x, err := ph.ConvertFromString(dto.Case.X)
 		if err != nil {
@@ -382,15 +395,7 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 		}
 		return CaseSpec{X: x, Conts: conts}, nil
 	case Spawn:
-		pe, err := ph.ConvertFromString(dto.Spawn.X)
-		if err != nil {
-			return nil, err
-		}
-		ces, err := ph.ConvertFromStrings(dto.Spawn.Ys)
-		if err != nil {
-			return nil, err
-		}
-		cont, err := MsgToTermNilable(dto.Spawn.Cont)
+		x, err := ph.ConvertFromString(dto.Spawn.X)
 		if err != nil {
 			return nil, err
 		}
@@ -398,17 +403,43 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		return SpawnSpec{X: pe, Ys: ces, Cont: cont, SigID: sigID}, nil
+		ys, err := ph.ConvertFromStrings(dto.Spawn.Ys)
+		if err != nil {
+			return nil, err
+		}
+		cont, err := MsgToTermNilable(dto.Spawn.Cont)
+		if err != nil {
+			return nil, err
+		}
+		return SpawnSpec{X: x, SigID: sigID, Ys: ys, Cont: cont}, nil
+	case Call:
+		x, err := ph.ConvertFromString(dto.Call.X)
+		if err != nil {
+			return nil, err
+		}
+		sigPH, err := ph.ConvertFromString(dto.Call.SigPH)
+		if err != nil {
+			return nil, err
+		}
+		ys, err := ph.ConvertFromStrings(dto.Call.Ys)
+		if err != nil {
+			return nil, err
+		}
+		cont, err := MsgToTermNilable(dto.Call.Cont)
+		if err != nil {
+			return nil, err
+		}
+		return CallSpec{X: x, SigPH: sigPH, Ys: ys, Cont: cont}, nil
 	case Fwd:
-		c, err := ph.ConvertFromString(dto.Fwd.X)
+		x, err := ph.ConvertFromString(dto.Fwd.X)
 		if err != nil {
 			return nil, err
 		}
-		d, err := ph.ConvertFromString(dto.Fwd.Y)
+		y, err := ph.ConvertFromString(dto.Fwd.Y)
 		if err != nil {
 			return nil, err
 		}
-		return FwdSpec{X: c, Y: d}, nil
+		return FwdSpec{X: x, Y: y}, nil
 	default:
 		panic(ErrUnexpectedTermKind(dto.K))
 	}

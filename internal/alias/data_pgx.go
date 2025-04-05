@@ -39,7 +39,7 @@ func (r *repoPgx) Insert(source data.Source, root Root) error {
 		)`
 	args := pgx.NamedArgs{
 		"id":       dto.ID,
-		"rev_from": dto.Rev,
+		"rev_from": dto.RN,
 		"rev_to":   math.MaxInt64,
 		"sym":      dto.Sym,
 	}

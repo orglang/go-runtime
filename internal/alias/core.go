@@ -3,13 +3,13 @@ package alias
 import (
 	"smecalculus/rolevod/lib/data"
 	"smecalculus/rolevod/lib/id"
-	"smecalculus/rolevod/lib/rev"
+	"smecalculus/rolevod/lib/rn"
 	"smecalculus/rolevod/lib/sym"
 )
 
 type Root struct {
 	ID  id.ADT
-	Rev rev.ADT
+	RN  rn.ADT
 	Sym sym.ADT
 }
 

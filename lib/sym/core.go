@@ -2,6 +2,12 @@ package sym
 
 import (
 	"strings"
+
+	"smecalculus/rolevod/lib/ph"
+)
+
+var (
+	Nil ADT
 )
 
 type Symbolizable interface {
@@ -10,24 +16,28 @@ type Symbolizable interface {
 
 type ADT string
 
-func (ADT) PH() {}
-
-func New(name string) ADT {
-	return ADT(name)
+func New(qn string) ADT {
+	return ADT(qn)
 }
 
-func (ns ADT) New(name string) ADT {
-	return ADT(strings.Join([]string{string(ns), name}, sep))
+func (ns ADT) New(sn string) ADT {
+	return ADT(strings.Join([]string{string(ns), sn}, sep))
 }
 
-func (s ADT) Name() string {
+// short name or simple name
+func (s ADT) SN() string {
 	sym := string(s)
 	return sym[strings.LastIndex(sym, sep)+1:]
 }
 
+// namespace
 func (s ADT) NS() ADT {
 	sym := string(s)
 	return ADT(sym[0:strings.LastIndex(sym, sep)])
+}
+
+func (s ADT) ToPH() ph.ADT {
+	return ph.ADT(s.SN())
 }
 
 func ConvertToSame(a ADT) ADT {
@@ -38,8 +48,12 @@ func CovertFromString(s string) ADT {
 	return ADT(s)
 }
 
-func ConvertToString(a ADT) string {
-	return string(a)
+func ConvertToString(s ADT) string {
+	return string(s)
+}
+
+func ConvertToPH(s ADT) ph.ADT {
+	return ph.ADT(s.SN())
 }
 
 const (

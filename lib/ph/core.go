@@ -1,7 +1,8 @@
 package ph
 
 var (
-	Nil ADT
+	Nil   ADT
+	Blank ADT
 )
 
 type ADT string

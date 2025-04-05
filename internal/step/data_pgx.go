@@ -6,9 +6,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"smecalculus/rolevod/internal/chnl"
 	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/data"
+	"smecalculus/rolevod/lib/id"
 )
 
 // Adapter
@@ -73,7 +73,7 @@ func (r *repoPgx) SelectByID(source data.Source, rid ID) (Root, error) {
 	return r.execute(source, query, rid.String())
 }
 
-func (r *repoPgx) SelectByPID(source data.Source, pid chnl.ID) (Root, error) {
+func (r *repoPgx) SelectByPID(source data.Source, pid id.ADT) (Root, error) {
 	query := `
 		SELECT
 			id, kind, pid, vid, spec
@@ -82,7 +82,7 @@ func (r *repoPgx) SelectByPID(source data.Source, pid chnl.ID) (Root, error) {
 	return r.execute(source, query, pid.String())
 }
 
-func (r *repoPgx) SelectByVID(source data.Source, vid chnl.ID) (Root, error) {
+func (r *repoPgx) SelectByVID(source data.Source, vid id.ADT) (Root, error) {
 	query := `
 		SELECT
 			id, kind, pid, vid, spec

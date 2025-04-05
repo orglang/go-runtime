@@ -1,14 +1,14 @@
-package role_test
+package sig_test
 
 import (
 	"os"
 	"testing"
 
-	roleroot "smecalculus/rolevod/app/role/root"
+	"smecalculus/rolevod/app/proc/sig"
 )
 
 var (
-	api = roleroot.NewAPI()
+	api = sig.NewAPI()
 )
 
 func TestMain(m *testing.M) {

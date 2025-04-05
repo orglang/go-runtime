@@ -7,10 +7,8 @@ import (
 	"smecalculus/rolevod/lib/data"
 	"smecalculus/rolevod/lib/id"
 	"smecalculus/rolevod/lib/ph"
-	"smecalculus/rolevod/lib/rev"
+	"smecalculus/rolevod/lib/rn"
 	"smecalculus/rolevod/lib/sym"
-
-	"smecalculus/rolevod/internal/chnl"
 )
 
 type ID = id.ADT
@@ -38,60 +36,60 @@ type SrvRef struct {
 func (r SrvRef) Ident() id.ADT { return r.ID }
 
 type Root interface {
-	step() chnl.ID
+	step() id.ADT
 }
 
-func ChnlID(r Root) chnl.ID { return r.step() }
+func ChnlID(r Root) id.ADT { return r.step() }
 
 // aka exec.Proc
 type ProcRoot struct {
 	ID   id.ADT
-	PID  chnl.ID
+	PID  id.ADT
 	Term Term
 }
 
-func (r ProcRoot) step() chnl.ID { return r.PID }
+func (r ProcRoot) step() id.ADT { return r.PID }
 
 // aka exec.Msg
 type MsgRoot struct {
 	ID  id.ADT
-	PID chnl.ID
-	VID chnl.ID
+	PID id.ADT
+	VID id.ADT
 	Val Value
 }
 
-func (r MsgRoot) step() chnl.ID { return r.VID }
+func (r MsgRoot) step() id.ADT { return r.VID }
 
 type MsgRoot2 struct {
 	PoolID id.ADT
 	ProcID id.ADT
 	ChnlID id.ADT
 	Val    Val
-	Rev    rev.ADT
+	PoolRN rn.ADT
 }
 
-func (r MsgRoot2) step() chnl.ID { return r.ChnlID }
+func (r MsgRoot2) step() id.ADT { return r.ChnlID }
 
 type SrvRoot struct {
 	ID   id.ADT
-	PID  chnl.ID
-	VID  chnl.ID
+	PID  id.ADT
+	VID  id.ADT
 	Cont Continuation
 }
 
-func (r SrvRoot) step() chnl.ID { return r.VID }
+func (r SrvRoot) step() id.ADT { return r.VID }
 
 type SvcRoot2 struct {
 	PoolID id.ADT
 	ProcID id.ADT
 	ChnlID id.ADT
 	Cont   Cont
-	Rev    rev.ADT
+	PoolRN rn.ADT
 }
 
-func (r SvcRoot2) step() chnl.ID { return r.ChnlID }
+func (r SvcRoot2) step() id.ADT { return r.ChnlID }
 
-// aka Expression
+// aka Expression or Term
 type Term interface {
 	Via() ph.ADT
 }
@@ -186,8 +184,8 @@ func (CaseSpec) cont() {}
 // aka ExpName
 type LinkSpec struct {
 	SigQN sym.ADT
-	X     chnl.ID
-	Ys    []chnl.ID
+	X     id.ADT
+	Ys    []id.ADT
 }
 
 func (s LinkSpec) Via() ph.ADT { return "" }
@@ -204,11 +202,21 @@ func (FwdSpec) val() {}
 
 func (FwdSpec) cont() {}
 
-// аналог SendSpec, но значения пересылаются балком
+// аналог SendSpec, но значения отправляются балком
+type CallSpec struct {
+	X     ph.ADT
+	SigPH ph.ADT
+	Ys    []ph.ADT
+	Cont  Term
+}
+
+func (s CallSpec) Via() ph.ADT { return s.SigPH }
+
+// аналог RecvSpec, но значения принимаются балком
 type SpawnSpec struct {
 	X      ph.ADT
+	SigID  id.ADT
 	Ys     []ph.ADT
-	SigID  id.ADT // TODO ссылаться по QN
 	PoolQN sym.ADT
 	Cont   Term
 }
@@ -310,8 +318,8 @@ type Repo interface {
 	Insert(data.Source, ...Root) error
 	SelectAll(data.Source) ([]Ref, error)
 	SelectByID(data.Source, id.ADT) (Root, error)
-	SelectByPID(data.Source, chnl.ID) (Root, error)
-	SelectByVID(data.Source, chnl.ID) (Root, error)
+	SelectByPID(data.Source, id.ADT) (Root, error)
+	SelectByVID(data.Source, id.ADT) (Root, error)
 }
 
 func CollectEnv(t Term) []id.ADT {
@@ -358,7 +366,7 @@ func ErrTermTypeMismatch(got, want Term) error {
 	return fmt.Errorf("term type mismatch: want %T, got %T", want, got)
 }
 
-func ErrTermValueNil(pid chnl.ID) error {
+func ErrTermValueNil(pid id.ADT) error {
 	return fmt.Errorf("proc %q term is nil", pid)
 }
 
