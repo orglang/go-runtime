@@ -7,7 +7,7 @@ import (
 
 	"smecalculus/rolevod/lib/data"
 	"smecalculus/rolevod/lib/id"
-	rn "smecalculus/rolevod/lib/rn"
+	"smecalculus/rolevod/lib/rn"
 	"smecalculus/rolevod/lib/sym"
 
 	"smecalculus/rolevod/internal/alias"
@@ -17,7 +17,8 @@ import (
 
 type Spec struct {
 	X     bnd.Spec // via
-	SigQN sym.ADT
+	SigNS sym.ADT
+	SigSN sym.ADT
 	Ys    []bnd.Spec // vals
 }
 
@@ -94,7 +95,7 @@ func (s *service) Incept(sigQN sym.ADT) (_ Ref, err error) {
 
 func (s *service) Create(spec Spec) (_ Impl, err error) {
 	ctx := context.Background()
-	qnAttr := slog.Any("sigQN", spec.SigQN)
+	qnAttr := slog.Any("sigQN", spec.SigSN)
 	s.log.Debug("creation started", qnAttr, slog.Any("spec", spec))
 	newImpl := Impl{
 		X:     spec.X,

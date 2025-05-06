@@ -3,7 +3,6 @@ package bnd
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
-	"smecalculus/rolevod/lib/ph"
 	"smecalculus/rolevod/lib/sym"
 )
 
@@ -14,7 +13,7 @@ type SpecMsg struct {
 
 func (dto SpecMsg) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.ChnlPH, ph.Optional...),
+		validation.Field(&dto.ChnlPH, sym.Optional...),
 		validation.Field(&dto.RoleQN, sym.Required...),
 	)
 }

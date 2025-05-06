@@ -8,7 +8,7 @@ import (
 
 	"smecalculus/rolevod/lib/msg"
 
-	role "smecalculus/rolevod/app/role/root"
+	role "smecalculus/rolevod/app/role/sig"
 )
 
 // Adapter

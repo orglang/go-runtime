@@ -3,10 +3,8 @@ package state
 import (
 	"fmt"
 
-	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/data"
 	"smecalculus/rolevod/lib/id"
-	"smecalculus/rolevod/lib/ph"
 	"smecalculus/rolevod/lib/pol"
 	"smecalculus/rolevod/lib/sym"
 )
@@ -24,7 +22,7 @@ func (OneSpec) spec() {}
 
 // aka TpName
 type LinkSpec struct {
-	Role sym.ADT
+	RoleQN sym.ADT
 }
 
 func (LinkSpec) spec() {}
@@ -45,26 +43,26 @@ func (LolliSpec) spec() {}
 
 // aka Internal Choice
 type PlusSpec struct {
-	Choices map[core.Label]Spec
+	Choices map[sym.ADT]Spec
 }
 
 func (PlusSpec) spec() {}
 
 // aka External Choice
 type WithSpec struct {
-	Choices map[core.Label]Spec
+	Choices map[sym.ADT]Spec
 }
 
 func (WithSpec) spec() {}
 
 type UpSpec struct {
-	A Spec
+	X Spec
 }
 
 func (UpSpec) spec() {}
 
 type DownSpec struct {
-	A Spec
+	X Spec
 }
 
 func (DownSpec) spec() {}
@@ -132,7 +130,7 @@ type Prod interface {
 }
 
 type Sum interface {
-	Next(core.Label) id.ADT
+	Next(sym.ADT) id.ADT
 }
 
 type OneRoot struct {
@@ -151,8 +149,8 @@ func (r OneRoot) Pol() pol.ADT { return pol.Pos }
 
 // aka TpName
 type LinkRoot struct {
-	ID   id.ADT
-	Role sym.ADT
+	ID     id.ADT
+	RoleQN sym.ADT
 }
 
 func (LinkRoot) spec() {}
@@ -164,28 +162,28 @@ func (LinkRoot) Pol() pol.ADT { return pol.Zero }
 // aka Internal Choice
 type PlusRoot struct {
 	ID      id.ADT
-	Choices map[core.Label]Root
+	Choices map[sym.ADT]Root
 }
 
 func (PlusRoot) spec() {}
 
 func (r PlusRoot) Ident() id.ADT { return r.ID }
 
-func (r PlusRoot) Next(l core.Label) id.ADT { return r.Choices[l].Ident() }
+func (r PlusRoot) Next(l sym.ADT) id.ADT { return r.Choices[l].Ident() }
 
 func (PlusRoot) Pol() pol.ADT { return pol.Pos }
 
 // aka External Choice
 type WithRoot struct {
 	ID      id.ADT
-	Choices map[core.Label]Root
+	Choices map[sym.ADT]Root
 }
 
 func (WithRoot) spec() {}
 
 func (r WithRoot) Ident() id.ADT { return r.ID }
 
-func (r WithRoot) Next(l core.Label) id.ADT { return r.Choices[l].Ident() }
+func (r WithRoot) Next(l sym.ADT) id.ADT { return r.Choices[l].Ident() }
 
 func (WithRoot) Pol() pol.ADT { return pol.Neg }
 
@@ -240,13 +238,13 @@ func (r DownRoot) Ident() id.ADT { return r.ID }
 func (r DownRoot) Pol() pol.ADT { return pol.Zero }
 
 type Context struct {
-	Assets map[ph.ADT]Root
-	Liabs  map[ph.ADT]Root
+	Assets map[sym.ADT]Root
+	Liabs  map[sym.ADT]Root
 }
 
 // Endpoint aka ChanTp
 type EP struct {
-	Z ph.ADT
+	Z sym.ADT
 	C Root
 }
 
@@ -266,7 +264,7 @@ func ConvertSpecToRoot(s Spec) Root {
 	case OneSpec:
 		return OneRoot{ID: id.New()}
 	case LinkSpec:
-		return LinkRoot{ID: id.New(), Role: spec.Role}
+		return LinkRoot{ID: id.New(), RoleQN: spec.RoleQN}
 	case TensorSpec:
 		return TensorRoot{
 			ID: id.New(),
@@ -280,13 +278,13 @@ func ConvertSpecToRoot(s Spec) Root {
 			Z:  ConvertSpecToRoot(spec.Z),
 		}
 	case WithSpec:
-		choices := make(map[core.Label]Root, len(spec.Choices))
+		choices := make(map[sym.ADT]Root, len(spec.Choices))
 		for lab, st := range spec.Choices {
 			choices[lab] = ConvertSpecToRoot(st)
 		}
 		return WithRoot{ID: id.New(), Choices: choices}
 	case PlusSpec:
-		choices := make(map[core.Label]Root, len(spec.Choices))
+		choices := make(map[sym.ADT]Root, len(spec.Choices))
 		for lab, st := range spec.Choices {
 			choices[lab] = ConvertSpecToRoot(st)
 		}
@@ -304,7 +302,7 @@ func ConvertRootToSpec(r Root) Spec {
 	case OneRoot:
 		return OneSpec{}
 	case LinkRoot:
-		return LinkSpec{Role: root.Role}
+		return LinkSpec{RoleQN: root.RoleQN}
 	case TensorRoot:
 		return TensorSpec{
 			B: ConvertRootToSpec(root.B),
@@ -316,13 +314,13 @@ func ConvertRootToSpec(r Root) Spec {
 			Z: ConvertRootToSpec(root.Z),
 		}
 	case WithRoot:
-		choices := make(map[core.Label]Spec, len(root.Choices))
+		choices := make(map[sym.ADT]Spec, len(root.Choices))
 		for lab, st := range root.Choices {
 			choices[lab] = ConvertRootToSpec(st)
 		}
 		return WithSpec{Choices: choices}
 	case PlusRoot:
-		choices := make(map[core.Label]Spec, len(root.Choices))
+		choices := make(map[sym.ADT]Spec, len(root.Choices))
 		for lab, st := range root.Choices {
 			choices[lab] = ConvertRootToSpec(st)
 		}
@@ -503,7 +501,7 @@ func ErrMissingInCfg(want ID) error {
 	return fmt.Errorf("root missing in cfg: %v", want)
 }
 
-func ErrMissingInCtx(want ph.ADT) error {
+func ErrMissingInCtx(want sym.ADT) error {
 	return fmt.Errorf("root missing in ctx: %v", want)
 }
 

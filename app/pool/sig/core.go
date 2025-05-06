@@ -11,17 +11,22 @@ import (
 )
 
 type Spec struct {
-	SigQN   sym.ADT
-	Imports []bnd.Spec
-	Exports []bnd.Spec
+	X     bnd.Spec // export
+	SigNS sym.ADT
+	SigSN sym.ADT    // label
+	Ys    []bnd.Spec // imports
 }
 
-type Impl struct {
+type Ref struct {
+	SigID id.ADT
+}
+
+type impl struct {
 	SigID id.ADT
 }
 
 type API interface {
-	Create(Spec) (Impl, error)
+	Create(Spec) (Ref, error)
 }
 
 // for compilation purposes
@@ -35,11 +40,11 @@ type service struct {
 	log      *slog.Logger
 }
 
-func (s *service) Create(spec Spec) (Impl, error) {
-	return Impl{}, nil
+func (s *service) Create(spec Spec) (Ref, error) {
+	return Ref{}, nil
 }
 
 // Port
 type Repo interface {
-	Insert(data.Source, Impl) error
+	Insert(data.Source, impl) error
 }

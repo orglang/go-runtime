@@ -10,7 +10,7 @@ func Next(rev ADT) ADT {
 	return rev + 1
 }
 
-func (rev ADT) Inc() ADT {
+func (rev ADT) Next() ADT {
 	return rev + 1
 }
 

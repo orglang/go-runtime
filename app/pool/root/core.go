@@ -9,7 +9,6 @@ import (
 
 	"smecalculus/rolevod/lib/data"
 	"smecalculus/rolevod/lib/id"
-	"smecalculus/rolevod/lib/ph"
 	"smecalculus/rolevod/lib/pol"
 	rn "smecalculus/rolevod/lib/rn"
 	"smecalculus/rolevod/lib/sym"
@@ -20,13 +19,12 @@ import (
 
 	procroot "smecalculus/rolevod/app/proc/root"
 	procsig "smecalculus/rolevod/app/proc/sig"
-	roleroot "smecalculus/rolevod/app/role/root"
+	rolesig "smecalculus/rolevod/app/role/sig"
 )
 
 type Spec struct {
-	SigQN   sym.ADT
-	ProcIDs []id.ADT // imports
-	SupID   id.ADT
+	SigQN sym.ADT
+	SupID id.ADT
 }
 
 type Ref struct {
@@ -70,7 +68,7 @@ func newAPI() API {
 type service struct {
 	pools    Repo
 	sigs     procsig.Repo
-	roles    roleroot.Repo
+	roles    rolesig.Repo
 	states   state.Repo
 	operator data.Operator
 	log      *slog.Logger
@@ -79,7 +77,7 @@ type service struct {
 func newService(
 	pools Repo,
 	sigs procsig.Repo,
-	roles roleroot.Repo,
+	roles rolesig.Repo,
 	states state.Repo,
 	operator data.Operator,
 	l *slog.Logger,
@@ -129,8 +127,8 @@ func (s *service) Spawn(spec procroot.Spec) (_ procroot.Ref, err error) {
 }
 
 func (s *service) Take(spec StepSpec) (err error) {
-	procAttr := slog.Any("procID", spec.ProcID)
-	s.log.Debug("taking started", procAttr)
+	idAttr := slog.Any("procID", spec.ProcID)
+	s.log.Debug("taking started", idAttr)
 	ctx := context.Background()
 	// initial values
 	poolID := spec.PoolID
@@ -143,7 +141,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 			return err
 		})
 		if err != nil {
-			s.log.Error("taking failed", procAttr)
+			s.log.Error("taking failed", idAttr)
 			return err
 		}
 		if len(procCfg.Chnls) == 0 {
@@ -156,20 +154,20 @@ func (s *service) Take(spec StepSpec) (err error) {
 			return err
 		})
 		if err != nil {
-			s.log.Error("taking failed", procAttr, slog.Any("sigs", sigIDs))
+			s.log.Error("taking failed", idAttr, slog.Any("sigs", sigIDs))
 			return err
 		}
 		roleQNs := procsig.CollectEnv(maps.Values(sigs))
-		var roles map[sym.ADT]roleroot.Impl
+		var roles map[sym.ADT]rolesig.Impl
 		err = s.operator.Implicit(ctx, func(ds data.Source) error {
 			roles, err = s.roles.SelectEnv(ds, roleQNs)
 			return err
 		})
 		if err != nil {
-			s.log.Error("taking failed", procAttr, slog.Any("roles", roleQNs))
+			s.log.Error("taking failed", idAttr, slog.Any("roles", roleQNs))
 			return err
 		}
-		envIDs := roleroot.CollectEnv(maps.Values(roles))
+		envIDs := rolesig.CollectEnv(maps.Values(roles))
 		ctxIDs := CollectCtx(maps.Values(procCfg.Chnls))
 		var states map[state.ID]state.Root
 		err = s.operator.Implicit(ctx, func(ds data.Source) error {
@@ -177,7 +175,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 			return err
 		})
 		if err != nil {
-			s.log.Error("taking failed", procAttr, slog.Any("env", envIDs), slog.Any("ctx", ctxIDs))
+			s.log.Error("taking failed", idAttr, slog.Any("env", envIDs), slog.Any("ctx", ctxIDs))
 			return err
 		}
 		procEnv := procroot.Env{Sigs: sigs, Roles: roles, States: states}
@@ -185,25 +183,25 @@ func (s *service) Take(spec StepSpec) (err error) {
 		// type checking
 		err = s.checkState(poolID, procEnv, procCtx, procCfg, termSpec)
 		if err != nil {
-			s.log.Error("taking failed", procAttr)
+			s.log.Error("taking failed", idAttr)
 			return err
 		}
 		// step taking
 		nextSpec, procMod, err := s.takeWith(procEnv, procCfg, termSpec)
 		if err != nil {
-			s.log.Error("taking failed", procAttr)
+			s.log.Error("taking failed", idAttr)
 			return err
 		}
 		err = s.operator.Explicit(ctx, func(ds data.Source) error {
 			err = s.pools.UpdateProc(ds, procMod)
 			if err != nil {
-				s.log.Error("taking failed", procAttr)
+				s.log.Error("taking failed", idAttr)
 				return err
 			}
 			return nil
 		})
 		if err != nil {
-			s.log.Error("taking failed", procAttr)
+			s.log.Error("taking failed", idAttr)
 			return err
 		}
 		// next values
@@ -211,7 +209,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 		procID = nextSpec.ProcID
 		termSpec = nextSpec.Term
 	}
-	s.log.Debug("taking succeeded", procAttr)
+	s.log.Debug("taking succeeded", idAttr)
 	return nil
 }
 
@@ -244,7 +242,7 @@ func (s *service) takeWith(
 				PoolID: procCfg.PoolID,
 				ProcID: procCfg.ProcID,
 				ChnlID: viaChnl.ChnlID,
-				PoolRN: procCfg.PoolRN.Inc(),
+				PoolRN: procCfg.PoolRN.Next(),
 				Val: step.CloseImpl{
 					X: termSpec.X,
 				},
@@ -253,7 +251,7 @@ func (s *service) takeWith(
 			s.log.Debug("taking half done", viaAttr)
 			return tranSpec, procMod, nil
 		}
-		svcStep, ok := rcvrStep.(step.SvcRoot2)
+		svcStep, ok := rcvrStep.(step.SvcRoot)
 		if !ok {
 			panic(step.ErrRootTypeUnexpected(rcvrStep))
 		}
@@ -262,13 +260,13 @@ func (s *service) takeWith(
 			sndrViaBnd := procroot.Bnd{
 				ProcID: procCfg.ProcID,
 				ChnlPH: termSpec.X,
-				PoolRN: -procCfg.PoolRN.Inc(),
+				PoolRN: -procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, sndrViaBnd)
 			rcvrViaBnd := procroot.Bnd{
 				ProcID: svcStep.ProcID,
 				ChnlPH: termImpl.X,
-				PoolRN: -svcStep.PoolRN.Inc(),
+				PoolRN: -svcStep.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrViaBnd)
 			tranSpec = StepSpec{
@@ -296,11 +294,11 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, rcvrLock)
 		sndrStep := procCfg.Steps[viaChnl.ChnlID]
 		if sndrStep == nil {
-			rcvrStep := step.SvcRoot2{
+			rcvrStep := step.SvcRoot{
 				PoolID: procCfg.PoolID,
 				ProcID: procCfg.ProcID,
 				ChnlID: viaChnl.ChnlID,
-				PoolRN: procCfg.PoolRN.Inc(),
+				PoolRN: procCfg.PoolRN.Next(),
 				Cont: step.WaitImpl{
 					X:    termSpec.X,
 					Cont: termSpec.Cont,
@@ -319,13 +317,13 @@ func (s *service) takeWith(
 			sndrViaBnd := procroot.Bnd{
 				ProcID: msgStep.ProcID,
 				ChnlPH: termImpl.X,
-				PoolRN: -msgStep.PoolRN.Inc(),
+				PoolRN: -msgStep.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, sndrViaBnd)
 			rcvrViaBnd := procroot.Bnd{
 				ProcID: procCfg.ProcID,
 				ChnlPH: termSpec.X,
-				PoolRN: -procCfg.PoolRN.Inc(),
+				PoolRN: -procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrViaBnd)
 			tranSpec = StepSpec{
@@ -341,7 +339,7 @@ func (s *service) takeWith(
 				ChnlPH:  termSpec.X,
 				ChnlID:  termImpl.B,
 				StateID: viaChnl.StateID,
-				PoolRN:  procCfg.PoolRN.Inc(),
+				PoolRN:  procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrViaBnd)
 			tranSpec = StepSpec{
@@ -383,7 +381,7 @@ func (s *service) takeWith(
 		sndrValBnd := procroot.Bnd{
 			ProcID: procCfg.ProcID,
 			ChnlPH: termSpec.Y,
-			PoolRN: -procCfg.PoolRN.Inc(),
+			PoolRN: -procCfg.PoolRN.Next(),
 		}
 		procMod.Bnds = append(procMod.Bnds, sndrValBnd)
 		rcvrStep := procCfg.Steps[viaChnl.ChnlID]
@@ -394,14 +392,14 @@ func (s *service) takeWith(
 				ChnlPH:  termSpec.X,
 				ChnlID:  newChnlID,
 				StateID: viaStateID,
-				PoolRN:  procCfg.PoolRN.Inc(),
+				PoolRN:  procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, sndrViaBnd)
 			sndrStep := step.MsgRoot2{
 				PoolID: procCfg.PoolID,
 				ProcID: procCfg.ProcID,
 				ChnlID: viaChnl.ChnlID,
-				PoolRN: procCfg.PoolRN.Inc(),
+				PoolRN: procCfg.PoolRN.Next(),
 				Val: step.SendImpl{
 					X: termSpec.X,
 					A: newChnlID,
@@ -413,7 +411,7 @@ func (s *service) takeWith(
 			s.log.Debug("taking half done", viaAttr)
 			return tranSpec, procMod, nil
 		}
-		svcStep, ok := rcvrStep.(step.SvcRoot2)
+		svcStep, ok := rcvrStep.(step.SvcRoot)
 		if !ok {
 			panic(step.ErrRootTypeUnexpected(rcvrStep))
 		}
@@ -424,7 +422,7 @@ func (s *service) takeWith(
 				ChnlPH:  termSpec.X,
 				ChnlID:  termImpl.A,
 				StateID: viaStateID,
-				PoolRN:  procCfg.PoolRN.Inc(),
+				PoolRN:  procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, sndrViaBnd)
 			rcvrViaBnd := procroot.Bnd{
@@ -432,7 +430,7 @@ func (s *service) takeWith(
 				ChnlPH:  termImpl.X,
 				ChnlID:  termImpl.A,
 				StateID: viaStateID,
-				PoolRN:  svcStep.PoolRN.Inc(),
+				PoolRN:  svcStep.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrViaBnd)
 			rcvrValBnd := procroot.Bnd{
@@ -440,7 +438,7 @@ func (s *service) takeWith(
 				ChnlPH:  termImpl.Y,
 				ChnlID:  valChnl.ChnlID,
 				StateID: valChnl.StateID,
-				PoolRN:  svcStep.PoolRN.Inc(),
+				PoolRN:  svcStep.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrValBnd)
 			tranSpec = StepSpec{
@@ -468,11 +466,11 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, rcvrLock)
 		sndrStep := procCfg.Steps[viaChnl.ChnlID]
 		if sndrStep == nil {
-			rcvrStep := step.SvcRoot2{
+			rcvrStep := step.SvcRoot{
 				PoolID: procCfg.PoolID,
 				ProcID: procCfg.ProcID,
 				ChnlID: viaChnl.ChnlID,
-				PoolRN: procCfg.PoolRN.Inc(),
+				PoolRN: procCfg.PoolRN.Next(),
 				Cont: step.RecvImpl{
 					X:    termSpec.X,
 					A:    id.New(),
@@ -501,7 +499,7 @@ func (s *service) takeWith(
 				ChnlPH:  termSpec.X,
 				ChnlID:  termImpl.A,
 				StateID: viaState.(state.Prod).Next(),
-				PoolRN:  procCfg.PoolRN.Inc(),
+				PoolRN:  procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrViaBnd)
 			rcvrValBnd := procroot.Bnd{
@@ -509,7 +507,7 @@ func (s *service) takeWith(
 				ChnlPH:  termSpec.Y,
 				ChnlID:  termImpl.B,
 				StateID: termImpl.S,
-				PoolRN:  procCfg.PoolRN.Inc(),
+				PoolRN:  procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrValBnd)
 			tranSpec = StepSpec{
@@ -541,7 +539,7 @@ func (s *service) takeWith(
 			s.log.Error("taking failed", viaAttr)
 			return StepSpec{}, procroot.Mod{}, err
 		}
-		viaStateID := viaState.(state.Sum).Next(termSpec.L)
+		viaStateID := viaState.(state.Sum).Next(termSpec.Label)
 		rcvrStep := procCfg.Steps[viaChnl.ChnlID]
 		if rcvrStep == nil {
 			newViaID := id.New()
@@ -550,25 +548,25 @@ func (s *service) takeWith(
 				ChnlPH:  termSpec.X,
 				ChnlID:  newViaID,
 				StateID: viaStateID,
-				PoolRN:  procCfg.PoolRN.Inc(),
+				PoolRN:  procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, sndrViaBnd)
 			sndrStep := step.MsgRoot2{
 				PoolID: procCfg.PoolID,
 				ProcID: procCfg.ProcID,
 				ChnlID: viaChnl.ChnlID,
-				PoolRN: procCfg.PoolRN.Inc(),
+				PoolRN: procCfg.PoolRN.Next(),
 				Val: step.LabImpl{
 					X: termSpec.X,
 					A: newViaID,
-					L: termSpec.L,
+					L: termSpec.Label,
 				},
 			}
 			procMod.Steps = append(procMod.Steps, sndrStep)
 			s.log.Debug("taking half done", viaAttr)
 			return tranSpec, procMod, nil
 		}
-		svcStep, ok := rcvrStep.(step.SvcRoot2)
+		svcStep, ok := rcvrStep.(step.SvcRoot)
 		if !ok {
 			panic(step.ErrRootTypeUnexpected(rcvrStep))
 		}
@@ -579,7 +577,7 @@ func (s *service) takeWith(
 				ChnlPH:  termSpec.X,
 				ChnlID:  termImpl.A,
 				StateID: viaStateID,
-				PoolRN:  procCfg.PoolRN.Inc(),
+				PoolRN:  procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, sndrViaBnd)
 			rcvrViaBnd := procroot.Bnd{
@@ -587,13 +585,13 @@ func (s *service) takeWith(
 				ChnlPH:  termImpl.X,
 				ChnlID:  termImpl.A,
 				StateID: viaStateID,
-				PoolRN:  svcStep.PoolRN.Inc(),
+				PoolRN:  svcStep.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrViaBnd)
 			tranSpec = StepSpec{
 				PoolID: svcStep.PoolID,
 				ProcID: svcStep.ProcID,
-				Term:   termImpl.Conts[termSpec.L],
+				Term:   termImpl.Conts[termSpec.Label],
 			}
 			s.log.Debug("taking succeeded", viaAttr)
 			return tranSpec, procMod, nil
@@ -615,11 +613,11 @@ func (s *service) takeWith(
 		procMod.Locks = append(procMod.Locks, rcvrLock)
 		sndrStep := procCfg.Steps[viaChnl.ChnlID]
 		if sndrStep == nil {
-			rcvrStep := step.SvcRoot2{
+			rcvrStep := step.SvcRoot{
 				PoolID: procCfg.PoolID,
 				ProcID: procCfg.ProcID,
 				ChnlID: viaChnl.ChnlID,
-				PoolRN: procCfg.PoolRN.Inc(),
+				PoolRN: procCfg.PoolRN.Next(),
 				Cont: step.CaseImpl{
 					X:     termSpec.X,
 					A:     id.New(),
@@ -647,7 +645,7 @@ func (s *service) takeWith(
 				ChnlPH:  termSpec.X,
 				ChnlID:  termImpl.A,
 				StateID: viaState.(state.Sum).Next(termImpl.L),
-				PoolRN:  procCfg.PoolRN.Inc(),
+				PoolRN:  procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrViaBnd)
 			tranSpec = StepSpec{
@@ -670,7 +668,7 @@ func (s *service) takeWith(
 		rcvrLiab := procroot.Liab{
 			ProcID: id.New(),
 			PoolID: rcvrSnap.PoolID,
-			PoolRN: rcvrSnap.PoolRN.Inc(),
+			PoolRN: rcvrSnap.PoolRN.Next(),
 		}
 		procMod.Liabs = append(procMod.Liabs, rcvrLiab)
 		rcvrSig, ok := procEnv.Sigs[termSpec.SigID]
@@ -691,7 +689,7 @@ func (s *service) takeWith(
 			ChnlPH:  termSpec.X,
 			ChnlID:  newViaID,
 			StateID: rcvrRole.StateID,
-			PoolRN:  procCfg.PoolRN.Inc(),
+			PoolRN:  procCfg.PoolRN.Next(),
 		}
 		procMod.Bnds = append(procMod.Bnds, sndrViaBnd)
 		rcvrViaBnd := procroot.Bnd{
@@ -699,7 +697,7 @@ func (s *service) takeWith(
 			ChnlPH:  rcvrSig.X.ChnlPH,
 			ChnlID:  newViaID,
 			StateID: rcvrRole.StateID,
-			PoolRN:  rcvrSnap.PoolRN.Inc(),
+			PoolRN:  rcvrSnap.PoolRN.Next(),
 		}
 		procMod.Bnds = append(procMod.Bnds, rcvrViaBnd)
 		for i, chnlPH := range termSpec.Ys {
@@ -712,7 +710,7 @@ func (s *service) takeWith(
 			sndrValBnd := procroot.Bnd{
 				ProcID: procCfg.ProcID,
 				ChnlPH: chnlPH,
-				PoolRN: -procCfg.PoolRN.Inc(),
+				PoolRN: -procCfg.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, sndrValBnd)
 			rcvrValBnd := procroot.Bnd{
@@ -720,7 +718,7 @@ func (s *service) takeWith(
 				ChnlPH:  rcvrSig.Ys[i].ChnlPH,
 				ChnlID:  valChnl.ChnlID,
 				StateID: valChnl.StateID,
-				PoolRN:  rcvrSnap.PoolRN.Inc(),
+				PoolRN:  rcvrSnap.PoolRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, rcvrValBnd)
 		}
@@ -755,13 +753,13 @@ func (s *service) takeWith(
 		switch viaState.Pol() {
 		case pol.Pos:
 			switch viaStep := vs.(type) {
-			case step.SvcRoot2:
+			case step.SvcRoot:
 				xBnd := procroot.Bnd{
 					ProcID:  viaStep.ProcID,
 					ChnlPH:  viaStep.Cont.Via(),
 					ChnlID:  viaChnl.ChnlID,
 					StateID: viaChnl.StateID,
-					PoolRN:  viaStep.PoolRN.Inc(),
+					PoolRN:  viaStep.PoolRN.Next(),
 				}
 				procMod.Bnds = append(procMod.Bnds, xBnd)
 				tranSpec = StepSpec{
@@ -777,7 +775,7 @@ func (s *service) takeWith(
 					ChnlPH:  viaStep.Val.Via(),
 					ChnlID:  valChnl.ChnlID,
 					StateID: valChnl.StateID,
-					PoolRN:  viaStep.PoolRN.Inc(),
+					PoolRN:  viaStep.PoolRN.Next(),
 				}
 				procMod.Bnds = append(procMod.Bnds, yBnd)
 				tranSpec = StepSpec{
@@ -791,20 +789,20 @@ func (s *service) takeWith(
 				xBnd := procroot.Bnd{
 					ProcID: procCfg.ProcID,
 					ChnlPH: termSpec.X,
-					PoolRN: -procCfg.PoolRN.Inc(),
+					PoolRN: -procCfg.PoolRN.Next(),
 				}
 				procMod.Bnds = append(procMod.Bnds, xBnd)
 				yBnd := procroot.Bnd{
 					ProcID: procCfg.ProcID,
 					ChnlPH: termSpec.Y,
-					PoolRN: -procCfg.PoolRN.Inc(),
+					PoolRN: -procCfg.PoolRN.Next(),
 				}
 				procMod.Bnds = append(procMod.Bnds, yBnd)
 				msgStep := step.MsgRoot2{
 					PoolID: procCfg.PoolID,
 					ProcID: procCfg.ProcID,
 					ChnlID: viaChnl.ChnlID,
-					PoolRN: procCfg.PoolRN.Inc(),
+					PoolRN: procCfg.PoolRN.Next(),
 					Val: step.FwdImpl{
 						B: valChnl.ChnlID,
 					},
@@ -817,13 +815,13 @@ func (s *service) takeWith(
 			}
 		case pol.Neg:
 			switch viaStep := vs.(type) {
-			case step.SvcRoot2:
+			case step.SvcRoot:
 				yBnd := procroot.Bnd{
 					ProcID:  viaStep.ProcID,
 					ChnlPH:  viaStep.Cont.Via(),
 					ChnlID:  valChnl.ChnlID,
 					StateID: valChnl.StateID,
-					PoolRN:  viaStep.PoolRN.Inc(),
+					PoolRN:  viaStep.PoolRN.Next(),
 				}
 				procMod.Bnds = append(procMod.Bnds, yBnd)
 				tranSpec = StepSpec{
@@ -839,7 +837,7 @@ func (s *service) takeWith(
 					ChnlPH:  viaStep.Val.Via(),
 					ChnlID:  viaChnl.ChnlID,
 					StateID: viaChnl.StateID,
-					PoolRN:  viaStep.PoolRN.Inc(),
+					PoolRN:  viaStep.PoolRN.Next(),
 				}
 				procMod.Bnds = append(procMod.Bnds, xBnd)
 				tranSpec = StepSpec{
@@ -850,11 +848,11 @@ func (s *service) takeWith(
 				s.log.Debug("taking succeeded", viaAttr)
 				return tranSpec, procMod, nil
 			case nil:
-				svcStep := step.SvcRoot2{
+				svcStep := step.SvcRoot{
 					PoolID: procCfg.PoolID,
 					ProcID: procCfg.ProcID,
 					ChnlID: viaChnl.ChnlID,
-					PoolRN: procCfg.PoolRN.Inc(),
+					PoolRN: procCfg.PoolRN.Next(),
 					Cont: step.FwdImpl{
 						B: valChnl.ChnlID,
 					},
@@ -904,8 +902,8 @@ func CollectCtx(chnls []procroot.EP) []state.ID {
 }
 
 func convertToCtx(poolID id.ADT, chnls []procroot.EP, states map[state.ID]state.Root) state.Context {
-	assets := make(map[ph.ADT]state.Root, len(chnls)-1)
-	liabs := make(map[ph.ADT]state.Root, 1)
+	assets := make(map[sym.ADT]state.Root, len(chnls)-1)
+	liabs := make(map[sym.ADT]state.Root, 1)
 	for _, ch := range chnls {
 		if poolID == ch.PoolID {
 			liabs[ch.ChnlPH] = states[ch.StateID]
@@ -1043,9 +1041,9 @@ func (s *service) checkProvider(
 			return err
 		}
 		// check label
-		choice, ok := wantVia.Choices[termSpec.L]
+		choice, ok := wantVia.Choices[termSpec.Label]
 		if !ok {
-			err := fmt.Errorf("label mismatch: want %v, got %q", maps.Keys(wantVia.Choices), termSpec.L)
+			err := fmt.Errorf("label mismatch: want %v, got %q", maps.Keys(wantVia.Choices), termSpec.Label)
 			s.log.Error("checking failed")
 			return err
 		}
@@ -1226,9 +1224,9 @@ func (s *service) checkClient(
 			return err
 		}
 		// check label
-		choice, ok := wantVia.Choices[termSpec.L]
+		choice, ok := wantVia.Choices[termSpec.Label]
 		if !ok {
-			err := fmt.Errorf("label mismatch: want %v, got %q", maps.Keys(wantVia.Choices), termSpec.L)
+			err := fmt.Errorf("label mismatch: want %v, got %q", maps.Keys(wantVia.Choices), termSpec.Label)
 			s.log.Error("checking failed")
 			return err
 		}
@@ -1288,7 +1286,7 @@ func (s *service) checkClient(
 		for i, ep := range procSig.Ys {
 			valRole, ok := procEnv.Roles[ep.RoleQN]
 			if !ok {
-				err := roleroot.ErrMissingInEnv(ep.RoleQN)
+				err := rolesig.ErrMissingInEnv(ep.RoleQN)
 				s.log.Error("checking failed")
 				return err
 			}
@@ -1314,7 +1312,7 @@ func (s *service) checkClient(
 		// check via
 		viaRole, ok := procEnv.Roles[procSig.X.RoleQN]
 		if !ok {
-			err := roleroot.ErrMissingInEnv(procSig.X.RoleQN)
+			err := rolesig.ErrMissingInEnv(procSig.X.RoleQN)
 			s.log.Error("checking failed")
 			return err
 		}

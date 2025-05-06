@@ -7,7 +7,7 @@ import (
 
 	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/id"
-	"smecalculus/rolevod/lib/ph"
+	"smecalculus/rolevod/lib/sym"
 )
 
 type RefMsg struct {
@@ -178,7 +178,6 @@ type CallMsg struct {
 	X     string   `json:"x"`
 	SigPH string   `json:"sig_ph"`
 	Ys    []string `json:"ys"`
-	Cont  *TermMsg `json:"cont"`
 }
 
 func (dto CallMsg) Validate() error {
@@ -186,7 +185,6 @@ func (dto CallMsg) Validate() error {
 		validation.Field(&dto.X, validation.Required),
 		validation.Field(&dto.SigPH, id.Required...),
 		validation.Field(&dto.Ys, core.CtxOptional...),
-		// validation.Field(&dto.Cont, validation.Required),
 	)
 }
 
@@ -244,14 +242,14 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Close,
 			Close: &CloseMsg{
-				X: ph.ConvertToString(term.X),
+				X: sym.ConvertToString(term.X),
 			},
 		}
 	case WaitSpec:
 		return TermMsg{
 			K: Wait,
 			Wait: &WaitMsg{
-				X:    ph.ConvertToString(term.X),
+				X:    sym.ConvertToString(term.X),
 				Cont: MsgFromTerm(term.Cont),
 			},
 		}
@@ -259,16 +257,16 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Send,
 			Send: &SendMsg{
-				X: ph.ConvertToString(term.X),
-				Y: ph.ConvertToString(term.Y),
+				X: sym.ConvertToString(term.X),
+				Y: sym.ConvertToString(term.Y),
 			},
 		}
 	case RecvSpec:
 		return TermMsg{
 			K: Recv,
 			Recv: &RecvMsg{
-				X:    ph.ConvertToString(term.X),
-				Y:    ph.ConvertToString(term.Y),
+				X:    sym.ConvertToString(term.X),
+				Y:    sym.ConvertToString(term.Y),
 				Cont: MsgFromTerm(term.Cont),
 			},
 		}
@@ -276,8 +274,8 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Lab,
 			Lab: &LabMsg{
-				X:     ph.ConvertToString(term.X),
-				Label: string(term.L),
+				X:     sym.ConvertToString(term.X),
+				Label: string(term.Label),
 			},
 		}
 	case CaseSpec:
@@ -288,7 +286,7 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Case,
 			Case: &CaseMsg{
-				X:   ph.ConvertToString(term.X),
+				X:   sym.ConvertToString(term.X),
 				Brs: brs,
 			},
 		}
@@ -296,9 +294,9 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Spawn,
 			Spawn: &SpawnMsg{
-				X:     ph.ConvertToString(term.X),
+				X:     sym.ConvertToString(term.X),
 				SigID: id.ConvertToString(term.SigID),
-				Ys:    ph.ConvertToStrings(term.Ys),
+				Ys:    sym.ConvertToStrings(term.Ys),
 				Cont:  MsgFromTermNilable(term.Cont),
 			},
 		}
@@ -306,18 +304,17 @@ func MsgFromTerm(t Term) TermMsg {
 		return TermMsg{
 			K: Call,
 			Call: &CallMsg{
-				X:     ph.ConvertToString(term.X),
-				SigPH: ph.ConvertToString(term.SigPH),
-				Ys:    ph.ConvertToStrings(term.Ys),
-				Cont:  MsgFromTermNilable(term.Cont),
+				X:     sym.ConvertToString(term.X),
+				SigPH: sym.ConvertToString(term.SigPH),
+				Ys:    sym.ConvertToStrings(term.Ys),
 			},
 		}
 	case FwdSpec:
 		return TermMsg{
 			K: Fwd,
 			Fwd: &FwdMsg{
-				X: ph.ConvertToString(term.X),
-				Y: ph.ConvertToString(term.Y),
+				X: sym.ConvertToString(term.X),
+				Y: sym.ConvertToString(term.Y),
 			},
 		}
 	default:
@@ -335,13 +332,13 @@ func MsgToTermNilable(dto *TermMsg) (Term, error) {
 func MsgToTerm(dto TermMsg) (Term, error) {
 	switch dto.K {
 	case Close:
-		x, err := ph.ConvertFromString(dto.Close.X)
+		x, err := sym.ConvertFromString(dto.Close.X)
 		if err != nil {
 			return nil, err
 		}
 		return CloseSpec{X: x}, nil
 	case Wait:
-		x, err := ph.ConvertFromString(dto.Wait.X)
+		x, err := sym.ConvertFromString(dto.Wait.X)
 		if err != nil {
 			return nil, err
 		}
@@ -351,21 +348,21 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 		}
 		return WaitSpec{X: x, Cont: cont}, nil
 	case Send:
-		x, err := ph.ConvertFromString(dto.Send.X)
+		x, err := sym.ConvertFromString(dto.Send.X)
 		if err != nil {
 			return nil, err
 		}
-		y, err := ph.ConvertFromString(dto.Send.Y)
+		y, err := sym.ConvertFromString(dto.Send.Y)
 		if err != nil {
 			return nil, err
 		}
 		return SendSpec{X: x, Y: y}, nil
 	case Recv:
-		x, err := ph.ConvertFromString(dto.Recv.X)
+		x, err := sym.ConvertFromString(dto.Recv.X)
 		if err != nil {
 			return nil, err
 		}
-		y, err := ph.ConvertFromString(dto.Recv.Y)
+		y, err := sym.ConvertFromString(dto.Recv.Y)
 		if err != nil {
 			return nil, err
 		}
@@ -375,27 +372,27 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 		}
 		return RecvSpec{X: x, Y: y, Cont: cont}, nil
 	case Lab:
-		x, err := ph.ConvertFromString(dto.Lab.X)
+		x, err := sym.ConvertFromString(dto.Lab.X)
 		if err != nil {
 			return nil, err
 		}
-		return LabSpec{X: x, L: core.Label(dto.Lab.Label)}, nil
+		return LabSpec{X: x, Label: sym.ADT(dto.Lab.Label)}, nil
 	case Case:
-		x, err := ph.ConvertFromString(dto.Case.X)
+		x, err := sym.ConvertFromString(dto.Case.X)
 		if err != nil {
 			return nil, err
 		}
-		conts := make(map[core.Label]Term, len(dto.Case.Brs))
+		conts := make(map[sym.ADT]Term, len(dto.Case.Brs))
 		for _, b := range dto.Case.Brs {
 			cont, err := MsgToTerm(b.Cont)
 			if err != nil {
 				return nil, err
 			}
-			conts[core.Label(b.Label)] = cont
+			conts[sym.ADT(b.Label)] = cont
 		}
 		return CaseSpec{X: x, Conts: conts}, nil
 	case Spawn:
-		x, err := ph.ConvertFromString(dto.Spawn.X)
+		x, err := sym.ConvertFromString(dto.Spawn.X)
 		if err != nil {
 			return nil, err
 		}
@@ -403,7 +400,7 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		ys, err := ph.ConvertFromStrings(dto.Spawn.Ys)
+		ys, err := sym.ConvertFromStrings(dto.Spawn.Ys)
 		if err != nil {
 			return nil, err
 		}
@@ -413,29 +410,25 @@ func MsgToTerm(dto TermMsg) (Term, error) {
 		}
 		return SpawnSpec{X: x, SigID: sigID, Ys: ys, Cont: cont}, nil
 	case Call:
-		x, err := ph.ConvertFromString(dto.Call.X)
+		x, err := sym.ConvertFromString(dto.Call.X)
 		if err != nil {
 			return nil, err
 		}
-		sigPH, err := ph.ConvertFromString(dto.Call.SigPH)
+		sigPH, err := sym.ConvertFromString(dto.Call.SigPH)
 		if err != nil {
 			return nil, err
 		}
-		ys, err := ph.ConvertFromStrings(dto.Call.Ys)
+		ys, err := sym.ConvertFromStrings(dto.Call.Ys)
 		if err != nil {
 			return nil, err
 		}
-		cont, err := MsgToTermNilable(dto.Call.Cont)
-		if err != nil {
-			return nil, err
-		}
-		return CallSpec{X: x, SigPH: sigPH, Ys: ys, Cont: cont}, nil
+		return CallSpec{X: x, SigPH: sigPH, Ys: ys}, nil
 	case Fwd:
-		x, err := ph.ConvertFromString(dto.Fwd.X)
+		x, err := sym.ConvertFromString(dto.Fwd.X)
 		if err != nil {
 			return nil, err
 		}
-		y, err := ph.ConvertFromString(dto.Fwd.Y)
+		y, err := sym.ConvertFromString(dto.Fwd.Y)
 		if err != nil {
 			return nil, err
 		}

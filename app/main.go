@@ -13,10 +13,10 @@ import (
 	"smecalculus/rolevod/internal/state"
 	"smecalculus/rolevod/internal/step"
 
-	pool "smecalculus/rolevod/app/pool/root"
+	poolroot "smecalculus/rolevod/app/pool/root"
 	procroot "smecalculus/rolevod/app/proc/root"
 	procsig "smecalculus/rolevod/app/proc/sig"
-	role "smecalculus/rolevod/app/role/root"
+	rolesig "smecalculus/rolevod/app/role/sig"
 	"smecalculus/rolevod/app/web"
 )
 
@@ -31,8 +31,8 @@ func main() {
 		state.Module,
 		step.Module,
 		// app
-		pool.Module,
-		role.Module,
+		poolroot.Module,
+		rolesig.Module,
 		procroot.Module,
 		procsig.Module,
 		web.Module,

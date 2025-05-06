@@ -1,4 +1,4 @@
-package proc
+package root
 
 import (
 	"smecalculus/rolevod/internal/step"

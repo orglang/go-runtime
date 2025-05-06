@@ -18,6 +18,6 @@ func NewAPI() API {
 	return newClientResty()
 }
 
-func (cl *clientResty) Create(spec Spec) (Impl, error) {
-	return Impl{}, nil
+func (cl *clientResty) Create(spec Spec) (Ref, error) {
+	return Ref{}, nil
 }

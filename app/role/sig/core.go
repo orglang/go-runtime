@@ -15,7 +15,8 @@ import (
 )
 
 type Spec struct {
-	RoleQN sym.ADT
+	RoleNS sym.ADT
+	RoleSN sym.ADT
 	State  state.Spec
 }
 
@@ -101,9 +102,9 @@ func (s *service) Incept(roleQN sym.ADT) (_ Ref, err error) {
 
 func (s *service) Create(spec Spec) (_ Snap, err error) {
 	ctx := context.Background()
-	qnAttr := slog.Any("roleQN", spec.RoleQN)
+	qnAttr := slog.Any("roleQN", spec.RoleSN)
 	s.log.Debug("creation started", qnAttr, slog.Any("spec", spec))
-	newAlias := alias.Root{Sym: spec.RoleQN, ID: id.New(), RN: rn.Initial()}
+	newAlias := alias.Root{Sym: spec.RoleSN, ID: id.New(), RN: rn.Initial()}
 	newState := state.ConvertSpecToRoot(spec.State)
 	newRoot := Impl{
 		RoleID:  newAlias.ID,

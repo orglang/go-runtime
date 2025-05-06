@@ -2,12 +2,11 @@ package sym
 
 import (
 	"strings"
-
-	"smecalculus/rolevod/lib/ph"
 )
 
 var (
-	Nil ADT
+	Nil   ADT
+	Blank ADT
 )
 
 type Symbolizable interface {
@@ -16,15 +15,15 @@ type Symbolizable interface {
 
 type ADT string
 
-func New(qn string) ADT {
-	return ADT(qn)
+func New(s string) ADT {
+	return ADT(s)
 }
 
 func (ns ADT) New(sn string) ADT {
 	return ADT(strings.Join([]string{string(ns), sn}, sep))
 }
 
-// short name or simple name
+// simple name
 func (s ADT) SN() string {
 	sym := string(s)
 	return sym[strings.LastIndex(sym, sep)+1:]
@@ -36,25 +35,26 @@ func (s ADT) NS() ADT {
 	return ADT(sym[0:strings.LastIndex(sym, sep)])
 }
 
-func (s ADT) ToPH() ph.ADT {
-	return ph.ADT(s.SN())
+func ConvertToSame(s ADT) ADT {
+	return s
 }
 
-func ConvertToSame(a ADT) ADT {
-	return a
-}
-
-func CovertFromString(s string) ADT {
-	return ADT(s)
+func ConvertFromString(s string) (ADT, error) {
+	return ADT(s), nil
 }
 
 func ConvertToString(s ADT) string {
 	return string(s)
 }
 
-func ConvertToPH(s ADT) ph.ADT {
-	return ph.ADT(s.SN())
-}
+// goverter:variables
+// goverter:output:format assign-variable
+// goverter:extend ConvertToString
+// goverter:extend ConvertFromString
+var (
+	ConvertFromStrings func([]string) ([]ADT, error)
+	ConvertToStrings   func([]ADT) []string
+)
 
 const (
 	sep = "."

@@ -40,8 +40,12 @@ func (p *presenterEcho) PostOne(c echo.Context) error {
 		p.log.Error("dto validation failed")
 		return err
 	}
-	fqn := sym.CovertFromString(dto.NS).New(dto.Name)
-	snap, err := p.api.Create(Spec{RoleQN: fqn, State: state.OneSpec{}})
+	ns, err := sym.ConvertFromString(dto.NS)
+	if err != nil {
+		p.log.Error("dto parsing failed")
+		return err
+	}
+	snap, err := p.api.Create(Spec{RoleSN: ns.New(dto.Name), State: state.OneSpec{}})
 	if err != nil {
 		p.log.Error("role creation failed")
 		return err

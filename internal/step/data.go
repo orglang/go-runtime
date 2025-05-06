@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/id"
-	"smecalculus/rolevod/lib/ph"
+	"smecalculus/rolevod/lib/sym"
 )
 
 type RootData struct {
@@ -247,24 +246,24 @@ func dataFromValue(v Value) specData {
 	case CloseSpec:
 		return specData{
 			K:     close,
-			Close: &closeData{ph.DataFromPH(val.X)},
+			Close: &closeData{sym.ConvertToString(val.X)},
 		}
 	case SendSpec:
 		return specData{
 			K:    send,
-			Send: &sendData{ph.DataFromPH(val.X), ph.DataFromPH(val.Y)},
+			Send: &sendData{sym.ConvertToString(val.X), sym.ConvertToString(val.Y)},
 		}
 	case LabSpec:
 		return specData{
 			K:   lab,
-			Lab: &labData{ph.DataFromPH(val.X), string(val.L)},
+			Lab: &labData{sym.ConvertToString(val.X), string(val.Label)},
 		}
 	case FwdSpec:
 		return specData{
 			K: fwd,
 			Fwd: &fwdData{
-				C: ph.DataFromPH(val.X),
-				D: ph.DataFromPH(val.Y),
+				C: sym.ConvertToString(val.X),
+				D: sym.ConvertToString(val.Y),
 			},
 		}
 	default:
@@ -275,33 +274,33 @@ func dataFromValue(v Value) specData {
 func dataToValue(dto specData) (Value, error) {
 	switch dto.K {
 	case close:
-		a, err := ph.DataToPH(dto.Close.A)
+		a, err := sym.ConvertFromString(dto.Close.A)
 		if err != nil {
 			return nil, err
 		}
 		return CloseSpec{X: a}, nil
 	case send:
-		a, err := ph.DataToPH(dto.Send.A)
+		a, err := sym.ConvertFromString(dto.Send.A)
 		if err != nil {
 			return nil, err
 		}
-		b, err := ph.DataToPH(dto.Send.B)
+		b, err := sym.ConvertFromString(dto.Send.B)
 		if err != nil {
 			return nil, err
 		}
 		return SendSpec{X: a, Y: b}, nil
 	case lab:
-		a, err := ph.DataToPH(dto.Lab.A)
+		a, err := sym.ConvertFromString(dto.Lab.A)
 		if err != nil {
 			return nil, err
 		}
-		return LabSpec{X: a, L: core.Label(dto.Lab.L)}, nil
+		return LabSpec{X: a, Label: sym.ADT(dto.Lab.L)}, nil
 	case fwd:
-		c, err := ph.DataToPH(dto.Fwd.C)
+		c, err := sym.ConvertFromString(dto.Fwd.C)
 		if err != nil {
 			return nil, err
 		}
-		d, err := ph.DataToPH(dto.Fwd.D)
+		d, err := sym.ConvertFromString(dto.Fwd.D)
 		if err != nil {
 			return nil, err
 		}
@@ -321,7 +320,7 @@ func dataFromCont(c Continuation) (specData, error) {
 		return specData{
 			K: wait,
 			Wait: &waitData{
-				X:    ph.DataFromPH(cont.X),
+				X:    sym.ConvertToString(cont.X),
 				Cont: dto,
 			},
 		}, nil
@@ -333,8 +332,8 @@ func dataFromCont(c Continuation) (specData, error) {
 		return specData{
 			K: recv,
 			Recv: &recvData{
-				X:    ph.DataFromPH(cont.X),
-				Y:    ph.DataFromPH(cont.Y),
+				X:    sym.ConvertToString(cont.X),
+				Y:    sym.ConvertToString(cont.Y),
 				Cont: dto,
 			},
 		}, nil
@@ -350,7 +349,7 @@ func dataFromCont(c Continuation) (specData, error) {
 		return specData{
 			K: caze,
 			Case: &caseData{
-				X:   ph.DataFromPH(cont.X),
+				X:   sym.ConvertToString(cont.X),
 				Brs: brs,
 			},
 		}, nil
@@ -358,8 +357,8 @@ func dataFromCont(c Continuation) (specData, error) {
 		return specData{
 			K: fwd,
 			Fwd: &fwdData{
-				C: ph.DataFromPH(cont.X),
-				D: ph.DataFromPH(cont.Y),
+				C: sym.ConvertToString(cont.X),
+				D: sym.ConvertToString(cont.Y),
 			},
 		}, nil
 	default:
@@ -370,7 +369,7 @@ func dataFromCont(c Continuation) (specData, error) {
 func dataToCont(dto specData) (Continuation, error) {
 	switch dto.K {
 	case wait:
-		x, err := ph.DataToPH(dto.Wait.X)
+		x, err := sym.ConvertFromString(dto.Wait.X)
 		if err != nil {
 			return nil, err
 		}
@@ -380,11 +379,11 @@ func dataToCont(dto specData) (Continuation, error) {
 		}
 		return WaitSpec{X: x, Cont: cont}, nil
 	case recv:
-		x, err := ph.DataToPH(dto.Recv.X)
+		x, err := sym.ConvertFromString(dto.Recv.X)
 		if err != nil {
 			return nil, err
 		}
-		y, err := ph.DataToPH(dto.Recv.Y)
+		y, err := sym.ConvertFromString(dto.Recv.Y)
 		if err != nil {
 			return nil, err
 		}
@@ -394,25 +393,25 @@ func dataToCont(dto specData) (Continuation, error) {
 		}
 		return RecvSpec{X: x, Y: y, Cont: cont}, nil
 	case caze:
-		x, err := ph.DataToPH(dto.Case.X)
+		x, err := sym.ConvertFromString(dto.Case.X)
 		if err != nil {
 			return nil, err
 		}
-		conts := make(map[core.Label]Term, len(dto.Case.Brs))
+		conts := make(map[sym.ADT]Term, len(dto.Case.Brs))
 		for _, b := range dto.Case.Brs {
 			cont, err := dataToTerm(b.Cont)
 			if err != nil {
 				return nil, err
 			}
-			conts[core.Label(b.L)] = cont
+			conts[sym.ADT(b.L)] = cont
 		}
 		return CaseSpec{X: x, Conts: conts}, nil
 	case fwd:
-		c, err := ph.DataToPH(dto.Fwd.C)
+		c, err := sym.ConvertFromString(dto.Fwd.C)
 		if err != nil {
 			return nil, err
 		}
-		d, err := ph.DataToPH(dto.Fwd.D)
+		d, err := sym.ConvertFromString(dto.Fwd.D)
 		if err != nil {
 			return nil, err
 		}

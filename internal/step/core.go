@@ -3,10 +3,8 @@ package step
 import (
 	"fmt"
 
-	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/data"
 	"smecalculus/rolevod/lib/id"
-	"smecalculus/rolevod/lib/ph"
 	"smecalculus/rolevod/lib/rn"
 	"smecalculus/rolevod/lib/sym"
 )
@@ -66,6 +64,7 @@ type MsgRoot2 struct {
 	ChnlID id.ADT
 	Val    Val
 	PoolRN rn.ADT
+	ProcRN rn.ADT
 }
 
 func (r MsgRoot2) step() id.ADT { return r.ChnlID }
@@ -79,7 +78,7 @@ type SrvRoot struct {
 
 func (r SrvRoot) step() id.ADT { return r.VID }
 
-type SvcRoot2 struct {
+type SvcRoot struct {
 	PoolID id.ADT
 	ProcID id.ADT
 	ChnlID id.ADT
@@ -87,11 +86,11 @@ type SvcRoot2 struct {
 	PoolRN rn.ADT
 }
 
-func (r SvcRoot2) step() id.ADT { return r.ChnlID }
+func (r SvcRoot) step() id.ADT { return r.ChnlID }
 
 // aka Expression or Term
 type Term interface {
-	Via() ph.ADT
+	Via() sym.ADT
 }
 
 type Impl interface {
@@ -126,58 +125,56 @@ type Action interface {
 }
 
 type CloseSpec struct {
-	X ph.ADT
+	X sym.ADT
 }
 
-func (s CloseSpec) Via() ph.ADT { return s.X }
+func (s CloseSpec) Via() sym.ADT { return s.X }
 
 func (CloseSpec) val() {}
 
 type WaitSpec struct {
-	X    ph.ADT
+	X    sym.ADT
 	Cont Term
 }
 
-func (s WaitSpec) Via() ph.ADT { return s.X }
+func (s WaitSpec) Via() sym.ADT { return s.X }
 
 func (WaitSpec) cont() {}
 
 type SendSpec struct {
-	X ph.ADT // via
-	Y ph.ADT // val
-	// Cont  Term
+	X sym.ADT // via
+	Y sym.ADT // val
 }
 
-func (s SendSpec) Via() ph.ADT { return s.X }
+func (s SendSpec) Via() sym.ADT { return s.X }
 
 func (SendSpec) val() {}
 
 type RecvSpec struct {
-	X    ph.ADT // via
-	Y    ph.ADT // val
+	X    sym.ADT // via
+	Y    sym.ADT // val
 	Cont Term
 }
 
-func (s RecvSpec) Via() ph.ADT { return s.X }
+func (s RecvSpec) Via() sym.ADT { return s.X }
 
 func (RecvSpec) cont() {}
 
 type LabSpec struct {
-	X ph.ADT
-	L core.Label
-	// Cont Term
+	X     sym.ADT
+	Label sym.ADT
 }
 
-func (s LabSpec) Via() ph.ADT { return s.X }
+func (s LabSpec) Via() sym.ADT { return s.X }
 
 func (LabSpec) val() {}
 
 type CaseSpec struct {
-	X     ph.ADT
-	Conts map[core.Label]Term
+	X     sym.ADT
+	Conts map[sym.ADT]Term
 }
 
-func (s CaseSpec) Via() ph.ADT { return s.X }
+func (s CaseSpec) Via() sym.ADT { return s.X }
 
 func (CaseSpec) cont() {}
 
@@ -188,15 +185,14 @@ type LinkSpec struct {
 	Ys    []id.ADT
 }
 
-func (s LinkSpec) Via() ph.ADT { return "" }
+func (s LinkSpec) Via() sym.ADT { return "" }
 
-// аналог SendSpec, но без продолжения с новым via
 type FwdSpec struct {
-	X ph.ADT // via (from)
-	Y ph.ADT // val (to)
+	X sym.ADT // old via (from)
+	Y sym.ADT // new via (to)
 }
 
-func (s FwdSpec) Via() ph.ADT { return s.X }
+func (s FwdSpec) Via() sym.ADT { return s.X }
 
 func (FwdSpec) val() {}
 
@@ -204,109 +200,111 @@ func (FwdSpec) cont() {}
 
 // аналог SendSpec, но значения отправляются балком
 type CallSpec struct {
-	X     ph.ADT
-	SigPH ph.ADT
-	Ys    []ph.ADT
-	Cont  Term
+	X     sym.ADT
+	SigPH sym.ADT // import
+	Ys    []sym.ADT
 }
 
-func (s CallSpec) Via() ph.ADT { return s.SigPH }
+func (s CallSpec) Via() sym.ADT { return s.SigPH }
 
 // аналог RecvSpec, но значения принимаются балком
 type SpawnSpec struct {
-	X      ph.ADT
+	X      sym.ADT
 	SigID  id.ADT
-	Ys     []ph.ADT
+	Ys     []sym.ADT
 	PoolQN sym.ADT
 	Cont   Term
 }
 
-func (s SpawnSpec) Via() ph.ADT { return s.X }
+func (s SpawnSpec) Via() sym.ADT { return s.X }
 
-type EP struct {
-	ChnlPH  ph.ADT
-	ChnlID  id.ADT
-	StateID id.ADT
+// аналог RecvSpec, но значения принимаются балком
+type SpawnSpec2 struct {
+	X     sym.ADT
+	SigPH sym.ADT // export
+	Cont  Term
 }
+
+func (s SpawnSpec2) Via() sym.ADT { return s.SigPH }
 
 type CloseImpl struct {
-	X ph.ADT
+	X sym.ADT
 }
 
-func (i CloseImpl) Via() ph.ADT { return i.X }
+func (i CloseImpl) Via() sym.ADT { return i.X }
 
 func (CloseImpl) impl() {}
 
 func (CloseImpl) val2() {}
 
 type WaitImpl struct {
-	X    ph.ADT
+	X    sym.ADT
 	Cont Term
 }
 
-func (i WaitImpl) Via() ph.ADT { return i.X }
+func (i WaitImpl) Via() sym.ADT { return i.X }
 
 func (WaitImpl) impl() {}
 
 func (WaitImpl) cont2() {}
 
 type SendImpl struct {
-	X ph.ADT
+	X sym.ADT
 	A id.ADT
 	B id.ADT
 	S id.ADT
 }
 
-func (i SendImpl) Via() ph.ADT { return i.X }
+func (i SendImpl) Via() sym.ADT { return i.X }
 
 func (SendImpl) impl() {}
 
 func (SendImpl) val2() {}
 
 type RecvImpl struct {
-	X    ph.ADT
+	X    sym.ADT
 	A    id.ADT
-	Y    ph.ADT
+	Y    sym.ADT
 	Cont Term
 }
 
-func (i RecvImpl) Via() ph.ADT { return i.X }
+func (i RecvImpl) Via() sym.ADT { return i.X }
 
 func (RecvImpl) impl() {}
 
 func (RecvImpl) cont2() {}
 
 type LabImpl struct {
-	X ph.ADT
+	X sym.ADT
 	A id.ADT
-	L core.Label
+	L sym.ADT
 }
 
-func (i LabImpl) Via() ph.ADT { return i.X }
+func (i LabImpl) Via() sym.ADT { return i.X }
 
 func (LabImpl) impl() {}
 
 func (LabImpl) val2() {}
 
 type CaseImpl struct {
-	X     ph.ADT
+	X     sym.ADT
 	A     id.ADT
-	Conts map[core.Label]Term
-	// States map[core.Label]state.ID
+	Conts map[sym.ADT]Term
+	// States map[sym.ADT]state.ID
 }
 
-func (i CaseImpl) Via() ph.ADT { return i.X }
+func (i CaseImpl) Via() sym.ADT { return i.X }
 
 func (CaseImpl) impl() {}
 
 func (CaseImpl) cont2() {}
 
 type FwdImpl struct {
-	X ph.ADT
+	X sym.ADT
 	B id.ADT // to
 }
 
-func (i FwdImpl) Via() ph.ADT { return i.X }
+func (i FwdImpl) Via() sym.ADT { return i.X }
 
 func (FwdImpl) impl() {}
 
@@ -386,7 +384,7 @@ func ErrContTypeUnexpected2(got Cont) error {
 	return fmt.Errorf("continuation type unexpected: %T", got)
 }
 
-func ErrMissingInCfg(want ph.ADT) error {
+func ErrMissingInCfg(want sym.ADT) error {
 	return fmt.Errorf("channel missing in cfg: %v", want)
 }
 

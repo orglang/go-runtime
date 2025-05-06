@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	"smecalculus/rolevod/lib/core"
 	"smecalculus/rolevod/lib/id"
 	"smecalculus/rolevod/lib/sym"
 )
@@ -147,7 +146,11 @@ func statesToRoot(states map[string]stateData, st stateData) (Root, error) {
 	case one:
 		return OneRoot{ID: stID}, nil
 	case link:
-		return LinkRoot{ID: stID, Role: sym.CovertFromString(st.Spec.Link)}, nil
+		roleQN, err := sym.ConvertFromString(st.Spec.Link)
+		if err != nil {
+			return nil, err
+		}
+		return LinkRoot{ID: stID, RoleQN: roleQN}, nil
 	case tensor:
 		b, err := statesToRoot(states, states[st.Spec.Tensor.Val])
 		if err != nil {
@@ -169,23 +172,23 @@ func statesToRoot(states map[string]stateData, st stateData) (Root, error) {
 		}
 		return LolliRoot{ID: stID, Y: y, Z: z}, nil
 	case plus:
-		choices := make(map[core.Label]Root, len(st.Spec.Plus))
+		choices := make(map[sym.ADT]Root, len(st.Spec.Plus))
 		for _, ch := range st.Spec.Plus {
 			choice, err := statesToRoot(states, states[ch.Cont])
 			if err != nil {
 				return nil, err
 			}
-			choices[core.Label(ch.Lab)] = choice
+			choices[sym.ADT(ch.Lab)] = choice
 		}
 		return PlusRoot{ID: stID, Choices: choices}, nil
 	case with:
-		choices := make(map[core.Label]Root, len(st.Spec.With))
+		choices := make(map[sym.ADT]Root, len(st.Spec.With))
 		for _, ch := range st.Spec.With {
 			choice, err := statesToRoot(states, states[ch.Cont])
 			if err != nil {
 				return nil, err
 			}
-			choices[core.Label(ch.Lab)] = choice
+			choices[sym.ADT(ch.Lab)] = choice
 		}
 		return WithRoot{ID: stID, Choices: choices}, nil
 	default:
@@ -210,7 +213,7 @@ func statesFromRoot(from string, r Root, dto *rootData) (string, error) {
 			K:      link,
 			FromID: fromID,
 			Spec: specData{
-				Link: sym.ConvertToString(root.Role),
+				Link: sym.ConvertToString(root.RoleQN),
 			},
 		}
 		dto.States = append(dto.States, st)

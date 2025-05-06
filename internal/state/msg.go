@@ -124,7 +124,7 @@ func MsgFromSpec(s Spec) SpecMsg {
 	case LinkSpec:
 		return SpecMsg{
 			K:    Link,
-			Link: &LinkMsg{QN: sym.ConvertToString(spec.Role)}}
+			Link: &LinkMsg{QN: sym.ConvertToString(spec.RoleQN)}}
 	case TensorSpec:
 		return SpecMsg{
 			K: Tensor,
@@ -163,7 +163,11 @@ func MsgToSpec(dto SpecMsg) (Spec, error) {
 	case One:
 		return OneSpec{}, nil
 	case Link:
-		return LinkSpec{Role: sym.CovertFromString(dto.Link.QN)}, nil
+		roleQN, err := sym.ConvertFromString(dto.Link.QN)
+		if err != nil {
+			return nil, err
+		}
+		return LinkSpec{RoleQN: roleQN}, nil
 	case Tensor:
 		v, err := MsgToSpec(dto.Tensor.Value)
 		if err != nil {
@@ -185,23 +189,23 @@ func MsgToSpec(dto SpecMsg) (Spec, error) {
 		}
 		return LolliSpec{Y: v, Z: s}, nil
 	case Plus:
-		choices := make(map[core.Label]Spec, len(dto.Plus.Choices))
+		choices := make(map[sym.ADT]Spec, len(dto.Plus.Choices))
 		for _, ch := range dto.Plus.Choices {
 			choice, err := MsgToSpec(ch.Cont)
 			if err != nil {
 				return nil, err
 			}
-			choices[core.Label(ch.Label)] = choice
+			choices[sym.ADT(ch.Label)] = choice
 		}
 		return PlusSpec{Choices: choices}, nil
 	case With:
-		choices := make(map[core.Label]Spec, len(dto.With.Choices))
+		choices := make(map[sym.ADT]Spec, len(dto.With.Choices))
 		for _, ch := range dto.With.Choices {
 			choice, err := MsgToSpec(ch.Cont)
 			if err != nil {
 				return nil, err
 			}
-			choices[core.Label(ch.Label)] = choice
+			choices[sym.ADT(ch.Label)] = choice
 		}
 		return WithSpec{Choices: choices}, nil
 	default:

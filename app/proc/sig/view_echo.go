@@ -38,8 +38,12 @@ func (p *presenterEcho) PostOne(c echo.Context) error {
 		p.log.Error("dto validation failed")
 		return err
 	}
-	fqn := sym.CovertFromString(dto.NS).New(dto.Name)
-	ref, err := p.api.Incept(fqn)
+	ns, err := sym.ConvertFromString(dto.NS)
+	if err != nil {
+		p.log.Error("dto parsing failed")
+		return err
+	}
+	ref, err := p.api.Incept(ns.New(dto.Name))
 	if err != nil {
 		p.log.Error("root creation failed")
 		return err

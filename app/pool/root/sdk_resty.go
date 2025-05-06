@@ -35,11 +35,11 @@ func (cl *clientResty) Create(spec Spec) (Ref, error) {
 	return MsgToRef(res)
 }
 
-func (cl *clientResty) Retrieve(rid id.ADT) (Snap, error) {
+func (cl *clientResty) Retrieve(poolID id.ADT) (Snap, error) {
 	var res SnapMsg
 	_, err := cl.resty.R().
 		SetResult(&res).
-		SetPathParam("id", rid.String()).
+		SetPathParam("id", poolID.String()).
 		Get("/pools/{id}")
 	if err != nil {
 		return Snap{}, err

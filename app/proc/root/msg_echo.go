@@ -1,4 +1,4 @@
-package proc
+package root
 
 import (
 	"log/slog"
@@ -38,7 +38,7 @@ func (h *handlerEcho) GetSnap(c echo.Context) error {
 	return c.JSON(http.StatusOK, MsgFromSnap(snap))
 }
 
-func (h *handlerEcho) PostStep(c echo.Context) error {
+func (h *handlerEcho) PostCall(c echo.Context) error {
 	var dto SpecMsg
 	err := c.Bind(&dto)
 	if err != nil {

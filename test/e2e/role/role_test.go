@@ -4,11 +4,11 @@ import (
 	"os"
 	"testing"
 
-	roleroot "smecalculus/rolevod/app/role/root"
+	rolersig "smecalculus/rolevod/app/role/sig"
 )
 
 var (
-	api = roleroot.NewAPI()
+	api = rolersig.NewAPI()
 )
 
 func TestMain(m *testing.M) {
