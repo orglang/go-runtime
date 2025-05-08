@@ -11,25 +11,22 @@ import (
 
 	"smecalculus/rolevod/lib/sym"
 
-	"smecalculus/rolevod/internal/state"
-	"smecalculus/rolevod/internal/step"
-
-	poolbnd "smecalculus/rolevod/app/pool/bnd"
-	poolroot "smecalculus/rolevod/app/pool/root"
-	poolsig "smecalculus/rolevod/app/pool/sig"
-	procbnd "smecalculus/rolevod/app/proc/bnd"
-	procroot "smecalculus/rolevod/app/proc/root"
-	procsig "smecalculus/rolevod/app/proc/sig"
-	"smecalculus/rolevod/app/proc/xact"
-	rolesig "smecalculus/rolevod/app/role/sig"
+	pooldec "smecalculus/rolevod/app/pool/dec"
+	pooldef "smecalculus/rolevod/app/pool/def"
+	poolxact "smecalculus/rolevod/app/pool/xact"
+	procdec "smecalculus/rolevod/app/proc/dec"
+	procdef "smecalculus/rolevod/app/proc/def"
+	proceval "smecalculus/rolevod/app/proc/eval"
+	typedec "smecalculus/rolevod/app/type/dec"
+	typedef "smecalculus/rolevod/app/type/def"
 )
 
 var (
-	roleAPI    = rolesig.NewAPI()
-	procSigAPI = procsig.NewAPI()
-	poolSigAPI = poolsig.NewAPI()
-	poolAPI    = poolroot.NewAPI()
-	procAPI    = procroot.NewAPI()
+	typeAPI    = typedec.NewAPI()
+	procSigAPI = procdec.NewAPI()
+	poolSigAPI = pooldec.NewAPI()
+	poolAPI    = pooldef.NewAPI()
+	procAPI    = proceval.NewAPI()
 	tc         *testCase
 )
 
@@ -84,13 +81,13 @@ func TestCreation(t *testing.T) {
 
 	t.Run("CreateRetreive", func(t *testing.T) {
 		// given
-		poolSpec1 := poolroot.Spec{SigQN: "ts1"}
+		poolSpec1 := pooldef.PoolSpec{SigQN: "ts1"}
 		poolRef1, err := poolAPI.Create(poolSpec1)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// and
-		poolSpec2 := poolroot.Spec{SigQN: "ts2", SupID: poolRef1.PoolID}
+		poolSpec2 := pooldef.PoolSpec{SigQN: "ts2", SupID: poolRef1.PoolID}
 		poolRef2, err := poolAPI.Create(poolSpec2)
 		if err != nil {
 			t.Fatal(err)
@@ -113,23 +110,23 @@ func TestTaking(t *testing.T) {
 	t.Run("WaitClose", func(t *testing.T) {
 		tc.Setup(t)
 		// given
-		mainRoleSN := sym.New("main-role")
-		closerSigSN := sym.New("closer-role")
-		waiterSigSN := sym.New("waiter-role")
-		_, err := roleAPI.Create(
-			rolesig.Spec{
-				RoleSN: mainRoleSN,
-				State: state.UpSpec{
-					X: state.WithSpec{
-						Choices: map[sym.ADT]state.Spec{
-							closerSigSN: state.DownSpec{
-								X: state.LinkSpec{
-									RoleQN: mainRoleSN,
+		mainRoleSN := sym.New("main-role-sn")
+		closerSigSN := sym.New("closer-sn")
+		waiterSigSN := sym.New("waiter-sn")
+		_, err := typeAPI.Create(
+			typedec.TypeSpec{
+				TypeSN: mainRoleSN,
+				TypeTS: typedef.UpSpec{
+					X: typedef.WithSpec{
+						Choices: map[sym.ADT]typedef.TermSpec{
+							closerSigSN: typedef.DownSpec{
+								X: typedef.LinkSpec{
+									TypeQN: mainRoleSN,
 								},
 							},
-							waiterSigSN: state.DownSpec{
-								X: state.LinkSpec{
-									RoleQN: mainRoleSN,
+							waiterSigSN: typedef.DownSpec{
+								X: typedef.LinkSpec{
+									TypeQN: mainRoleSN,
 								},
 							},
 						},
@@ -141,21 +138,21 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		oneRoleSN := sym.New("one")
-		_, err = roleAPI.Create(
-			rolesig.Spec{
-				RoleSN: oneRoleSN,
-				State:  state.OneSpec{},
+		oneRoleSN := sym.New("one-role")
+		_, err = typeAPI.Create(
+			typedec.TypeSpec{
+				TypeSN: oneRoleSN,
+				TypeTS: typedef.OneSpec{},
 			},
 		)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// and
-		closerSigSpec := procsig.Spec{
-			X: procbnd.Spec{
+		closerSigSpec := procdec.SigSpec{
+			X: procdec.BndSpec{
 				ChnlPH: sym.New("x"),
-				RoleQN: oneRoleSN,
+				TypeQN: oneRoleSN,
 			},
 			SigSN: closerSigSN,
 		}
@@ -164,11 +161,11 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		waiterSigSpec := procsig.Spec{
-			X:     procbnd.Spec{ChnlPH: sym.Blank, RoleQN: oneRoleSN},
+		waiterSigSpec := procdec.SigSpec{
+			X:     procdec.BndSpec{ChnlPH: sym.Blank, TypeQN: oneRoleSN},
 			SigSN: waiterSigSN,
-			Ys: []procbnd.Spec{
-				{ChnlPH: sym.New("y"), RoleQN: oneRoleSN},
+			Ys: []procdec.BndSpec{
+				{ChnlPH: sym.New("y"), TypeQN: oneRoleSN},
 			},
 		}
 		_, err = procSigAPI.Create(waiterSigSpec)
@@ -179,11 +176,11 @@ func TestTaking(t *testing.T) {
 		mainSigSN := sym.New("main-sig")
 		mainConnPH := sym.New("main-conn")
 		_, err = poolSigAPI.Create(
-			poolsig.Spec{
+			pooldec.SigSpec{
 				SigSN: mainSigSN,
-				X: poolbnd.Spec{
-					ConnPH: mainConnPH,
-					RoleQN: mainRoleSN,
+				X: pooldec.BndSpec{
+					ChnlPH: mainConnPH,
+					TypeQN: mainRoleSN,
 				},
 			},
 		)
@@ -192,7 +189,7 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		poolRef, err := poolAPI.Create(
-			poolroot.Spec{
+			pooldef.PoolSpec{
 				SigQN: mainSigSN,
 			},
 		)
@@ -201,10 +198,10 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		closerChnlPH := sym.New("closer")
-		closerProcSpec := procroot.Spec{
+		closerProcSpec := proceval.Spec{
 			PoolID: poolRef.PoolID,
 			ProcID: poolRef.ProcID,
-			Term: xact.CallSpec{
+			Term: poolxact.CallSpec{
 				MainPH: mainConnPH,
 				X:      closerChnlPH,
 				SigSN:  closerSigSN,
@@ -215,10 +212,10 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		waiterProcSpec := procroot.Spec{
+		waiterProcSpec := proceval.Spec{
 			PoolID: poolRef.PoolID,
 			ProcID: poolRef.ProcID,
-			Term: xact.CallSpec{
+			Term: poolxact.CallSpec{
 				MainPH: mainConnPH,
 				X:      sym.Blank,
 				SigSN:  waiterSigSN,
@@ -230,10 +227,10 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		closeStepSpec := poolroot.StepSpec{
+		closeStepSpec := pooldef.StepSpec{
 			PoolID: poolRef.PoolID,
 			ProcID: closerProcRef.ProcID,
-			Term: step.CloseSpec{
+			Term: procdef.CloseSpec{
 				X: closerSigSpec.X.ChnlPH,
 			},
 		}
@@ -243,12 +240,12 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		waitStepSpec := poolroot.StepSpec{
+		waitStepSpec := pooldef.StepSpec{
 			PoolID: poolRef.PoolID,
 			ProcID: waiterProcRef.ProcID,
-			Term: step.WaitSpec{
+			Term: procdef.WaitSpec{
 				X: waiterSigSpec.Ys[0].ChnlPH,
-				Cont: step.CloseSpec{
+				Cont: procdef.CloseSpec{
 					X: sym.Blank,
 				},
 			},
@@ -265,32 +262,32 @@ func TestTaking(t *testing.T) {
 	t.Run("RecvSend", func(t *testing.T) {
 		tc.Setup(t)
 		// given
-		lolliRoleSpec := rolesig.Spec{
-			RoleSN: "lolli-role",
-			State: state.LolliSpec{
-				Y: state.OneSpec{},
-				Z: state.OneSpec{},
+		lolliRoleSpec := typedec.TypeSpec{
+			TypeSN: "lolli-role",
+			TypeTS: typedef.LolliSpec{
+				Y: typedef.OneSpec{},
+				Z: typedef.OneSpec{},
 			},
 		}
-		lolliRole, err := roleAPI.Create(lolliRoleSpec)
+		lolliRole, err := typeAPI.Create(lolliRoleSpec)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// and
-		oneRoleSpec := rolesig.Spec{
-			RoleSN: "one-role",
-			State:  state.OneSpec{},
+		oneRoleSpec := typedec.TypeSpec{
+			TypeSN: "one-role",
+			TypeTS: typedef.OneSpec{},
 		}
-		oneRole, err := roleAPI.Create(oneRoleSpec)
+		oneRole, err := typeAPI.Create(oneRoleSpec)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// and
-		lolliSigSpec := procsig.Spec{
+		lolliSigSpec := procdec.SigSpec{
 			SigSN: "sig-1",
-			X: procbnd.Spec{
+			X: procdec.BndSpec{
 				ChnlPH: "chnl-1",
-				RoleQN: lolliRole.RoleQN,
+				TypeQN: lolliRole.TypeQN,
 			},
 		}
 		_, err = procSigAPI.Create(lolliSigSpec)
@@ -298,11 +295,11 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		oneSigSpec1 := procsig.Spec{
+		oneSigSpec1 := procdec.SigSpec{
 			SigSN: "sig-2",
-			X: procbnd.Spec{
+			X: procdec.BndSpec{
 				ChnlPH: "chnl-2",
-				RoleQN: oneRole.RoleQN,
+				TypeQN: oneRole.TypeQN,
 			},
 		}
 		oneSig1, err := procSigAPI.Create(oneSigSpec1)
@@ -310,12 +307,12 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		oneSigSpec2 := procsig.Spec{
+		oneSigSpec2 := procdec.SigSpec{
 			SigSN: "sig-3",
-			Ys:    []procbnd.Spec{lolliSigSpec.X, oneSig1.X},
-			X: procbnd.Spec{
+			Ys:    []procdec.BndSpec{lolliSigSpec.X, oneSig1.X},
+			X: procdec.BndSpec{
 				ChnlPH: "chnl-3",
-				RoleQN: oneRole.RoleQN,
+				TypeQN: oneRole.TypeQN,
 			},
 		}
 		_, err = procSigAPI.Create(oneSigSpec2)
@@ -324,7 +321,7 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		poolImpl, err := poolAPI.Create(
-			poolroot.Spec{
+			pooldef.PoolSpec{
 				SigQN: "pool-1",
 			},
 		)
@@ -334,10 +331,10 @@ func TestTaking(t *testing.T) {
 		// and
 		receiverChnlPH := sym.New("receiver")
 		receiver, err := procAPI.Create(
-			procroot.Spec{
+			proceval.Spec{
 				PoolID: poolImpl.PoolID,
 				ProcID: poolImpl.ProcID,
-				Term: xact.CallSpec{
+				Term: poolxact.CallSpec{
 					X:     receiverChnlPH,
 					SigSN: "tbd",
 				},
@@ -349,10 +346,10 @@ func TestTaking(t *testing.T) {
 		// and
 		messageChnlPH := sym.New("message")
 		_, err = procAPI.Create(
-			procroot.Spec{
+			proceval.Spec{
 				PoolID: poolImpl.PoolID,
 				ProcID: poolImpl.ProcID,
-				Term: xact.CallSpec{
+				Term: poolxact.CallSpec{
 					X:     messageChnlPH,
 					SigSN: "tbd",
 				},
@@ -364,10 +361,10 @@ func TestTaking(t *testing.T) {
 		// and
 		senderChnlPH := sym.New("sender")
 		sender, err := procAPI.Create(
-			procroot.Spec{
+			proceval.Spec{
 				PoolID: poolImpl.PoolID,
 				ProcID: poolImpl.ProcID,
-				Term: xact.CallSpec{
+				Term: poolxact.CallSpec{
 					X:     senderChnlPH,
 					SigSN: "tbd",
 					Ys:    []sym.ADT{receiverChnlPH, senderChnlPH},
@@ -378,15 +375,15 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		recvSpec := poolroot.StepSpec{
+		recvSpec := pooldef.StepSpec{
 			PoolID: poolImpl.PoolID,
 			ProcID: receiver.ProcID,
-			Term: step.RecvSpec{
+			Term: procdef.RecvSpec{
 				X: receiverChnlPH,
 				Y: messageChnlPH,
-				Cont: step.WaitSpec{
+				Cont: procdef.WaitSpec{
 					X: messageChnlPH,
-					Cont: step.CloseSpec{
+					Cont: procdef.CloseSpec{
 						X: receiverChnlPH,
 					},
 				},
@@ -398,10 +395,10 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		sendSpec := poolroot.StepSpec{
+		sendSpec := pooldef.StepSpec{
 			PoolID: poolImpl.PoolID,
 			ProcID: sender.ProcID,
-			Term: step.SendSpec{
+			Term: procdef.SendSpec{
 				X: receiverChnlPH,
 				Y: messageChnlPH,
 			},
@@ -420,33 +417,33 @@ func TestTaking(t *testing.T) {
 		// given
 		label := sym.ADT("label-1")
 		// and
-		withRoleSpec := rolesig.Spec{
-			RoleSN: "with-role",
-			State: state.WithSpec{
-				Choices: map[sym.ADT]state.Spec{
-					label: state.OneSpec{},
+		withRoleSpec := typedec.TypeSpec{
+			TypeSN: "with-role",
+			TypeTS: typedef.WithSpec{
+				Choices: map[sym.ADT]typedef.TermSpec{
+					label: typedef.OneSpec{},
 				},
 			},
 		}
-		withRole, err := roleAPI.Create(withRoleSpec)
+		withRole, err := typeAPI.Create(withRoleSpec)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// and
-		oneRoleSpec := rolesig.Spec{
-			RoleSN: "one-role",
-			State:  state.OneSpec{},
+		oneRoleSpec := typedec.TypeSpec{
+			TypeSN: "one-role",
+			TypeTS: typedef.OneSpec{},
 		}
-		oneRole, err := roleAPI.Create(oneRoleSpec)
+		oneRole, err := typeAPI.Create(oneRoleSpec)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// and
-		withSigSpec := procsig.Spec{
+		withSigSpec := procdec.SigSpec{
 			SigSN: "sig-1",
-			X: procbnd.Spec{
+			X: procdec.BndSpec{
 				ChnlPH: "chnl-1",
-				RoleQN: withRole.RoleQN,
+				TypeQN: withRole.TypeQN,
 			},
 		}
 		withSig, err := procSigAPI.Create(withSigSpec)
@@ -454,12 +451,12 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		oneSigSpec := procsig.Spec{
+		oneSigSpec := procdec.SigSpec{
 			SigSN: "sig-2",
-			Ys:    []procbnd.Spec{withSig.X},
-			X: procbnd.Spec{
+			Ys:    []procdec.BndSpec{withSig.X},
+			X: procdec.BndSpec{
 				ChnlPH: "chnl-2",
-				RoleQN: oneRole.RoleQN,
+				TypeQN: oneRole.TypeQN,
 			},
 		}
 		_, err = procSigAPI.Create(oneSigSpec)
@@ -467,7 +464,7 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		poolSpec := poolroot.Spec{
+		poolSpec := pooldef.PoolSpec{
 			SigQN: "pool-1",
 		}
 		poolImpl, err := poolAPI.Create(poolSpec)
@@ -477,10 +474,10 @@ func TestTaking(t *testing.T) {
 		// and
 		followerPH := sym.New("follower")
 		follower, err := procAPI.Create(
-			procroot.Spec{
+			proceval.Spec{
 				PoolID: poolImpl.PoolID,
 				ProcID: poolImpl.ProcID,
-				Term: xact.CallSpec{
+				Term: poolxact.CallSpec{
 					X:     followerPH,
 					SigSN: "tbd",
 				},
@@ -492,10 +489,10 @@ func TestTaking(t *testing.T) {
 		// and
 		deciderPH := sym.New("decider")
 		decider, err := procAPI.Create(
-			procroot.Spec{
+			proceval.Spec{
 				PoolID: poolImpl.PoolID,
 				ProcID: poolImpl.ProcID,
-				Term: xact.CallSpec{
+				Term: poolxact.CallSpec{
 					X:     deciderPH,
 					SigSN: "tbd",
 					Ys:    []sym.ADT{followerPH},
@@ -506,13 +503,13 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		caseSpec := poolroot.StepSpec{
+		caseSpec := pooldef.StepSpec{
 			PoolID: poolImpl.PoolID,
 			ProcID: follower.ProcID,
-			Term: step.CaseSpec{
+			Term: procdef.CaseSpec{
 				X: followerPH,
-				Conts: map[sym.ADT]step.Term{
-					label: step.CloseSpec{
+				Conts: map[sym.ADT]procdef.TermSpec{
+					label: procdef.CloseSpec{
 						X: followerPH,
 					},
 				},
@@ -524,10 +521,10 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		labSpec := poolroot.StepSpec{
+		labSpec := pooldef.StepSpec{
 			PoolID: poolImpl.PoolID,
 			ProcID: decider.ProcID,
-			Term: step.LabSpec{
+			Term: procdef.LabSpec{
 				X:     followerPH,
 				Label: label,
 			},
@@ -544,10 +541,10 @@ func TestTaking(t *testing.T) {
 	t.Run("Spawn", func(t *testing.T) {
 		tc.Setup(t)
 		// given
-		oneRole, err := roleAPI.Create(
-			rolesig.Spec{
-				RoleSN: "one-role",
-				State:  state.OneSpec{},
+		oneRole, err := typeAPI.Create(
+			typedec.TypeSpec{
+				TypeSN: "one-role",
+				TypeTS: typedef.OneSpec{},
 			},
 		)
 		if err != nil {
@@ -555,11 +552,11 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		oneSig1, err := procSigAPI.Create(
-			procsig.Spec{
+			procdec.SigSpec{
 				SigSN: "sig-1",
-				X: procbnd.Spec{
+				X: procdec.BndSpec{
 					ChnlPH: "chnl-1",
-					RoleQN: oneRole.RoleQN,
+					TypeQN: oneRole.TypeQN,
 				},
 			},
 		)
@@ -568,12 +565,12 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		_, err = procSigAPI.Create(
-			procsig.Spec{
+			procdec.SigSpec{
 				SigSN: "sig-2",
-				Ys:    []procbnd.Spec{oneSig1.X},
-				X: procbnd.Spec{
+				Ys:    []procdec.BndSpec{oneSig1.X},
+				X: procdec.BndSpec{
 					ChnlPH: "chnl-2",
-					RoleQN: oneRole.RoleQN,
+					TypeQN: oneRole.TypeQN,
 				},
 			},
 		)
@@ -582,12 +579,12 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		oneSig3, err := procSigAPI.Create(
-			procsig.Spec{
+			procdec.SigSpec{
 				SigSN: "sig-3",
-				Ys:    []procbnd.Spec{oneSig1.X},
-				X: procbnd.Spec{
+				Ys:    []procdec.BndSpec{oneSig1.X},
+				X: procdec.BndSpec{
 					ChnlPH: "chnl-3",
-					RoleQN: oneRole.RoleQN,
+					TypeQN: oneRole.TypeQN,
 				},
 			},
 		)
@@ -596,7 +593,7 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		poolImpl, err := poolAPI.Create(
-			poolroot.Spec{
+			pooldef.PoolSpec{
 				SigQN: "pool-1",
 			},
 		)
@@ -606,10 +603,10 @@ func TestTaking(t *testing.T) {
 		// and
 		injecteePH := sym.New("injectee")
 		_, err = procAPI.Create(
-			procroot.Spec{
+			proceval.Spec{
 				PoolID: poolImpl.PoolID,
 				ProcID: poolImpl.ProcID,
-				Term: xact.CallSpec{
+				Term: poolxact.CallSpec{
 					X:     injecteePH,
 					SigSN: "tbd",
 				},
@@ -621,10 +618,10 @@ func TestTaking(t *testing.T) {
 		// and
 		spawnerPH := sym.New("spawner")
 		spawner, err := procAPI.Create(
-			procroot.Spec{
+			proceval.Spec{
 				PoolID: poolImpl.PoolID,
 				ProcID: poolImpl.ProcID,
-				Term: xact.CallSpec{
+				Term: poolxact.CallSpec{
 					X:     spawnerPH,
 					SigSN: "tbd",
 					Ys:    []sym.ADT{injecteePH},
@@ -636,16 +633,16 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		x := sym.New("x")
-		spawnSpec := poolroot.StepSpec{
+		spawnSpec := pooldef.StepSpec{
 			PoolID: poolImpl.PoolID,
 			ProcID: spawner.ProcID,
-			Term: step.SpawnSpec{
+			Term: procdef.SpawnSpec{
 				SigID: oneSig3.SigID,
 				Ys:    []sym.ADT{injecteePH},
 				X:     x,
-				Cont: step.WaitSpec{
+				Cont: procdef.WaitSpec{
 					X: x,
-					Cont: step.CloseSpec{
+					Cont: procdef.CloseSpec{
 						X: spawnerPH,
 					},
 				},
@@ -663,10 +660,10 @@ func TestTaking(t *testing.T) {
 	t.Run("Fwd", func(t *testing.T) {
 		tc.Setup(t)
 		// given
-		oneRole, err := roleAPI.Create(
-			rolesig.Spec{
-				RoleSN: "one-role",
-				State:  state.OneSpec{},
+		oneRole, err := typeAPI.Create(
+			typedec.TypeSpec{
+				TypeSN: "one-role",
+				TypeTS: typedef.OneSpec{},
 			},
 		)
 		if err != nil {
@@ -674,11 +671,11 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		oneSig1, err := procSigAPI.Create(
-			procsig.Spec{
+			procdec.SigSpec{
 				SigSN: "sig-1",
-				X: procbnd.Spec{
+				X: procdec.BndSpec{
 					ChnlPH: "chnl-1",
-					RoleQN: oneRole.RoleQN,
+					TypeQN: oneRole.TypeQN,
 				},
 			},
 		)
@@ -687,12 +684,12 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		_, err = procSigAPI.Create(
-			procsig.Spec{
+			procdec.SigSpec{
 				SigSN: "sig-2",
-				Ys:    []procbnd.Spec{oneSig1.X},
-				X: procbnd.Spec{
+				Ys:    []procdec.BndSpec{oneSig1.X},
+				X: procdec.BndSpec{
 					ChnlPH: "chnl-2",
-					RoleQN: oneRole.RoleQN,
+					TypeQN: oneRole.TypeQN,
 				},
 			},
 		)
@@ -701,12 +698,12 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		_, err = procSigAPI.Create(
-			procsig.Spec{
+			procdec.SigSpec{
 				SigSN: "sig-3",
-				Ys:    []procbnd.Spec{oneSig1.X},
-				X: procbnd.Spec{
+				Ys:    []procdec.BndSpec{oneSig1.X},
+				X: procdec.BndSpec{
 					ChnlPH: "chnl-3",
-					RoleQN: oneRole.RoleQN,
+					TypeQN: oneRole.TypeQN,
 				},
 			},
 		)
@@ -715,7 +712,7 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		poolImpl, err := poolAPI.Create(
-			poolroot.Spec{
+			pooldef.PoolSpec{
 				SigQN: "pool-1",
 			},
 		)
@@ -724,10 +721,10 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		closerChnlPH := sym.New("closer")
-		closerSpec := procroot.Spec{
+		closerSpec := proceval.Spec{
 			PoolID: poolImpl.PoolID,
 			ProcID: poolImpl.ProcID,
-			Term: xact.CallSpec{
+			Term: poolxact.CallSpec{
 				X:     closerChnlPH,
 				SigSN: "tbd",
 			},
@@ -738,10 +735,10 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		forwarderChnlPH := sym.New("forwarder")
-		forwarderSpec := procroot.Spec{
+		forwarderSpec := proceval.Spec{
 			PoolID: poolImpl.PoolID,
 			ProcID: poolImpl.ProcID,
-			Term: xact.CallSpec{
+			Term: poolxact.CallSpec{
 				X:     forwarderChnlPH,
 				SigSN: "tbd",
 				Ys:    []sym.ADT{closerChnlPH},
@@ -753,10 +750,10 @@ func TestTaking(t *testing.T) {
 		}
 		// and
 		waiterChnlPH := sym.New("waiter")
-		waiterSpec := procroot.Spec{
+		waiterSpec := proceval.Spec{
 			PoolID: poolImpl.PoolID,
 			ProcID: poolImpl.ProcID,
-			Term: xact.CallSpec{
+			Term: poolxact.CallSpec{
 				X:     waiterChnlPH,
 				SigSN: "tbd",
 				Ys:    []sym.ADT{forwarderChnlPH},
@@ -767,10 +764,10 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		closeSpec := poolroot.StepSpec{
+		closeSpec := pooldef.StepSpec{
 			PoolID: poolImpl.PoolID,
 			ProcID: closer.ProcID,
-			Term: step.CloseSpec{
+			Term: procdef.CloseSpec{
 				X: closerChnlPH,
 			},
 		}
@@ -779,10 +776,10 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// when
-		fwdSpec := poolroot.StepSpec{
+		fwdSpec := pooldef.StepSpec{
 			PoolID: poolImpl.PoolID,
 			ProcID: forwarder.ProcID,
-			Term: step.FwdSpec{
+			Term: procdef.FwdSpec{
 				X: forwarderChnlPH,
 				Y: closerChnlPH,
 			},
@@ -792,12 +789,12 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		waitSpec := poolroot.StepSpec{
+		waitSpec := pooldef.StepSpec{
 			PoolID: poolImpl.PoolID,
 			ProcID: waiter.ProcID,
-			Term: step.WaitSpec{
+			Term: procdef.WaitSpec{
 				X: forwarderChnlPH,
-				Cont: step.CloseSpec{
+				Cont: procdef.CloseSpec{
 					X: waiterChnlPH,
 				},
 			},

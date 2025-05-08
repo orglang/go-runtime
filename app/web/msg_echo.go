@@ -8,7 +8,7 @@ import (
 
 	"smecalculus/rolevod/lib/msg"
 
-	role "smecalculus/rolevod/app/role/sig"
+	role "smecalculus/rolevod/app/type/dec"
 )
 
 // Adapter
@@ -28,7 +28,7 @@ func (h *handlerEcho) Home(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	html, err := h.ssr.Render("home.html", role.MsgFromRefs(refs))
+	html, err := h.ssr.Render("home.html", role.MsgFromTypeRefs(refs))
 	if err != nil {
 		return err
 	}

@@ -1,14 +1,14 @@
-package sig_test
+package type_test
 
 import (
 	"os"
 	"testing"
 
-	procdec "smecalculus/rolevod/app/proc/dec"
+	typedec "smecalculus/rolevod/app/type/dec"
 )
 
 var (
-	api = procdec.NewAPI()
+	api = typedec.NewAPI()
 )
 
 func TestMain(m *testing.M) {
