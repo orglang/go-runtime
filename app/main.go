@@ -15,7 +15,6 @@ import (
 	procdec "smecalculus/rolevod/app/proc/dec"
 	procdef "smecalculus/rolevod/app/proc/def"
 	proceval "smecalculus/rolevod/app/proc/eval"
-	typedec "smecalculus/rolevod/app/type/dec"
 	typedef "smecalculus/rolevod/app/type/def"
 
 	"smecalculus/rolevod/app/web"
@@ -29,10 +28,9 @@ func main() {
 		msg.Module,
 		alias.Module,
 		// app
-		typedef.Module,
 		procdef.Module,
 		pooldef.Module,
-		typedec.Module,
+		typedef.Module,
 		proceval.Module,
 		procdec.Module,
 		web.Module,

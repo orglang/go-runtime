@@ -13,7 +13,6 @@ import (
 	poolxact "smecalculus/rolevod/app/pool/xact"
 	procdec "smecalculus/rolevod/app/proc/dec"
 	procdef "smecalculus/rolevod/app/proc/def"
-	typedec "smecalculus/rolevod/app/type/dec"
 	typedef "smecalculus/rolevod/app/type/def"
 )
 
@@ -78,7 +77,7 @@ type Cfg struct {
 
 type Env struct {
 	ProcSigs  map[id.ADT]procdec.SigRec
-	Roles     map[sym.ADT]typedec.TypeRec
+	Types     map[sym.ADT]typedef.TypeRec
 	TypeTerms map[id.ADT]typedef.TermRec
 	Locks     map[sym.ADT]Lock
 }

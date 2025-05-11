@@ -1,4 +1,4 @@
-package dec
+package def
 
 import (
 	"log/slog"
@@ -10,8 +10,6 @@ import (
 	"smecalculus/rolevod/lib/id"
 	"smecalculus/rolevod/lib/msg"
 	"smecalculus/rolevod/lib/sym"
-
-	def "smecalculus/rolevod/app/type/def"
 )
 
 // Adapter
@@ -45,7 +43,7 @@ func (p *presenterEcho) PostOne(c echo.Context) error {
 		p.log.Error("dto parsing failed")
 		return err
 	}
-	snap, err := p.api.Create(TypeSpec{TypeSN: ns.New(dto.Name), TypeTS: def.OneSpec{}})
+	snap, err := p.api.Create(TypeSpec{TypeSN: ns.New(dto.Name), TypeTS: OneSpec{}})
 	if err != nil {
 		p.log.Error("role creation failed")
 		return err

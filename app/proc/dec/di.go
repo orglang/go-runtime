@@ -17,7 +17,7 @@ import (
 var Module = fx.Module("app/sig",
 	fx.Provide(
 		fx.Annotate(newService, fx.As(new(API))),
-		fx.Annotate(newRepoPgx, fx.As(new(SigRepo))),
+		fx.Annotate(newRepoPgx, fx.As(new(Repo))),
 	),
 	fx.Provide(
 		fx.Private,

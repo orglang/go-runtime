@@ -1,4 +1,4 @@
-package dec
+package def
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -6,8 +6,6 @@ import (
 	"smecalculus/rolevod/lib/id"
 	"smecalculus/rolevod/lib/rn"
 	"smecalculus/rolevod/lib/sym"
-
-	"smecalculus/rolevod/app/type/def"
 )
 
 type TypeSpecView struct {
@@ -37,10 +35,10 @@ func (dto TypeRefView) Validate() error {
 }
 
 type TypeSnapView struct {
-	RoleID string          `json:"id"`
-	RoleRN int64           `json:"rev"`
-	Title  string          `json:"title"`
-	State  def.TermSpecMsg `json:"state"`
+	RoleID string      `json:"id"`
+	RoleRN int64       `json:"rev"`
+	Title  string      `json:"title"`
+	State  TermSpecMsg `json:"state"`
 }
 
 // goverter:variables

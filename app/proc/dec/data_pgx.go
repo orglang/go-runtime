@@ -22,7 +22,7 @@ func newRepoPgx(l *slog.Logger) *repoPgx {
 }
 
 // for compilation purposes
-func newRepo() SigRepo {
+func newRepo() Repo {
 	return &repoPgx{}
 }
 

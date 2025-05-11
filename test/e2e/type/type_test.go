@@ -4,11 +4,11 @@ import (
 	"os"
 	"testing"
 
-	typedec "smecalculus/rolevod/app/type/dec"
+	typedef "smecalculus/rolevod/app/type/def"
 )
 
 var (
-	api = typedec.NewAPI()
+	api = typedef.NewAPI()
 )
 
 func TestMain(m *testing.M) {

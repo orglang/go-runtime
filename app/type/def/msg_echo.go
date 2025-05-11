@@ -1,4 +1,4 @@
-package dec
+package def
 
 import (
 	"log/slog"

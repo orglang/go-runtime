@@ -57,13 +57,13 @@ type API interface {
 }
 
 type service struct {
-	sigs     SigRepo
+	procs    Repo
 	aliases  alias.Repo
 	operator data.Operator
 	log      *slog.Logger
 }
 
-func newService(sigs SigRepo, aliases alias.Repo, operator data.Operator, l *slog.Logger) *service {
+func newService(sigs Repo, aliases alias.Repo, operator data.Operator, l *slog.Logger) *service {
 	return &service{sigs, aliases, operator, l}
 }
 
@@ -77,13 +77,13 @@ func (s *service) Incept(sigQN sym.ADT) (_ SigRef, err error) {
 	qnAttr := slog.Any("sigQN", sigQN)
 	s.log.Debug("inception started", qnAttr)
 	newAlias := alias.Root{QN: sigQN, ID: id.New(), RN: rn.Initial()}
-	newMod := SigRec{SigID: newAlias.ID, SigRN: newAlias.RN, Title: newAlias.QN.SN()}
+	newRec := SigRec{SigID: newAlias.ID, SigRN: newAlias.RN, Title: newAlias.QN.SN()}
 	s.operator.Explicit(ctx, func(ds data.Source) error {
 		err = s.aliases.Insert(ds, newAlias)
 		if err != nil {
 			return err
 		}
-		err = s.sigs.Insert(ds, newMod)
+		err = s.procs.Insert(ds, newRec)
 		if err != nil {
 			return err
 		}
@@ -93,8 +93,8 @@ func (s *service) Incept(sigQN sym.ADT) (_ SigRef, err error) {
 		s.log.Error("inception failed", qnAttr)
 		return SigRef{}, err
 	}
-	s.log.Debug("inception succeeded", qnAttr, slog.Any("sigId", newMod.SigID))
-	return ConvertRecToRef(newMod), nil
+	s.log.Debug("inception succeeded", qnAttr, slog.Any("sigId", newRec.SigID))
+	return ConvertRecToRef(newRec), nil
 }
 
 func (s *service) Create(spec SigSpec) (_ SigSnap, err error) {
@@ -108,7 +108,7 @@ func (s *service) Create(spec SigSpec) (_ SigSnap, err error) {
 		SigRN: rn.Initial(),
 	}
 	s.operator.Explicit(ctx, func(ds data.Source) error {
-		err = s.sigs.Insert(ds, newRec)
+		err = s.procs.Insert(ds, newRec)
 		if err != nil {
 			return err
 		}
@@ -125,7 +125,7 @@ func (s *service) Create(spec SigSpec) (_ SigSnap, err error) {
 func (s *service) Retrieve(sigID id.ADT) (snap SigSnap, err error) {
 	ctx := context.Background()
 	s.operator.Implicit(ctx, func(ds data.Source) error {
-		snap, err = s.sigs.SelectByID(ds, sigID)
+		snap, err = s.procs.SelectByID(ds, sigID)
 		return err
 	})
 	if err != nil {
@@ -138,7 +138,7 @@ func (s *service) Retrieve(sigID id.ADT) (snap SigSnap, err error) {
 func (s *service) RetreiveRefs() (refs []SigRef, err error) {
 	ctx := context.Background()
 	s.operator.Implicit(ctx, func(ds data.Source) error {
-		refs, err = s.sigs.SelectAll(ds)
+		refs, err = s.procs.SelectAll(ds)
 		return err
 	})
 	if err != nil {
@@ -148,7 +148,7 @@ func (s *service) RetreiveRefs() (refs []SigRef, err error) {
 	return refs, nil
 }
 
-type SigRepo interface {
+type Repo interface {
 	Insert(data.Source, SigRec) error
 	SelectAll(data.Source) ([]SigRef, error)
 	SelectByID(data.Source, id.ADT) (SigSnap, error)

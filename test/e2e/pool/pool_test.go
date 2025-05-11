@@ -17,12 +17,11 @@ import (
 	procdec "smecalculus/rolevod/app/proc/dec"
 	procdef "smecalculus/rolevod/app/proc/def"
 	proceval "smecalculus/rolevod/app/proc/eval"
-	typedec "smecalculus/rolevod/app/type/dec"
 	typedef "smecalculus/rolevod/app/type/def"
 )
 
 var (
-	typeAPI    = typedec.NewAPI()
+	typeAPI    = typedef.NewAPI()
 	procSigAPI = procdec.NewAPI()
 	poolSigAPI = pooldec.NewAPI()
 	poolAPI    = pooldef.NewAPI()
@@ -114,7 +113,7 @@ func TestTaking(t *testing.T) {
 		closerSigSN := sym.New("closer-sn")
 		waiterSigSN := sym.New("waiter-sn")
 		_, err := typeAPI.Create(
-			typedec.TypeSpec{
+			typedef.TypeSpec{
 				TypeSN: mainRoleSN,
 				TypeTS: typedef.UpSpec{
 					X: typedef.WithSpec{
@@ -140,7 +139,7 @@ func TestTaking(t *testing.T) {
 		// and
 		oneRoleSN := sym.New("one-role")
 		_, err = typeAPI.Create(
-			typedec.TypeSpec{
+			typedef.TypeSpec{
 				TypeSN: oneRoleSN,
 				TypeTS: typedef.OneSpec{},
 			},
@@ -262,7 +261,7 @@ func TestTaking(t *testing.T) {
 	t.Run("RecvSend", func(t *testing.T) {
 		tc.Setup(t)
 		// given
-		lolliRoleSpec := typedec.TypeSpec{
+		lolliRoleSpec := typedef.TypeSpec{
 			TypeSN: "lolli-role",
 			TypeTS: typedef.LolliSpec{
 				Y: typedef.OneSpec{},
@@ -274,7 +273,7 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		oneRoleSpec := typedec.TypeSpec{
+		oneRoleSpec := typedef.TypeSpec{
 			TypeSN: "one-role",
 			TypeTS: typedef.OneSpec{},
 		}
@@ -417,7 +416,7 @@ func TestTaking(t *testing.T) {
 		// given
 		label := sym.ADT("label-1")
 		// and
-		withRoleSpec := typedec.TypeSpec{
+		withRoleSpec := typedef.TypeSpec{
 			TypeSN: "with-role",
 			TypeTS: typedef.WithSpec{
 				Choices: map[sym.ADT]typedef.TermSpec{
@@ -430,7 +429,7 @@ func TestTaking(t *testing.T) {
 			t.Fatal(err)
 		}
 		// and
-		oneRoleSpec := typedec.TypeSpec{
+		oneRoleSpec := typedef.TypeSpec{
 			TypeSN: "one-role",
 			TypeTS: typedef.OneSpec{},
 		}
@@ -542,7 +541,7 @@ func TestTaking(t *testing.T) {
 		tc.Setup(t)
 		// given
 		oneRole, err := typeAPI.Create(
-			typedec.TypeSpec{
+			typedef.TypeSpec{
 				TypeSN: "one-role",
 				TypeTS: typedef.OneSpec{},
 			},
@@ -661,7 +660,7 @@ func TestTaking(t *testing.T) {
 		tc.Setup(t)
 		// given
 		oneRole, err := typeAPI.Create(
-			typedec.TypeSpec{
+			typedef.TypeSpec{
 				TypeSN: "one-role",
 				TypeTS: typedef.OneSpec{},
 			},

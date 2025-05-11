@@ -1,13 +1,46 @@
 package def
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 
 	"smecalculus/rolevod/lib/data"
 	"smecalculus/rolevod/lib/id"
 	"smecalculus/rolevod/lib/pol"
+	"smecalculus/rolevod/lib/rn"
 	"smecalculus/rolevod/lib/sym"
+
+	"smecalculus/rolevod/internal/alias"
 )
+
+type TypeSpec struct {
+	TypeNS sym.ADT
+	TypeSN sym.ADT
+	TypeTS TermSpec
+}
+
+type TypeRef struct {
+	TypeID id.ADT
+	Title  string
+	TypeRN rn.ADT
+}
+
+// aka TpDef
+type TypeRec struct {
+	TypeID id.ADT
+	Title  string
+	TermID id.ADT
+	TypeRN rn.ADT
+}
+
+type TypeSnap struct {
+	TypeID id.ADT
+	Title  string
+	TypeQN sym.ADT
+	TypeTS TermSpec
+	TypeRN rn.ADT
+}
 
 type TermSpec interface {
 	spec()
@@ -235,11 +268,241 @@ type Context struct {
 	Liabs  map[sym.ADT]TermRec
 }
 
-type TermRepo interface {
+type API interface {
+	Incept(sym.ADT) (TypeRef, error)
+	Create(TypeSpec) (TypeSnap, error)
+	Modify(TypeSnap) (TypeSnap, error)
+	Retrieve(id.ADT) (TypeSnap, error)
+	retrieveSnap(TypeRec) (TypeSnap, error)
+	RetreiveRefs() ([]TypeRef, error)
+}
+
+type service struct {
+	types    Repo
+	aliases  alias.Repo
+	operator data.Operator
+	log      *slog.Logger
+}
+
+// for compilation purposes
+func newAPI() API {
+	return &service{}
+}
+
+func newService(
+	types Repo,
+	aliases alias.Repo,
+	operator data.Operator,
+	l *slog.Logger,
+) *service {
+	return &service{types, aliases, operator, l}
+}
+
+func (s *service) Incept(qn sym.ADT) (_ TypeRef, err error) {
+	ctx := context.Background()
+	qnAttr := slog.Any("roleQN", qn)
+	s.log.Debug("inception started", qnAttr)
+	newAlias := alias.Root{QN: qn, ID: id.New(), RN: rn.Initial()}
+	newType := TypeRec{TypeID: newAlias.ID, TypeRN: newAlias.RN, Title: newAlias.QN.SN()}
+	s.operator.Explicit(ctx, func(ds data.Source) error {
+		err = s.aliases.Insert(ds, newAlias)
+		if err != nil {
+			return err
+		}
+		err = s.types.InsertType(ds, newType)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		s.log.Error("inception failed", qnAttr)
+		return TypeRef{}, err
+	}
+	s.log.Debug("inception succeeded", qnAttr, slog.Any("roleID", newType.TypeID))
+	return ConvertRecToRef(newType), nil
+}
+
+func (s *service) Create(spec TypeSpec) (_ TypeSnap, err error) {
+	ctx := context.Background()
+	qnAttr := slog.Any("typeQN", spec.TypeSN)
+	s.log.Debug("creation started", qnAttr, slog.Any("spec", spec))
+	newAlias := alias.Root{QN: spec.TypeSN, ID: id.New(), RN: rn.Initial()}
+	newTerm := ConvertSpecToRec(spec.TypeTS)
+	newType := TypeRec{
+		TypeID: newAlias.ID,
+		TypeRN: newAlias.RN,
+		Title:  newAlias.QN.SN(),
+		TermID: newTerm.Ident(),
+	}
+	s.operator.Explicit(ctx, func(ds data.Source) error {
+		err = s.aliases.Insert(ds, newAlias)
+		if err != nil {
+			return err
+		}
+		err = s.types.InsertTerm(ds, newTerm)
+		if err != nil {
+			return err
+		}
+		err = s.types.InsertType(ds, newType)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		s.log.Error("creation failed", qnAttr)
+		return TypeSnap{}, err
+	}
+	s.log.Debug("creation succeeded", qnAttr, slog.Any("typeID", newType.TypeID))
+	return TypeSnap{
+		TypeID: newType.TypeID,
+		TypeRN: newType.TypeRN,
+		Title:  newType.Title,
+		TypeQN: newAlias.QN,
+		TypeTS: ConvertRecToSpec(newTerm),
+	}, nil
+}
+
+func (s *service) Modify(snap TypeSnap) (_ TypeSnap, err error) {
+	ctx := context.Background()
+	idAttr := slog.Any("typeID", snap.TypeID)
+	s.log.Debug("modification started", idAttr)
+	var rec TypeRec
+	s.operator.Implicit(ctx, func(ds data.Source) error {
+		rec, err = s.types.SelectTypeRecByID(ds, snap.TypeID)
+		return err
+	})
+	if err != nil {
+		s.log.Error("modification failed", idAttr)
+		return TypeSnap{}, err
+	}
+	if snap.TypeRN != rec.TypeRN {
+		s.log.Error("modification failed", idAttr)
+		return TypeSnap{}, errConcurrentModification(snap.TypeRN, rec.TypeRN)
+	} else {
+		snap.TypeRN = rn.Next(snap.TypeRN)
+	}
+	curSnap, err := s.retrieveSnap(rec)
+	if err != nil {
+		s.log.Error("modification failed", idAttr)
+		return TypeSnap{}, err
+	}
+	s.operator.Explicit(ctx, func(ds data.Source) error {
+		if CheckSpec(snap.TypeTS, curSnap.TypeTS) != nil {
+			newTerm := ConvertSpecToRec(snap.TypeTS)
+			err = s.types.InsertTerm(ds, newTerm)
+			if err != nil {
+				return err
+			}
+			rec.TermID = newTerm.Ident()
+			rec.TypeRN = snap.TypeRN
+		}
+		if rec.TypeRN == snap.TypeRN {
+			err = s.types.UpdateType(ds, rec)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		s.log.Error("modification failed", idAttr)
+		return TypeSnap{}, err
+	}
+	s.log.Debug("modification succeeded", idAttr)
+	return snap, nil
+}
+
+func (s *service) Retrieve(recID id.ADT) (_ TypeSnap, err error) {
+	ctx := context.Background()
+	var root TypeRec
+	s.operator.Implicit(ctx, func(ds data.Source) error {
+		root, err = s.types.SelectTypeRecByID(ds, recID)
+		return err
+	})
+	if err != nil {
+		s.log.Error("retrieval failed", slog.Any("roleID", recID))
+		return TypeSnap{}, err
+	}
+	return s.retrieveSnap(root)
+}
+
+func (s *service) retrieveSnap(typeRec TypeRec) (_ TypeSnap, err error) {
+	ctx := context.Background()
+	var termRec TermRec
+	s.operator.Implicit(ctx, func(ds data.Source) error {
+		termRec, err = s.types.SelectTermRecByID(ds, typeRec.TermID)
+		return err
+	})
+	if err != nil {
+		s.log.Error("retrieval failed", slog.Any("roleID", typeRec.TypeID))
+		return TypeSnap{}, err
+	}
+	return TypeSnap{
+		TypeID: typeRec.TypeID,
+		TypeRN: typeRec.TypeRN,
+		Title:  typeRec.Title,
+		TypeTS: ConvertRecToSpec(termRec),
+	}, nil
+}
+
+func (s *service) RetreiveRefs() (refs []TypeRef, err error) {
+	ctx := context.Background()
+	s.operator.Implicit(ctx, func(ds data.Source) error {
+		refs, err = s.types.SelectTypeRefs(ds)
+		return err
+	})
+	if err != nil {
+		s.log.Error("retrieval failed")
+		return nil, err
+	}
+	return refs, nil
+}
+
+func CollectEnv(recs []TypeRec) []id.ADT {
+	termIDs := []id.ADT{}
+	for _, r := range recs {
+		termIDs = append(termIDs, r.TermID)
+	}
+	return termIDs
+}
+
+type Repo interface {
+	InsertType(data.Source, TypeRec) error
+	UpdateType(data.Source, TypeRec) error
+	SelectTypeRefs(data.Source) ([]TypeRef, error)
+	SelectTypeRecByID(data.Source, id.ADT) (TypeRec, error)
+	SelectTypeRecsByIDs(data.Source, []id.ADT) ([]TypeRec, error)
+	SelectTypeRecByQN(data.Source, sym.ADT) (TypeRec, error)
+	SelectTypeRecsByQNs(data.Source, []sym.ADT) ([]TypeRec, error)
+	SelectTypeEnv(data.Source, []sym.ADT) (map[sym.ADT]TypeRec, error)
+
 	InsertTerm(data.Source, TermRec) error
-	SelectTermByID(data.Source, id.ADT) (TermRec, error)
-	SelectByIDs(data.Source, []id.ADT) ([]TermRec, error)
-	SelectEnv(data.Source, []id.ADT) (map[id.ADT]TermRec, error)
+	SelectTermRecByID(data.Source, id.ADT) (TermRec, error)
+	SelectTermRecsByIDs(data.Source, []id.ADT) ([]TermRec, error)
+	SelectTermEnv(data.Source, []id.ADT) (map[id.ADT]TermRec, error)
+}
+
+// goverter:variables
+// goverter:output:format assign-variable
+// goverter:extend smecalculus/rolevod/lib/id:Convert.*
+// goverter:extend smecalculus/rolevod/app/type/def:Convert.*
+var (
+	ConvertRecToRef  func(TypeRec) TypeRef
+	ConvertSnapToRef func(TypeSnap) TypeRef
+)
+
+func ErrSymMissingInEnv(want sym.ADT) error {
+	return fmt.Errorf("root missing in env: %v", want)
+}
+
+func errConcurrentModification(got rn.ADT, want rn.ADT) error {
+	return fmt.Errorf("entity concurrent modification: want revision %v, got revision %v", want, got)
+}
+
+func errOptimisticUpdate(got rn.ADT) error {
+	return fmt.Errorf("entity concurrent modification: got revision %v", got)
 }
 
 func ConvertSpecToRec(s TermSpec) TermRec {
@@ -501,4 +764,12 @@ func ErrSpecTypeMismatch(got, want TermSpec) error {
 
 func ErrSnapTypeMismatch(got, want TermRec) error {
 	return fmt.Errorf("root type mismatch: want %T, got %T", want, got)
+}
+
+func ErrPolarityUnexpected(got TermRec) error {
+	return fmt.Errorf("root polarity unexpected: %v", got.Pol())
+}
+
+func ErrPolarityMismatch(a, b TermRec) error {
+	return fmt.Errorf("root polarity mismatch: %v != %v", a.Pol(), b.Pol())
 }

@@ -16,7 +16,6 @@ import (
 	procdec "smecalculus/rolevod/app/proc/dec"
 	procdef "smecalculus/rolevod/app/proc/def"
 	proceval "smecalculus/rolevod/app/proc/eval"
-	typedec "smecalculus/rolevod/app/type/dec"
 	typedef "smecalculus/rolevod/app/type/def"
 )
 
@@ -65,22 +64,20 @@ func newAPI() API {
 
 type service struct {
 	pools    Repo
-	sigs     procdec.SigRepo
-	roles    typedec.Repo
-	states   typedef.TermRepo
+	sigs     procdec.Repo
+	types    typedef.Repo
 	operator data.Operator
 	log      *slog.Logger
 }
 
 func newService(
 	pools Repo,
-	sigs procdec.SigRepo,
-	roles typedec.Repo,
-	states typedef.TermRepo,
+	sigs procdec.Repo,
+	types typedef.Repo,
 	operator data.Operator,
 	l *slog.Logger,
 ) *service {
-	return &service{pools, sigs, roles, states, operator, l}
+	return &service{pools, sigs, types, operator, l}
 }
 
 func (s *service) Create(spec PoolSpec) (PoolRef, error) {
@@ -155,29 +152,29 @@ func (s *service) Take(spec StepSpec) (err error) {
 			s.log.Error("taking failed", idAttr, slog.Any("sigs", sigIDs))
 			return err
 		}
-		roleQNs := procdec.CollectEnv(maps.Values(sigs))
-		var roles map[sym.ADT]typedec.TypeRec
+		typeQNs := procdec.CollectEnv(maps.Values(sigs))
+		var types map[sym.ADT]typedef.TypeRec
 		err = s.operator.Implicit(ctx, func(ds data.Source) error {
-			roles, err = s.roles.SelectEnv(ds, roleQNs)
+			types, err = s.types.SelectTypeEnv(ds, typeQNs)
 			return err
 		})
 		if err != nil {
-			s.log.Error("taking failed", idAttr, slog.Any("roles", roleQNs))
+			s.log.Error("taking failed", idAttr, slog.Any("types", typeQNs))
 			return err
 		}
-		envIDs := typedec.CollectEnv(maps.Values(roles))
+		envIDs := typedef.CollectEnv(maps.Values(types))
 		ctxIDs := CollectCtx(maps.Values(procCfg.Chnls))
-		var types map[id.ADT]typedef.TermRec
+		var terms map[id.ADT]typedef.TermRec
 		err = s.operator.Implicit(ctx, func(ds data.Source) error {
-			types, err = s.states.SelectEnv(ds, append(envIDs, ctxIDs...))
+			terms, err = s.types.SelectTermEnv(ds, append(envIDs, ctxIDs...))
 			return err
 		})
 		if err != nil {
 			s.log.Error("taking failed", idAttr, slog.Any("env", envIDs), slog.Any("ctx", ctxIDs))
 			return err
 		}
-		procEnv := proceval.Env{ProcSigs: sigs, Roles: roles, TypeTerms: types}
-		procCtx := convertToCtx(poolID, maps.Values(procCfg.Chnls), types)
+		procEnv := proceval.Env{ProcSigs: sigs, Types: types, TypeTerms: terms}
+		procCtx := convertToCtx(poolID, maps.Values(procCfg.Chnls), terms)
 		// type checking
 		err = s.checkState(poolID, procEnv, procCtx, procCfg, termSpec)
 		if err != nil {
@@ -675,7 +672,7 @@ func (s *service) takeWith(
 			s.log.Error("taking failed")
 			return StepSpec{}, proceval.Mod{}, err
 		}
-		rcvrRole, ok := procEnv.Roles[rcvrSig.X.TypeQN]
+		rcvrRole, ok := procEnv.Types[rcvrSig.X.TypeQN]
 		if !ok {
 			err := errMissingRole(rcvrSig.X.TypeQN)
 			s.log.Error("taking failed")
@@ -1282,9 +1279,9 @@ func (s *service) checkClient(
 			return nil
 		}
 		for i, ep := range procSig.Ys {
-			valRole, ok := procEnv.Roles[ep.TypeQN]
+			valRole, ok := procEnv.Types[ep.TypeQN]
 			if !ok {
-				err := typedec.ErrMissingInEnv(ep.TypeQN)
+				err := typedef.ErrSymMissingInEnv(ep.TypeQN)
 				s.log.Error("checking failed")
 				return err
 			}
@@ -1308,9 +1305,9 @@ func (s *service) checkClient(
 			delete(procCtx.Assets, termSpec.Ys[i])
 		}
 		// check via
-		viaRole, ok := procEnv.Roles[procSig.X.TypeQN]
+		viaRole, ok := procEnv.Types[procSig.X.TypeQN]
 		if !ok {
-			err := typedec.ErrMissingInEnv(procSig.X.TypeQN)
+			err := typedef.ErrSymMissingInEnv(procSig.X.TypeQN)
 			s.log.Error("checking failed")
 			return err
 		}
