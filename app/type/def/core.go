@@ -97,6 +97,12 @@ type DownSpec struct {
 
 func (DownSpec) spec() {}
 
+type XactSpec struct {
+	Zs map[sym.ADT]TermSpec // conts
+}
+
+func (XactSpec) spec() {}
+
 type TermRef interface {
 	id.Identifiable
 }

@@ -39,8 +39,8 @@ type SnapMsg struct {
 // goverter:extend smecalculus/rolevod/lib/id:Convert.*
 // goverter:extend smecalculus/rolevod/app/proc/def:Msg.*
 var (
-	MsgFromSpec func(ProgSpec) SpecMsg
-	MsgToSpec   func(SpecMsg) (ProgSpec, error)
+	MsgFromSpec func(ProcSpec) SpecMsg
+	MsgToSpec   func(SpecMsg) (ProcSpec, error)
 	MsgToRef    func(RefMsg) (ProcRef, error)
 	MsgFromRef  func(ProcRef) RefMsg
 	MsgToSnap   func(SnapMsg) (ProcSnap, error)

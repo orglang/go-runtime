@@ -50,9 +50,9 @@ func (h *handlerEcho) PostCall(c echo.Context) error {
 		h.log.Error("mapping failed", idAttr)
 		return err
 	}
-	ref, err := h.api.Create(spec)
+	err = h.api.Run(spec)
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, MsgFromRef(ref))
+	return c.NoContent(http.StatusOK)
 }

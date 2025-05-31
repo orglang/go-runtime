@@ -294,17 +294,17 @@ func dataFromTermSpec(s TermSpec) (TermSpecData, error) {
 	case CloseSpec:
 		return TermSpecData{
 			K:     closeKind,
-			Close: &closeSpecData{sym.ConvertToString(spec.X)},
+			Close: &closeSpecData{sym.ConvertToString(spec.CommPH)},
 		}, nil
 	case WaitSpec:
-		dto, err := dataFromTermSpec(spec.Cont)
+		dto, err := dataFromTermSpec(spec.ContTS)
 		if err != nil {
 			return TermSpecData{}, err
 		}
 		return TermSpecData{
 			K: waitKind,
 			Wait: &waitSpecData{
-				X:    sym.ConvertToString(spec.X),
+				X:    sym.ConvertToString(spec.CommPH),
 				Cont: dto,
 			},
 		}, nil
@@ -332,7 +332,7 @@ func dataFromTermSpec(s TermSpec) (TermSpecData, error) {
 	case LabSpec:
 		return TermSpecData{
 			K:   labKind,
-			Lab: &labSpecData{sym.ConvertToString(spec.X), string(spec.Label)},
+			Lab: &labSpecData{sym.ConvertToString(spec.CommPH), string(spec.Label)},
 		}, nil
 	case CaseSpec:
 		brs := []branchSpecData{}
@@ -346,7 +346,7 @@ func dataFromTermSpec(s TermSpec) (TermSpecData, error) {
 		return TermSpecData{
 			K: caseKind,
 			Case: &caseSpecData{
-				X:        sym.ConvertToString(spec.X),
+				X:        sym.ConvertToString(spec.CommPH),
 				Branches: brs,
 			},
 		}, nil
@@ -370,7 +370,7 @@ func dataToTermSpec(dto TermSpecData) (TermSpec, error) {
 		if err != nil {
 			return nil, err
 		}
-		return CloseSpec{X: a}, nil
+		return CloseSpec{CommPH: a}, nil
 	case waitKind:
 		x, err := sym.ConvertFromString(dto.Wait.X)
 		if err != nil {
@@ -380,7 +380,7 @@ func dataToTermSpec(dto TermSpecData) (TermSpec, error) {
 		if err != nil {
 			return nil, err
 		}
-		return WaitSpec{X: x, Cont: cont}, nil
+		return WaitSpec{CommPH: x, ContTS: cont}, nil
 	case sendKind:
 		x, err := sym.ConvertFromString(dto.Send.X)
 		if err != nil {
@@ -410,7 +410,7 @@ func dataToTermSpec(dto TermSpecData) (TermSpec, error) {
 		if err != nil {
 			return nil, err
 		}
-		return LabSpec{X: x, Label: sym.ADT(dto.Lab.Label)}, nil
+		return LabSpec{CommPH: x, Label: sym.ADT(dto.Lab.Label)}, nil
 	case caseKind:
 		x, err := sym.ConvertFromString(dto.Case.X)
 		if err != nil {
@@ -424,7 +424,7 @@ func dataToTermSpec(dto TermSpecData) (TermSpec, error) {
 			}
 			conts[sym.ADT(b.Label)] = cont
 		}
-		return CaseSpec{X: x, Conts: conts}, nil
+		return CaseSpec{CommPH: x, Conts: conts}, nil
 	case fwdKind:
 		x, err := sym.ConvertFromString(dto.Fwd.X)
 		if err != nil {

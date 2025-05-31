@@ -219,15 +219,15 @@ func MsgFromTermSpec(t TermSpec) TermSpecMsg {
 		return TermSpecMsg{
 			K: Close,
 			Close: &CloseSpecMsg{
-				X: sym.ConvertToString(term.X),
+				X: sym.ConvertToString(term.CommPH),
 			},
 		}
 	case WaitSpec:
 		return TermSpecMsg{
 			K: Wait,
 			Wait: &WaitSpecMsg{
-				X:    sym.ConvertToString(term.X),
-				Cont: MsgFromTermSpec(term.Cont),
+				X:    sym.ConvertToString(term.CommPH),
+				Cont: MsgFromTermSpec(term.ContTS),
 			},
 		}
 	case SendSpec:
@@ -251,7 +251,7 @@ func MsgFromTermSpec(t TermSpec) TermSpecMsg {
 		return TermSpecMsg{
 			K: Lab,
 			Lab: &LabSpecMsg{
-				X:     sym.ConvertToString(term.X),
+				X:     sym.ConvertToString(term.CommPH),
 				Label: string(term.Label),
 			},
 		}
@@ -263,11 +263,11 @@ func MsgFromTermSpec(t TermSpec) TermSpecMsg {
 		return TermSpecMsg{
 			K: Case,
 			Case: &CaseSpecMsg{
-				X:   sym.ConvertToString(term.X),
+				X:   sym.ConvertToString(term.CommPH),
 				Brs: brs,
 			},
 		}
-	case SpawnSpec:
+	case SpawnSpecOld:
 		return TermSpecMsg{
 			K: Spawn,
 			Spawn: &SpawnSpecMsg{
@@ -277,7 +277,7 @@ func MsgFromTermSpec(t TermSpec) TermSpecMsg {
 				Cont:  MsgFromTermSpecNilable(term.Cont),
 			},
 		}
-	case CallSpec:
+	case CallSpecOld:
 		return TermSpecMsg{
 			K: Call,
 			Call: &CallSpecMsg{
@@ -313,7 +313,7 @@ func MsgToTermSpec(dto TermSpecMsg) (TermSpec, error) {
 		if err != nil {
 			return nil, err
 		}
-		return CloseSpec{X: x}, nil
+		return CloseSpec{CommPH: x}, nil
 	case Wait:
 		x, err := sym.ConvertFromString(dto.Wait.X)
 		if err != nil {
@@ -323,7 +323,7 @@ func MsgToTermSpec(dto TermSpecMsg) (TermSpec, error) {
 		if err != nil {
 			return nil, err
 		}
-		return WaitSpec{X: x, Cont: cont}, nil
+		return WaitSpec{CommPH: x, ContTS: cont}, nil
 	case Send:
 		x, err := sym.ConvertFromString(dto.Send.X)
 		if err != nil {
@@ -353,7 +353,7 @@ func MsgToTermSpec(dto TermSpecMsg) (TermSpec, error) {
 		if err != nil {
 			return nil, err
 		}
-		return LabSpec{X: x, Label: sym.ADT(dto.Lab.Label)}, nil
+		return LabSpec{CommPH: x, Label: sym.ADT(dto.Lab.Label)}, nil
 	case Case:
 		x, err := sym.ConvertFromString(dto.Case.X)
 		if err != nil {
@@ -367,7 +367,7 @@ func MsgToTermSpec(dto TermSpecMsg) (TermSpec, error) {
 			}
 			conts[sym.ADT(b.Label)] = cont
 		}
-		return CaseSpec{X: x, Conts: conts}, nil
+		return CaseSpec{CommPH: x, Conts: conts}, nil
 	case Spawn:
 		x, err := sym.ConvertFromString(dto.Spawn.X)
 		if err != nil {
@@ -385,7 +385,7 @@ func MsgToTermSpec(dto TermSpecMsg) (TermSpec, error) {
 		if err != nil {
 			return nil, err
 		}
-		return SpawnSpec{X: x, SigID: sigID, Ys: ys, Cont: cont}, nil
+		return SpawnSpecOld{X: x, SigID: sigID, Ys: ys, Cont: cont}, nil
 	case Call:
 		x, err := sym.ConvertFromString(dto.Call.X)
 		if err != nil {
@@ -399,7 +399,7 @@ func MsgToTermSpec(dto TermSpecMsg) (TermSpec, error) {
 		if err != nil {
 			return nil, err
 		}
-		return CallSpec{X: x, SigPH: sigPH, Ys: ys}, nil
+		return CallSpecOld{X: x, SigPH: sigPH, Ys: ys}, nil
 	case Fwd:
 		x, err := sym.ConvertFromString(dto.Fwd.X)
 		if err != nil {

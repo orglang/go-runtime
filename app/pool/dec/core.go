@@ -9,10 +9,16 @@ import (
 )
 
 type PoolSpec struct {
-	X      ChnlSpec // export
 	PoolNS sym.ADT
-	PoolSN sym.ADT    // label
-	Ys     []ChnlSpec // imports
+	PoolSN sym.ADT
+	// endpoint where pool acts as a provider for insiders
+	InsiderProvisionEP ChnlSpec
+	// endpoint where pool acts as a client for insiders
+	InsiderReceptionEP ChnlSpec
+	// endpoint where pool acts as a provider for outsiders
+	OutsiderProvisionEP ChnlSpec
+	// endpoints where pool acts as a client for outsiders
+	OutsiderReceptionEPs []ChnlSpec
 }
 
 type ChnlSpec struct {

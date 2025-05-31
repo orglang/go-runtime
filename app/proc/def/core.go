@@ -31,17 +31,17 @@ type TermSpec interface {
 }
 
 type CloseSpec struct {
-	X sym.ADT
+	CommPH sym.ADT
 }
 
-func (s CloseSpec) Via() sym.ADT { return s.X }
+func (s CloseSpec) Via() sym.ADT { return s.CommPH }
 
 type WaitSpec struct {
-	X    sym.ADT
-	Cont TermSpec
+	CommPH sym.ADT
+	ContTS TermSpec
 }
 
-func (s WaitSpec) Via() sym.ADT { return s.X }
+func (s WaitSpec) Via() sym.ADT { return s.CommPH }
 
 type SendSpec struct {
 	CommPH sym.ADT // via
@@ -51,27 +51,27 @@ type SendSpec struct {
 func (s SendSpec) Via() sym.ADT { return s.CommPH }
 
 type RecvSpec struct {
-	CommPH sym.ADT // via
-	BindPH sym.ADT // val
+	CommPH sym.ADT
+	BindPH sym.ADT
 	ContTS TermSpec
 }
 
 func (s RecvSpec) Via() sym.ADT { return s.CommPH }
 
 type LabSpec struct {
-	X     sym.ADT
-	Label sym.ADT
-	Cont  TermSpec
+	CommPH sym.ADT
+	Label  sym.ADT
+	ContTS TermSpec
 }
 
-func (s LabSpec) Via() sym.ADT { return s.X }
+func (s LabSpec) Via() sym.ADT { return s.CommPH }
 
 type CaseSpec struct {
-	X     sym.ADT
-	Conts map[sym.ADT]TermSpec
+	CommPH sym.ADT
+	Conts  map[sym.ADT]TermSpec
 }
 
-func (s CaseSpec) Via() sym.ADT { return s.X }
+func (s CaseSpec) Via() sym.ADT { return s.CommPH }
 
 // aka ExpName
 type LinkSpec struct {
@@ -90,26 +90,26 @@ type FwdSpec struct {
 func (s FwdSpec) Via() sym.ADT { return s.X }
 
 // аналог SendSpec, но значения отправляются балком
-type CallSpec struct {
+type CallSpecOld struct {
 	X     sym.ADT
 	SigPH sym.ADT // import
 	Ys    []sym.ADT
 }
 
-func (s CallSpec) Via() sym.ADT { return s.SigPH }
+func (s CallSpecOld) Via() sym.ADT { return s.SigPH }
 
-// аналог LabSpec, но отправляем тегированный балк каналов
-type CallSpec2 struct {
+type CallSpec struct {
 	CommPH sym.ADT
-	ProcSN sym.ADT   // aka label
+	BindPH sym.ADT
+	ProcSN sym.ADT   // label
 	ValPHs []sym.ADT // channel bulk
 	ContTS TermSpec
 }
 
-func (s CallSpec2) Via() sym.ADT { return s.CommPH }
+func (s CallSpec) Via() sym.ADT { return s.CommPH }
 
 // аналог RecvSpec, но значения принимаются балком
-type SpawnSpec struct {
+type SpawnSpecOld struct {
 	X      sym.ADT
 	SigID  id.ADT
 	Ys     []sym.ADT
@@ -117,23 +117,15 @@ type SpawnSpec struct {
 	Cont   TermSpec
 }
 
-func (s SpawnSpec) Via() sym.ADT { return s.X }
+func (s SpawnSpecOld) Via() sym.ADT { return s.X }
 
-// аналог RecvSpec, но значения принимаются балком
-type SpawnSpec2 struct {
-	X     sym.ADT
-	SigPH sym.ADT // export
-	Cont  TermSpec
+type SpawnSpec struct {
+	CommPH sym.ADT
+	ProcSN sym.ADT
+	ContTS TermSpec
 }
 
-func (s SpawnSpec2) Via() sym.ADT { return s.SigPH }
-
-// аналог CaseSpec, но принимаем тегированный балк каналов
-type SpawnSpec3 struct {
-	PoolPH sym.ADT
-}
-
-func (s SpawnSpec3) Via() sym.ADT { return s.PoolPH }
+func (s SpawnSpec) Via() sym.ADT { return s.CommPH }
 
 type AcqureSpec struct {
 	CommPH sym.ADT
@@ -143,22 +135,23 @@ type AcqureSpec struct {
 func (s AcqureSpec) Via() sym.ADT { return s.CommPH }
 
 type AcceptSpec struct {
-	X sym.ADT
+	CommPH sym.ADT
+	ContTS TermSpec
 }
 
-func (s AcceptSpec) Via() sym.ADT { return s.X }
+func (s AcceptSpec) Via() sym.ADT { return s.CommPH }
 
 type DetachSpec struct {
-	X sym.ADT
+	CommPH sym.ADT
 }
 
-func (s DetachSpec) Via() sym.ADT { return s.X }
+func (s DetachSpec) Via() sym.ADT { return s.CommPH }
 
 type ReleaseSpec struct {
-	X sym.ADT
+	CommPH sym.ADT
 }
 
-func (s ReleaseSpec) Via() sym.ADT { return s.X }
+func (s ReleaseSpec) Via() sym.ADT { return s.CommPH }
 
 type TermRec interface {
 	TermSpec
@@ -282,7 +275,7 @@ func collectEnvRec(s TermSpec, env []id.ADT) []id.ADT {
 			env = collectEnvRec(cont, env)
 		}
 		return env
-	case SpawnSpec:
+	case SpawnSpecOld:
 		return collectEnvRec(spec.Cont, append(env, spec.SigID))
 	default:
 		return env

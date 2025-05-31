@@ -43,7 +43,7 @@ func (r *repoPgx) Insert(source data.Source, root PoolRec) (err error) {
 		r.log.Error("execution failed")
 		return err
 	}
-	r.log.Debug("insertion succeeded", slog.Any("poolID", root.PoolID))
+	r.log.Debug("insertion succeeded", slog.Any("poolID", root.ExecID))
 	return nil
 }
 

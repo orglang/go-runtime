@@ -35,6 +35,10 @@ func (cl *clientResty) Create(spec PoolSpec) (PoolRef, error) {
 	return MsgToPoolRef(res)
 }
 
+func (cl *clientResty) Poll(spec PollSpec) (procexec.ProcRef, error) {
+	return procexec.ProcRef{}, nil
+}
+
 func (cl *clientResty) Retrieve(poolID id.ADT) (PoolSnap, error) {
 	var res PoolSnapMsg
 	_, err := cl.resty.R().
@@ -52,7 +56,7 @@ func (cl *clientResty) RetreiveRefs() ([]PoolRef, error) {
 	return refs, nil
 }
 
-func (cl *clientResty) Spawn(spec procexec.ProgSpec) (procexec.ProcRef, error) {
+func (cl *clientResty) Spawn(spec procexec.ProcSpec) (procexec.ProcRef, error) {
 	req := procexec.MsgFromSpec(spec)
 	var res procexec.RefMsg
 	_, err := cl.resty.R().

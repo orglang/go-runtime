@@ -42,7 +42,7 @@ type SvcRec struct {
 
 func (r SvcRec) step() id.ADT { return r.ChnlID }
 
-type ProgSpec struct {
+type ProcSpec struct {
 	PoolID id.ADT
 	ExecID id.ADT
 	ProcTS procdef.TermSpec
@@ -134,7 +134,7 @@ type Bnd struct {
 }
 
 type API interface {
-	Create(ProgSpec) (ProcRef, error)
+	Run(ProcSpec) error
 	Retrieve(id.ADT) (ProcSnap, error)
 }
 
@@ -157,7 +157,7 @@ func newService(
 	return &service{procs, operator, l}
 }
 
-func (s *service) Create(spec ProgSpec) (_ ProcRef, err error) {
+func (s *service) Run(spec ProcSpec) (err error) {
 	idAttr := slog.Any("procID", spec.ExecID)
 	s.log.Debug("creation started", idAttr)
 	ctx := context.Background()
@@ -168,18 +168,18 @@ func (s *service) Create(spec ProgSpec) (_ ProcRef, err error) {
 	})
 	if err != nil {
 		s.log.Error("creation failed", idAttr)
-		return ProcRef{}, err
+		return err
 	}
 	var mainEnv Env
 	err = s.checkType(spec.PoolID, mainEnv, mainCfg, spec.ProcTS)
 	if err != nil {
 		s.log.Error("creation failed", idAttr)
-		return ProcRef{}, err
+		return err
 	}
 	mainMod, err := s.createWith(mainEnv, mainCfg, spec.ProcTS)
 	if err != nil {
 		s.log.Error("creation failed", idAttr)
-		return ProcRef{}, err
+		return err
 	}
 	err = s.operator.Explicit(ctx, func(ds data.Source) error {
 		err = s.procs.UpdateMain(ds, mainMod)
@@ -191,9 +191,9 @@ func (s *service) Create(spec ProgSpec) (_ ProcRef, err error) {
 	})
 	if err != nil {
 		s.log.Error("creation failed", idAttr)
-		return ProcRef{}, err
+		return err
 	}
-	return ProcRef{}, nil
+	return nil
 }
 
 func (s *service) Retrieve(procID id.ADT) (_ ProcSnap, err error) {
@@ -244,7 +244,7 @@ func (s *service) createWith(
 	_ error,
 ) {
 	switch termSpec := ts.(type) {
-	case procdef.CallSpec:
+	case procdef.CallSpecOld:
 		viaCord, ok := procCfg.Bnds[termSpec.X]
 		if !ok {
 			err := procdef.ErrMissingInCfg(termSpec.X)
@@ -269,7 +269,7 @@ func (s *service) createWith(
 		}
 		s.log.Debug("coordination succeeded")
 		return procMod, nil
-	case procdef.SpawnSpec:
+	case procdef.SpawnSpecOld:
 		s.log.Debug("coordination succeeded")
 		return procMod, nil
 	default:

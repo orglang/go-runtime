@@ -20,7 +20,7 @@ func NewAPI() API {
 	return newClientResty()
 }
 
-func (cl *clientResty) Create(spec ProgSpec) (ProcRef, error) {
+func (cl *clientResty) Run(spec ProcSpec) error {
 	req := MsgFromSpec(spec)
 	var res RefMsg
 	_, err := cl.resty.R().
@@ -29,9 +29,9 @@ func (cl *clientResty) Create(spec ProgSpec) (ProcRef, error) {
 		SetResult(&res).
 		Post("/procs/{id}/calls")
 	if err != nil {
-		return ProcRef{}, err
+		return err
 	}
-	return MsgToRef(res)
+	return nil
 }
 
 func (cl *clientResty) Retrieve(procID id.ADT) (ProcSnap, error) {

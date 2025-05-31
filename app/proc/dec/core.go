@@ -14,13 +14,15 @@ import (
 )
 
 type ProcSpec struct {
-	X      ChnlSpec // via
 	ProcNS sym.ADT
 	ProcSN sym.ADT
-	Ys     []ChnlSpec // vals
+	// endpoint where process acts as a provider
+	ProvisionEP ChnlSpec
+	// endpoints where process acts as a client
+	ReceptionEPs []ChnlSpec
 }
 
-// aka ChanTp
+// channel endpoint
 type ChnlSpec struct {
 	CommPH sym.ADT // may be blank
 	TypeQN sym.ADT
@@ -102,9 +104,9 @@ func (s *service) Create(spec ProcSpec) (_ ProcSnap, err error) {
 	qnAttr := slog.Any("sigQN", spec.ProcSN)
 	s.log.Debug("creation started", qnAttr, slog.Any("spec", spec))
 	newRec := ProcRec{
-		X:     spec.X,
+		X:     spec.ProvisionEP,
 		DecID: id.New(),
-		Ys:    spec.Ys,
+		Ys:    spec.ReceptionEPs,
 		DecRN: rn.Initial(),
 	}
 	s.operator.Explicit(ctx, func(ds data.Source) error {
