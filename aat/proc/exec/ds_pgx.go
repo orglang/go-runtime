@@ -12,24 +12,24 @@ import (
 )
 
 // Adapter
-type repoPgx struct {
+type daoPgx struct {
 	log *slog.Logger
 }
 
 // for compilation purposes
 func newRepo() repo {
-	return &repoPgx{}
+	return &daoPgx{}
 }
 
-func newRepoPgx(l *slog.Logger) *repoPgx {
-	return &repoPgx{l}
+func newDaoPgx(l *slog.Logger) *daoPgx {
+	return &daoPgx{l}
 }
 
-func (r *repoPgx) SelectMain(data.Source, id.ADT) (MainCfg, error) {
+func (r *daoPgx) SelectMain(data.Source, id.ADT) (MainCfg, error) {
 	return MainCfg{}, nil
 }
 
-func (r *repoPgx) UpdateMain(data.Source, MainMod) error {
+func (r *daoPgx) UpdateMain(data.Source, MainMod) error {
 	return nil
 }
 

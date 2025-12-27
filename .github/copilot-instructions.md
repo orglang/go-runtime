@@ -28,9 +28,16 @@ This a visual programming language to support organization development and manag
 - `aet`: Abstract entity type
     - Consumed by `Service` struct
     - Specified by `Repo` interface
-    - Implemented by dao adapter
+    - Implemented by DAO adapter
 - `avt`: Abstract value type
     - Specified by `ADT` type or interface
+
+### Artifact abstractions
+
+- `sources`: Human-readable source code artifacts
+- `binaries`: Machine-readable binary artifacts (optional)
+- `distros`: Distributable artifacts (images, archives, etc)
+- `stacks`: Deployable artifacts (ansible playbooks, helm charts, etc)
 
 ### Execution abstractions
 
@@ -65,3 +72,9 @@ This a visual programming language to support organization development and manag
 - `sdk_resty.go`: Resty (HTTP client) specific API implementations (secondary adapters for external use)
 - `iv_ozzo.go`: Ozzo (validation library) specific validation methods
 - `tc_goverter.go`: Goverter (tool for creating type-safe converters) specific conversion methods
+
+## Workflow
+
+- `task sources` - before commit in task branch
+- `task binaries` - before push in task branch
+- `task packages` - before pull request

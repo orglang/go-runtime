@@ -13,20 +13,20 @@ import (
 )
 
 // Adapter
-type repoPgx struct {
+type daoPgx struct {
 	log *slog.Logger
 }
 
-func newRepoPgx(l *slog.Logger) *repoPgx {
-	return &repoPgx{l}
+func newDaoPgx(l *slog.Logger) *daoPgx {
+	return &daoPgx{l}
 }
 
 // for compilation purposes
 func newRepo() Repo {
-	return &repoPgx{}
+	return &daoPgx{}
 }
 
-func (r *repoPgx) Insert(source data.Source, mod ProcRec) error {
+func (r *daoPgx) Insert(source data.Source, mod ProcRec) error {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("id", mod.DecID)
 	dto, err := DataFromSigRec(mod)
@@ -101,7 +101,7 @@ func (r *repoPgx) Insert(source data.Source, mod ProcRec) error {
 	return nil
 }
 
-func (r *repoPgx) SelectByID(source data.Source, rid id.ADT) (ProcSnap, error) {
+func (r *daoPgx) SelectByID(source data.Source, rid id.ADT) (ProcSnap, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("id", rid)
 	rows, err := ds.Conn.Query(ds.Ctx, selectById, rid.String())
@@ -119,7 +119,7 @@ func (r *repoPgx) SelectByID(source data.Source, rid id.ADT) (ProcSnap, error) {
 	return DataToSigSnap(dto)
 }
 
-func (r *repoPgx) SelectEnv(source data.Source, ids []id.ADT) (map[id.ADT]ProcRec, error) {
+func (r *daoPgx) SelectEnv(source data.Source, ids []id.ADT) (map[id.ADT]ProcRec, error) {
 	sigs, err := r.SelectByIDs(source, ids)
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func (r *repoPgx) SelectEnv(source data.Source, ids []id.ADT) (map[id.ADT]ProcRe
 	return env, nil
 }
 
-func (r *repoPgx) SelectByIDs(source data.Source, ids []id.ADT) (_ []ProcRec, err error) {
+func (r *daoPgx) SelectByIDs(source data.Source, ids []id.ADT) (_ []ProcRec, err error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	if len(ids) == 0 {
 		return []ProcRec{}, nil
@@ -167,7 +167,7 @@ func (r *repoPgx) SelectByIDs(source data.Source, ids []id.ADT) (_ []ProcRec, er
 	return DataToSigRecs(dtos)
 }
 
-func (r *repoPgx) SelectAll(source data.Source) ([]ProcRef, error) {
+func (r *daoPgx) SelectAll(source data.Source) ([]ProcRef, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	query := `
 		select

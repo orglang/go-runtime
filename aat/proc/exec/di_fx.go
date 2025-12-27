@@ -14,7 +14,7 @@ var Module = fx.Module("aat/proc",
 	fx.Provide(
 		fx.Private,
 		newHandlerEcho,
-		fx.Annotate(newRepoPgx, fx.As(new(repo))),
+		fx.Annotate(newDaoPgx, fx.As(new(repo))),
 	),
 	fx.Invoke(
 		cfgEcho,

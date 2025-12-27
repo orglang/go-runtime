@@ -22,7 +22,7 @@ var Module = fx.Module("aat/pool",
 		fx.Private,
 		newHandlerEcho,
 		newStepHandlerEcho,
-		fx.Annotate(newRepoPgx, fx.As(new(Repo))),
+		fx.Annotate(newDaoPgx, fx.As(new(Repo))),
 		fx.Annotate(newRenderer, fx.As(new(msg.Renderer))),
 	),
 	fx.Invoke(

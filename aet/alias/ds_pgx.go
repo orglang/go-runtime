@@ -9,21 +9,21 @@ import (
 )
 
 // Adapter
-type repoPgx struct {
+type daoPgx struct {
 	log *slog.Logger
 }
 
-func newRepoPgx(l *slog.Logger) *repoPgx {
+func newDaoPgx(l *slog.Logger) *daoPgx {
 	name := slog.String("name", "aliasRepoPgx")
-	return &repoPgx{l.With(name)}
+	return &daoPgx{l.With(name)}
 }
 
 // for compilation purposes
 func newRepo() Repo {
-	return &repoPgx{}
+	return &daoPgx{}
 }
 
-func (r *repoPgx) Insert(source data.Source, root Root) error {
+func (r *daoPgx) Insert(source data.Source, root Root) error {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("id", root.ID)
 	dto, err := DataFromRoot(root)

@@ -16,20 +16,20 @@ import (
 )
 
 // Adapter
-type repoPgx struct {
+type daoPgx struct {
 	log *slog.Logger
 }
 
-func newRepoPgx(l *slog.Logger) *repoPgx {
-	return &repoPgx{l}
+func newDaoPgx(l *slog.Logger) *daoPgx {
+	return &daoPgx{l}
 }
 
 // for compilation purposes
 func newRepo() Repo {
-	return &repoPgx{}
+	return &daoPgx{}
 }
 
-func (r *repoPgx) Insert(source data.Source, root PoolRec) (err error) {
+func (r *daoPgx) Insert(source data.Source, root PoolRec) (err error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	dto := DataFromPoolRec(root)
 	args := pgx.NamedArgs{
@@ -47,7 +47,7 @@ func (r *repoPgx) Insert(source data.Source, root PoolRec) (err error) {
 	return nil
 }
 
-func (r *repoPgx) InsertLiab(source data.Source, liab procexec.Liab) (err error) {
+func (r *daoPgx) InsertLiab(source data.Source, liab procexec.Liab) (err error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	dto := DataFromLiab(liab)
 	args := pgx.NamedArgs{
@@ -64,7 +64,7 @@ func (r *repoPgx) InsertLiab(source data.Source, liab procexec.Liab) (err error)
 	return nil
 }
 
-func (r *repoPgx) SelectProc(source data.Source, procID id.ADT) (procexec.Cfg, error) {
+func (r *daoPgx) SelectProc(source data.Source, procID id.ADT) (procexec.Cfg, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("procID", procID)
 	chnlRows, err := ds.Conn.Query(ds.Ctx, selectChnls, procID.String())
@@ -106,7 +106,7 @@ func (r *repoPgx) SelectProc(source data.Source, procID id.ADT) (procexec.Cfg, e
 	}, nil
 }
 
-func (r *repoPgx) UpdateProc(source data.Source, mod procexec.Mod) (err error) {
+func (r *daoPgx) UpdateProc(source data.Source, mod procexec.Mod) (err error) {
 	if len(mod.Locks) == 0 {
 		panic("empty locks")
 	}
@@ -199,7 +199,7 @@ func (r *repoPgx) UpdateProc(source data.Source, mod procexec.Mod) (err error) {
 	return nil
 }
 
-func (r *repoPgx) SelectSubs(source data.Source, poolID id.ADT) (PoolSnap, error) {
+func (r *daoPgx) SelectSubs(source data.Source, poolID id.ADT) (PoolSnap, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("poolID", poolID)
 	rows, err := ds.Conn.Query(ds.Ctx, selectOrgSnap, poolID.String())
@@ -222,7 +222,7 @@ func (r *repoPgx) SelectSubs(source data.Source, poolID id.ADT) (PoolSnap, error
 	return snap, nil
 }
 
-func (r *repoPgx) SelectRefs(source data.Source) ([]PoolRef, error) {
+func (r *daoPgx) SelectRefs(source data.Source) ([]PoolRef, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	query := `
 		select

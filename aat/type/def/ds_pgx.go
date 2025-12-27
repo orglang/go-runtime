@@ -15,20 +15,20 @@ import (
 )
 
 // Adapter
-type repoPgx struct {
+type daoPgx struct {
 	log *slog.Logger
 }
 
-func newRepoPgx(l *slog.Logger) *repoPgx {
-	return &repoPgx{l}
+func newDaoPgx(l *slog.Logger) *daoPgx {
+	return &daoPgx{l}
 }
 
 // for compilation purposes
 func newRepo() Repo {
-	return &repoPgx{}
+	return &daoPgx{}
 }
 
-func (r *repoPgx) InsertType(source data.Source, rec TypeRec) error {
+func (r *daoPgx) InsertType(source data.Source, rec TypeRec) error {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("id", rec.TypeID)
 	r.log.Log(ds.Ctx, core.LevelTrace, "entity insertion started", idAttr)
@@ -74,7 +74,7 @@ func (r *repoPgx) InsertType(source data.Source, rec TypeRec) error {
 	return nil
 }
 
-func (r *repoPgx) UpdateType(source data.Source, rec TypeRec) error {
+func (r *daoPgx) UpdateType(source data.Source, rec TypeRec) error {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("id", rec.TypeID)
 	r.log.Log(ds.Ctx, core.LevelTrace, "entity update started", idAttr)
@@ -119,7 +119,7 @@ func (r *repoPgx) UpdateType(source data.Source, rec TypeRec) error {
 	return nil
 }
 
-func (r *repoPgx) SelectTypeRefs(source data.Source) ([]TypeRef, error) {
+func (r *daoPgx) SelectTypeRefs(source data.Source) ([]TypeRef, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	query := `
 		SELECT
@@ -140,7 +140,7 @@ func (r *repoPgx) SelectTypeRefs(source data.Source) ([]TypeRef, error) {
 	return DataToTypeRefs(dtos)
 }
 
-func (r *repoPgx) SelectTypeRecByID(source data.Source, recID id.ADT) (TypeRec, error) {
+func (r *daoPgx) SelectTypeRecByID(source data.Source, recID id.ADT) (TypeRec, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("id", recID)
 	rows, err := ds.Conn.Query(ds.Ctx, selectById, recID.String())
@@ -158,7 +158,7 @@ func (r *repoPgx) SelectTypeRecByID(source data.Source, recID id.ADT) (TypeRec, 
 	return DataToTypeRec(dto)
 }
 
-func (r *repoPgx) SelectTypeRecByQN(source data.Source, recQN sym.ADT) (TypeRec, error) {
+func (r *daoPgx) SelectTypeRecByQN(source data.Source, recQN sym.ADT) (TypeRec, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	fqnAttr := slog.Any("qn", recQN)
 	rows, err := ds.Conn.Query(ds.Ctx, selectByFQN, sym.ConvertToString(recQN))
@@ -176,7 +176,7 @@ func (r *repoPgx) SelectTypeRecByQN(source data.Source, recQN sym.ADT) (TypeRec,
 	return DataToTypeRec(dto)
 }
 
-func (r *repoPgx) SelectTypeRecsByIDs(source data.Source, recIDs []id.ADT) (_ []TypeRec, err error) {
+func (r *daoPgx) SelectTypeRecsByIDs(source data.Source, recIDs []id.ADT) (_ []TypeRec, err error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	if len(recIDs) == 0 {
 		return []TypeRec{}, nil
@@ -217,7 +217,7 @@ func (r *repoPgx) SelectTypeRecsByIDs(source data.Source, recIDs []id.ADT) (_ []
 	return DataToTypeRecs(dtos)
 }
 
-func (r *repoPgx) SelectTypeEnv(source data.Source, recQNs []sym.ADT) (map[sym.ADT]TypeRec, error) {
+func (r *daoPgx) SelectTypeEnv(source data.Source, recQNs []sym.ADT) (map[sym.ADT]TypeRec, error) {
 	recs, err := r.SelectTypeRecsByQNs(source, recQNs)
 	if err != nil {
 		return nil, err
@@ -229,7 +229,7 @@ func (r *repoPgx) SelectTypeEnv(source data.Source, recQNs []sym.ADT) (map[sym.A
 	return env, nil
 }
 
-func (r *repoPgx) SelectTypeRecsByQNs(source data.Source, recQNs []sym.ADT) (_ []TypeRec, err error) {
+func (r *daoPgx) SelectTypeRecsByQNs(source data.Source, recQNs []sym.ADT) (_ []TypeRec, err error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	if len(recQNs) == 0 {
 		return []TypeRec{}, nil
@@ -262,7 +262,7 @@ func (r *repoPgx) SelectTypeRecsByQNs(source data.Source, recQNs []sym.ADT) (_ [
 	return DataToTypeRecs(dtos)
 }
 
-func (r *repoPgx) InsertTerm(source data.Source, rec TermRec) (err error) {
+func (r *daoPgx) InsertTerm(source data.Source, rec TermRec) (err error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	dto := dataFromTermRec(rec)
 	query := `
@@ -297,7 +297,7 @@ func (r *repoPgx) InsertTerm(source data.Source, rec TermRec) (err error) {
 	return nil
 }
 
-func (r *repoPgx) SelectTermRecByID(source data.Source, recID id.ADT) (TermRec, error) {
+func (r *daoPgx) SelectTermRecByID(source data.Source, recID id.ADT) (TermRec, error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	idAttr := slog.Any("id", recID)
 	query := `
@@ -336,7 +336,7 @@ func (r *repoPgx) SelectTermRecByID(source data.Source, recID id.ADT) (TermRec, 
 	return statesToTermRec(states, states[recID.String()])
 }
 
-func (r *repoPgx) SelectTermEnv(source data.Source, recIDs []id.ADT) (map[id.ADT]TermRec, error) {
+func (r *daoPgx) SelectTermEnv(source data.Source, recIDs []id.ADT) (map[id.ADT]TermRec, error) {
 	recs, err := r.SelectTermRecsByIDs(source, recIDs)
 	if err != nil {
 		return nil, err
@@ -348,7 +348,7 @@ func (r *repoPgx) SelectTermEnv(source data.Source, recIDs []id.ADT) (map[id.ADT
 	return env, nil
 }
 
-func (r *repoPgx) SelectTermRecsByIDs(source data.Source, recIDs []id.ADT) (_ []TermRec, err error) {
+func (r *daoPgx) SelectTermRecsByIDs(source data.Source, recIDs []id.ADT) (_ []TermRec, err error) {
 	ds := data.MustConform[data.SourcePgx](source)
 	batch := pgx.Batch{}
 	for _, rid := range recIDs {

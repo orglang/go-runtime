@@ -5,11 +5,11 @@ import (
 )
 
 // Adapter
-type repoPgx struct {
+type daoPgx struct {
 	log *slog.Logger
 }
 
-func newRepoPgx(l *slog.Logger) *repoPgx {
+func newDaoPgx(l *slog.Logger) *daoPgx {
 	name := slog.String("name", "stepRepoPgx")
-	return &repoPgx{l.With(name)}
+	return &daoPgx{l.With(name)}
 }
