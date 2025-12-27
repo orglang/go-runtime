@@ -5,19 +5,19 @@ package main
 import (
 	"go.uber.org/fx"
 
-	"smecalculus/rolevod/lib/core"
-	"smecalculus/rolevod/lib/data"
-	"smecalculus/rolevod/lib/msg"
+	"orglang/orglang/avt/core"
+	"orglang/orglang/avt/data"
+	"orglang/orglang/avt/msg"
 
-	"smecalculus/rolevod/internal/alias"
+	"orglang/orglang/aet/alias"
 
-	poolexec "smecalculus/rolevod/app/pool/exec"
-	procdec "smecalculus/rolevod/app/proc/dec"
-	procdef "smecalculus/rolevod/app/proc/def"
-	procexec "smecalculus/rolevod/app/proc/exec"
-	typedef "smecalculus/rolevod/app/type/def"
+	poolexec "orglang/orglang/aat/pool/exec"
+	procdec "orglang/orglang/aat/proc/dec"
+	procdef "orglang/orglang/aat/proc/def"
+	procexec "orglang/orglang/aat/proc/exec"
+	typedef "orglang/orglang/aat/type/def"
 
-	"smecalculus/rolevod/app/web"
+	"orglang/orglang/app/web"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	a "smecalculus/rolevod/proto/rast1/ast"
+	a "orglang/orglang/proto/rast1/ast"
 
 	"github.com/google/go-cmp/cmp"
 )

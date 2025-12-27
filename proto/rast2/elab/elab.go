@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	a "orglang/orglang/proto/rast2/ast"
+	tc "orglang/orglang/proto/rast2/typecheck"
 	"slices"
-	a "smecalculus/rolevod/proto/rast2/ast"
-	tc "smecalculus/rolevod/proto/rast2/typecheck"
 )
 
 func ElabTps(env a.Environment, dcls map[string]a.Decl) error {

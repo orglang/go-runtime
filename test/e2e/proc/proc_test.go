@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	procdec "smecalculus/rolevod/app/proc/dec"
+	procdec "orglang/orglang/aat/proc/dec"
 )
 
 var (

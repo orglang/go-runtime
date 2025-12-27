@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	typedef "smecalculus/rolevod/app/type/def"
+	typedef "orglang/orglang/aat/type/def"
 )
 
 var (

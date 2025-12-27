@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	a "smecalculus/rolevod/proto/rast2/ast"
+	a "orglang/orglang/proto/rast2/ast"
 )
 
 type Proc struct {

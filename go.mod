@@ -1,4 +1,4 @@
-module smecalculus/rolevod
+module orglang/orglang
 
 go 1.24.0
 

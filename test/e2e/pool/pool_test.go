@@ -9,15 +9,15 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"smecalculus/rolevod/lib/sym"
+	"orglang/orglang/avt/sym"
 
-	pooldec "smecalculus/rolevod/app/pool/dec"
-	pooldef "smecalculus/rolevod/app/pool/def"
-	poolexec "smecalculus/rolevod/app/pool/exec"
-	procdec "smecalculus/rolevod/app/proc/dec"
-	procdef "smecalculus/rolevod/app/proc/def"
-	procexec "smecalculus/rolevod/app/proc/exec"
-	typedef "smecalculus/rolevod/app/type/def"
+	pooldec "orglang/orglang/aat/pool/dec"
+	pooldef "orglang/orglang/aat/pool/def"
+	poolexec "orglang/orglang/aat/pool/exec"
+	procdec "orglang/orglang/aat/proc/dec"
+	procdef "orglang/orglang/aat/proc/def"
+	procexec "orglang/orglang/aat/proc/exec"
+	typedef "orglang/orglang/aat/type/def"
 )
 
 var (
