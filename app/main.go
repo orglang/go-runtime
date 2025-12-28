@@ -7,7 +7,7 @@ import (
 
 	"orglang/orglang/lib/lf"
 	"orglang/orglang/lib/sd"
-	"orglang/orglang/lib/wf"
+	"orglang/orglang/lib/ws"
 
 	"orglang/orglang/aet/alias"
 
@@ -23,7 +23,7 @@ import (
 func main() {
 	fx.New(
 		// lib
-		wf.Module,
+		ws.Module,
 		sd.Module,
 		lf.Module,
 		// aet

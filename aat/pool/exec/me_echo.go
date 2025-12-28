@@ -22,7 +22,7 @@ type handlerEcho struct {
 }
 
 func newHandlerEcho(a API, r te.Renderer, l *slog.Logger) *handlerEcho {
-	name := slog.String("name", "poolHandlerEcho")
+	name := slog.String("name", reflect.TypeFor[handlerEcho]().Name())
 	return &handlerEcho{a, r, l.With(name)}
 }
 
@@ -108,7 +108,7 @@ type stepHandlerEcho struct {
 }
 
 func newStepHandlerEcho(a API, r te.Renderer, l *slog.Logger) *stepHandlerEcho {
-	name := slog.String("name", "stepHandlerEcho")
+	name := slog.String("name", reflect.TypeFor[stepHandlerEcho]().Name())
 	return &stepHandlerEcho{a, r, l.With(name)}
 }
 

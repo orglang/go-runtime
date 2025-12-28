@@ -3,6 +3,7 @@ package alias
 import (
 	"log/slog"
 	"math"
+	"reflect"
 
 	"github.com/jackc/pgx/v5"
 
@@ -15,7 +16,7 @@ type daoPgx struct {
 }
 
 func newDaoPgx(l *slog.Logger) *daoPgx {
-	name := slog.String("name", "aliasRepoPgx")
+	name := slog.String("name", reflect.TypeFor[daoPgx]().Name())
 	return &daoPgx{l.With(name)}
 }
 

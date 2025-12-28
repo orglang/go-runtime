@@ -1,4 +1,4 @@
-package wf
+package ws
 
 import (
 	"context"
@@ -10,9 +10,9 @@ import (
 	"go.uber.org/fx"
 )
 
-func newEcho(p *props, l *slog.Logger, lc fx.Lifecycle) *echo.Echo {
+func newServerEcho(pc exchangePC, l *slog.Logger, lc fx.Lifecycle) *echo.Echo {
 	e := echo.New()
-	log := l.With(slog.String("name", "echo.Echo"))
+	log := l.With(slog.String("name", "serverEcho"))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogMethod:   true,
 		LogURI:      true,
@@ -34,7 +34,7 @@ func newEcho(p *props, l *slog.Logger, lc fx.Lifecycle) *echo.Echo {
 	lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				go e.Start(fmt.Sprintf(":%v", p.Protocol.Http.Port))
+				go e.Start(fmt.Sprintf(":%v", pc.Protocol.Http.Port))
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {

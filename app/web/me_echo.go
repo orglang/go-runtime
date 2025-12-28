@@ -3,6 +3,7 @@ package web
 import (
 	"log/slog"
 	"net/http"
+	"reflect"
 
 	"github.com/labstack/echo/v4"
 
@@ -18,7 +19,7 @@ type handlerEcho struct {
 }
 
 func newHandlerEcho(a typedef.API, r te.Renderer, l *slog.Logger) *handlerEcho {
-	name := slog.String("name", "web.handlerEcho")
+	name := slog.String("name", reflect.TypeFor[handlerEcho]().Name())
 	return &handlerEcho{a, r, l.With(name)}
 }
 

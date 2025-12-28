@@ -1,5 +1,5 @@
 package cs
 
 type Keeper interface {
-	Load(key string, v any) error
+	Load(key string, val any) error
 }

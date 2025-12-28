@@ -4,15 +4,21 @@ This a visual programming language to support organization development and manag
 
 ## Repository structure
 
-- `app`: Process level definitions
-    - `web`: Web application definitions
+- `app`: Runnable application definitions
+  - `web`: Web application definitions
 - `aat`: Reusable aggregate definitions
 - `aet`: Reusable entity definitions
 - `avt`: Reusable value definitions
+- `lib`: Reusable behavior definitions
+  - `cs`: Configuration source harness
+  - `lf`: Logging framework harness
+  - `sd`: Storage driver harness
+  - `te`: Template engine harness
+  - `ws`: Web server harness
 - `db`: Storage schema definitions
-    - `postgres`: PostgreSQL specific definitions
+  - `postgres`: PostgreSQL specific definitions
 - `orch`: Orchestration harness definitions (local)
-    - `task`: Task (build tool) harness definitions
+  - `task`: Task (build tool) harness definitions
 - `proto`: Prototype endeavors
 - `stack`: System level definitions
 - `test`: End-to-end tests and harness
@@ -21,23 +27,24 @@ This a visual programming language to support organization development and manag
 
 ### Definition abstractions
 
-- `aat`: Abstract aggregate type
-    - Consumed by controller adapter
-    - Specified by `API` interface
-    - Implemented by `Service` struct
-- `aet`: Abstract entity type
-    - Consumed by `Service` struct
-    - Specified by `Repo` interface
-    - Implemented by DAO adapter
-- `avt`: Abstract value type
-    - Specified by `ADT` type or interface
+- `aat`: Abstract aggregate types
+    - Consumed by controller adapters
+    - Specified by `API` interfaces
+    - Implemented by `Service` structs
+- `aet`: Abstract entity types
+    - Consumed by `Service` structs of `aat` types
+    - Specified by `Repo` interfaces
+    - Implemented by DAO adapters
+- `avt`: Abstract value types
+    - Specified by `ADT` types or interfaces
+    - Used in `aet` or `aat` types
 
 ### Artifact abstractions
 
 - `sources`: Human-readable source code artifacts
 - `binaries`: Machine-readable binary artifacts (optional)
-- `distros`: Distributable artifacts (images, archives, etc)
-- `stacks`: Deployable artifacts (ansible playbooks, helm charts, etc)
+- `distros`: Distributable artifacts (images, archives, etc.)
+- `stacks`: Deployable artifacts (ansible playbooks, helm charts, etc.)
 
 ### Execution abstractions
 
@@ -47,7 +54,7 @@ This a visual programming language to support organization development and manag
 
 ## Feature-sliced structure
 
-### Framework agnostic
+### Toolkit agnostic
 
 - `core.go`: Pure domain logic
     - Domain models (core models)
@@ -63,24 +70,23 @@ This a visual programming language to support organization development and manag
 - `iv.go`: Pure input validation (IV) logic
     - Message validation harness
     - Props validation harness
-- `oc.go`: Pure option configuration (OC) logic
+- `pc.go`: Pure properties configuration (PC) logic
     - Configuration specific DTO's (borderline models)
 - `tc.go`: Pure type conversion (TC) logic
     - Domain to domain conversions
     - Domain to message conversions and vice versa
     - Domain to data conversions and vice versa
 
-### Framework specific
+### Toolkit specific
 
 - `di_fx.go`: Fx (dependency injection library) specific component definitions
-- `me_echo.go`: Echo (web framework) specific controllers (primary adapters)
-- `vp_echo.go`: Echo (web framework) specific presenters (primary adapters)
-- `me_resty.go`: Resty (HTTP client library) specific API implementations (secondary adapters for external use)
-- `ds_pgx.go`: pgx (PostgreSQL Driver and Toolkit) specific repository iplementations (secondary adapters for internal use)
-- `iv_ozzo.go`: Ozzo (validation library) specific validation harness
-- `oc_viper.go`: Viper (configuration library) specific configuration harness
-- `tc_goverter.go`: Goverter (type conversion tool) specific conversion harness
-- `vp_template.html`: HTML template engine (standart library) specific views
+- `me_echo.go`: Echo (web framework) specific controller definitions (primary adapters)
+- `vp_echo.go`: Echo (web framework) specific presenter definitions (primary adapters)
+- `me_resty.go`: Resty (HTTP library) specific client definitions (secondary adapters for external use)
+- `ds_pgx.go`: pgx (PostgreSQL driver and toolkit) specific DAO definitions (secondary adapters for internal use)
+- `iv_ozzo.go`: Ozzo (validation library) specific validation definitions
+- `tc_goverter.go`: Goverter (type conversion tool) specific conversion definitions
+- `vp/bs5/*.html`: Go's built-in `html/template` and Bootstrap 5 (frontend toolkit) specific presentation definitions
 
 ## Workflow
 

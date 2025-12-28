@@ -3,6 +3,7 @@ package dec
 import (
 	"log/slog"
 	"net/http"
+	"reflect"
 
 	"github.com/labstack/echo/v4"
 
@@ -20,7 +21,7 @@ type presenterEcho struct {
 }
 
 func newPresenterEcho(a API, r te.Renderer, l *slog.Logger) *presenterEcho {
-	name := slog.String("name", "sigPresenterEcho")
+	name := slog.String("name", reflect.TypeFor[presenterEcho]().Name())
 	return &presenterEcho{a, r, l.With(name)}
 }
 

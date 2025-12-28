@@ -6,6 +6,6 @@ import (
 
 var Module = fx.Module("lib/lf", // logging framework
 	fx.Provide(
-		newLogger,
+		newLoggerSlog,
 	),
 )

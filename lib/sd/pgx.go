@@ -11,8 +11,8 @@ func newOperator(pool *pgxpool.Pool) Operator {
 	return &OperatorPgx{pool}
 }
 
-func newPgx(p *props, lc fx.Lifecycle) (*pgxpool.Pool, error) {
-	config, err := pgxpool.ParseConfig(p.Protocol.Postgres.Url)
+func newDriverPgx(pc storagePC, lc fx.Lifecycle) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(pc.Protocol.Postgres.Url)
 	if err != nil {
 		return nil, err
 	}

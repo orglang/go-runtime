@@ -2,6 +2,7 @@ package def
 
 import (
 	"log/slog"
+	"reflect"
 )
 
 // Adapter
@@ -10,6 +11,6 @@ type daoPgx struct {
 }
 
 func newDaoPgx(l *slog.Logger) *daoPgx {
-	name := slog.String("name", "stepRepoPgx")
+	name := slog.String("name", reflect.TypeFor[daoPgx]().Name())
 	return &daoPgx{l.With(name)}
 }

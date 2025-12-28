@@ -4,21 +4,22 @@ import (
 	"bytes"
 	"html/template"
 	"log/slog"
+	"reflect"
 )
 
 type RendererStdlib struct {
-	te  *template.Template
-	log *slog.Logger
+	engine *template.Template
+	log    *slog.Logger
 }
 
 func NewRendererStdlib(t *template.Template, l *slog.Logger) *RendererStdlib {
-	name := slog.String("name", "te.RendererStdlib")
+	name := slog.String("name", reflect.TypeFor[RendererStdlib]().Name())
 	return &RendererStdlib{t, l.With(name)}
 }
 
 func (r *RendererStdlib) Render(name string, data any) ([]byte, error) {
 	buf := new(bytes.Buffer)
-	err := r.te.ExecuteTemplate(buf, name, data)
+	err := r.engine.ExecuteTemplate(buf, name, data)
 	if err != nil {
 		r.log.Error("rendering failed", slog.Any("reason", err))
 	}

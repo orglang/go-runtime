@@ -1,9 +1,11 @@
-messaging:
+exchange:
   protocol:
+    modes: [http]
     http:
       port: 8080
 
 storage:
   protocol:
+    mode: postgres
     postgres:
       url: postgres://orglang:orglang@localhost:5432/orglang

@@ -9,7 +9,7 @@ const (
 	LevelTrace = slog.Level(-8)
 )
 
-func newLogger() *slog.Logger {
+func newLoggerSlog() *slog.Logger {
 	opts := &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
 		AddSource: true,
