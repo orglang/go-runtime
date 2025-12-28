@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/rn"
 	"orglang/orglang/avt/sym"
@@ -61,7 +62,7 @@ type ProcSnap struct {
 type service struct {
 	procs    Repo
 	aliases  alias.Repo
-	operator data.Operator
+	operator sd.Operator
 	log      *slog.Logger
 }
 
@@ -70,7 +71,7 @@ func newAPI() API {
 	return &service{}
 }
 
-func newService(procs Repo, aliases alias.Repo, operator data.Operator, l *slog.Logger) *service {
+func newService(procs Repo, aliases alias.Repo, operator sd.Operator, l *slog.Logger) *service {
 	return &service{procs, aliases, operator, l}
 }
 
@@ -80,7 +81,7 @@ func (s *service) Incept(procQN sym.ADT) (_ ProcRef, err error) {
 	s.log.Debug("inception started", qnAttr)
 	newAlias := alias.Root{QN: procQN, ID: id.New(), RN: rn.Initial()}
 	newRec := ProcRec{DecID: newAlias.ID, DecRN: newAlias.RN, Title: newAlias.QN.SN()}
-	s.operator.Explicit(ctx, func(ds data.Source) error {
+	s.operator.Explicit(ctx, func(ds sd.Source) error {
 		err = s.aliases.Insert(ds, newAlias)
 		if err != nil {
 			return err
@@ -109,7 +110,7 @@ func (s *service) Create(spec ProcSpec) (_ ProcSnap, err error) {
 		Ys:    spec.ReceptionEPs,
 		DecRN: rn.Initial(),
 	}
-	s.operator.Explicit(ctx, func(ds data.Source) error {
+	s.operator.Explicit(ctx, func(ds sd.Source) error {
 		err = s.procs.Insert(ds, newRec)
 		if err != nil {
 			return err
@@ -126,7 +127,7 @@ func (s *service) Create(spec ProcSpec) (_ ProcSnap, err error) {
 
 func (s *service) Retrieve(sigID id.ADT) (snap ProcSnap, err error) {
 	ctx := context.Background()
-	s.operator.Implicit(ctx, func(ds data.Source) error {
+	s.operator.Implicit(ctx, func(ds sd.Source) error {
 		snap, err = s.procs.SelectByID(ds, sigID)
 		return err
 	})
@@ -139,7 +140,7 @@ func (s *service) Retrieve(sigID id.ADT) (snap ProcSnap, err error) {
 
 func (s *service) RetreiveRefs() (refs []ProcRef, err error) {
 	ctx := context.Background()
-	s.operator.Implicit(ctx, func(ds data.Source) error {
+	s.operator.Implicit(ctx, func(ds sd.Source) error {
 		refs, err = s.procs.SelectAll(ds)
 		return err
 	})

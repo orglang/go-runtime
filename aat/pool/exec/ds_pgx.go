@@ -7,8 +7,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/core"
-	"orglang/orglang/avt/data"
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/rn"
 
@@ -29,8 +30,8 @@ func newRepo() Repo {
 	return &daoPgx{}
 }
 
-func (r *daoPgx) Insert(source data.Source, root PoolRec) (err error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) Insert(source sd.Source, root PoolRec) (err error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	dto := DataFromPoolRec(root)
 	args := pgx.NamedArgs{
 		"pool_id":     dto.PoolID,
@@ -47,8 +48,8 @@ func (r *daoPgx) Insert(source data.Source, root PoolRec) (err error) {
 	return nil
 }
 
-func (r *daoPgx) InsertLiab(source data.Source, liab procexec.Liab) (err error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) InsertLiab(source sd.Source, liab procexec.Liab) (err error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	dto := DataFromLiab(liab)
 	args := pgx.NamedArgs{
 		"pool_id": dto.PoolID,
@@ -64,8 +65,8 @@ func (r *daoPgx) InsertLiab(source data.Source, liab procexec.Liab) (err error) 
 	return nil
 }
 
-func (r *daoPgx) SelectProc(source data.Source, procID id.ADT) (procexec.Cfg, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectProc(source sd.Source, procID id.ADT) (procexec.Cfg, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("procID", procID)
 	chnlRows, err := ds.Conn.Query(ds.Ctx, selectChnls, procID.String())
 	if err != nil {
@@ -106,11 +107,11 @@ func (r *daoPgx) SelectProc(source data.Source, procID id.ADT) (procexec.Cfg, er
 	}, nil
 }
 
-func (r *daoPgx) UpdateProc(source data.Source, mod procexec.Mod) (err error) {
+func (r *daoPgx) UpdateProc(source sd.Source, mod procexec.Mod) (err error) {
 	if len(mod.Locks) == 0 {
 		panic("empty locks")
 	}
-	ds := data.MustConform[data.SourcePgx](source)
+	ds := sd.MustConform[sd.SourcePgx](source)
 	dto, err := procexec.DataFromMod(mod)
 	if err != nil {
 		r.log.Error("mapping failed")
@@ -199,8 +200,8 @@ func (r *daoPgx) UpdateProc(source data.Source, mod procexec.Mod) (err error) {
 	return nil
 }
 
-func (r *daoPgx) SelectSubs(source data.Source, poolID id.ADT) (PoolSnap, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectSubs(source sd.Source, poolID id.ADT) (PoolSnap, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("poolID", poolID)
 	rows, err := ds.Conn.Query(ds.Ctx, selectOrgSnap, poolID.String())
 	if err != nil {
@@ -222,8 +223,8 @@ func (r *daoPgx) SelectSubs(source data.Source, poolID id.ADT) (PoolSnap, error)
 	return snap, nil
 }
 
-func (r *daoPgx) SelectRefs(source data.Source) ([]PoolRef, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectRefs(source sd.Source) ([]PoolRef, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	query := `
 		select
 			pool_id, title

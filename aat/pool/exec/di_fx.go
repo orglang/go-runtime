@@ -3,15 +3,8 @@
 package exec
 
 import (
-	"embed"
-	"html/template"
-	"log/slog"
-
-	"github.com/Masterminds/sprig/v3"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/fx"
-
-	"orglang/orglang/avt/msg"
 )
 
 var Module = fx.Module("aat/pool",
@@ -23,24 +16,12 @@ var Module = fx.Module("aat/pool",
 		newHandlerEcho,
 		newStepHandlerEcho,
 		fx.Annotate(newDaoPgx, fx.As(new(Repo))),
-		fx.Annotate(newRenderer, fx.As(new(msg.Renderer))),
 	),
 	fx.Invoke(
 		cfgEcho,
 		cfgStepEcho,
 	),
 )
-
-//go:embed *.html
-var viewsFs embed.FS
-
-func newRenderer(l *slog.Logger) (*msg.RendererStdlib, error) {
-	t, err := template.New("pool").Funcs(sprig.FuncMap()).ParseFS(viewsFs, "*.html")
-	if err != nil {
-		return nil, err
-	}
-	return msg.NewRendererStdlib(t, l), nil
-}
 
 func cfgEcho(e *echo.Echo, h *handlerEcho) error {
 	e.POST("/api/v1/pools", h.PostOne)

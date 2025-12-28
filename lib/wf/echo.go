@@ -1,4 +1,4 @@
-package msg
+package wf
 
 import (
 	"context"
@@ -8,28 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/fx"
-
-	"orglang/orglang/avt/core"
 )
-
-var Module = fx.Module("avt/msg",
-	fx.Provide(
-		newEcho,
-	),
-	fx.Provide(
-		fx.Private,
-		newCfg,
-	),
-)
-
-func newCfg(k core.Keeper) (*props, error) {
-	props := &props{}
-	err := k.Load("messaging", props)
-	if err != nil {
-		return nil, err
-	}
-	return props, nil
-}
 
 func newEcho(p *props, l *slog.Logger, lc fx.Lifecycle) *echo.Echo {
 	e := echo.New()

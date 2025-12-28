@@ -4,20 +4,20 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-// Adapter
-type clientResty struct {
+// Client-side secondary adapter
+type sdkResty struct {
 	resty *resty.Client
 }
 
-func newClientResty() *clientResty {
+func newSdkResty() *sdkResty {
 	r := resty.New().SetBaseURL("http://localhost:8080/api/v1")
-	return &clientResty{r}
+	return &sdkResty{r}
 }
 
 func NewAPI() API {
-	return newClientResty()
+	return newSdkResty()
 }
 
-func (cl *clientResty) Create(spec PoolSpec) (PoolRef, error) {
+func (cl *sdkResty) Create(spec PoolSpec) (PoolRef, error) {
 	return PoolRef{}, nil
 }

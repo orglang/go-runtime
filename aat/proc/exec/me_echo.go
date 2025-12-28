@@ -9,7 +9,7 @@ import (
 	"orglang/orglang/avt/id"
 )
 
-// Adapter
+// Server-side primary adapter
 type handlerEcho struct {
 	api API
 	log *slog.Logger

@@ -6,11 +6,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/avt/core"
 	"orglang/orglang/avt/id"
+	"orglang/orglang/lib/lf"
 )
 
-// Adapter
+// Server-side primary adapter
 type handlerEcho struct {
 	api API
 	log *slog.Logger
@@ -29,7 +29,7 @@ func (h *handlerEcho) PostOne(c echo.Context) error {
 		return err
 	}
 	ctx := c.Request().Context()
-	h.log.Log(ctx, core.LevelTrace, "role posting started", slog.Any("dto", dto))
+	h.log.Log(ctx, lf.LevelTrace, "role posting started", slog.Any("dto", dto))
 	err = dto.Validate()
 	if err != nil {
 		h.log.Error("dto validation failed")
@@ -45,7 +45,7 @@ func (h *handlerEcho) PostOne(c echo.Context) error {
 		h.log.Error("role creation failed")
 		return err
 	}
-	h.log.Log(ctx, core.LevelTrace, "role posting succeeded", slog.Any("id", snap.TypeID))
+	h.log.Log(ctx, lf.LevelTrace, "role posting succeeded", slog.Any("id", snap.TypeID))
 	return c.JSON(http.StatusCreated, MsgFromTypeSnap(snap))
 }
 
@@ -82,7 +82,7 @@ func (h *handlerEcho) PatchOne(c echo.Context) error {
 		return err
 	}
 	ctx := c.Request().Context()
-	h.log.Log(ctx, core.LevelTrace, "role patching started", slog.Any("dto", dto))
+	h.log.Log(ctx, lf.LevelTrace, "role patching started", slog.Any("dto", dto))
 	err = dto.Validate()
 	if err != nil {
 		h.log.Error("dto validation failed")
@@ -98,6 +98,6 @@ func (h *handlerEcho) PatchOne(c echo.Context) error {
 		h.log.Error("role modification failed")
 		return err
 	}
-	h.log.Log(ctx, core.LevelTrace, "role patching succeeded", slog.Any("ref", ConvertSnapToRef(resSnap)))
+	h.log.Log(ctx, lf.LevelTrace, "role patching succeeded", slog.Any("ref", ConvertSnapToRef(resSnap)))
 	return c.JSON(http.StatusOK, MsgFromTypeSnap(resSnap))
 }

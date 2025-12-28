@@ -3,20 +3,21 @@ package exec
 import (
 	"database/sql"
 
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 
 	procdef "orglang/orglang/aat/proc/def"
 )
 
 type repo interface {
-	SelectMain(data.Source, id.ADT) (MainCfg, error)
-	UpdateMain(data.Source, MainMod) error
+	SelectMain(sd.Source, id.ADT) (MainCfg, error)
+	UpdateMain(sd.Source, MainMod) error
 }
 
 type SemRepo interface {
-	InsertSem(data.Source, ...SemRec) error
-	SelectSemByID(data.Source, id.ADT) (SemRec, error)
+	InsertSem(sd.Source, ...SemRec) error
+	SelectSemByID(sd.Source, id.ADT) (SemRec, error)
 }
 
 type modDS struct {

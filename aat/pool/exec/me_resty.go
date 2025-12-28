@@ -8,21 +8,21 @@ import (
 	procexec "orglang/orglang/aat/proc/exec"
 )
 
-// Adapter
-type clientResty struct {
+// Client-side secondary adapter
+type sdkResty struct {
 	resty *resty.Client
 }
 
-func newClientResty() *clientResty {
+func newSdkResty() *sdkResty {
 	r := resty.New().SetBaseURL("http://localhost:8080/api/v1")
-	return &clientResty{r}
+	return &sdkResty{r}
 }
 
 func NewAPI() API {
-	return newClientResty()
+	return newSdkResty()
 }
 
-func (cl *clientResty) Create(spec PoolSpec) (PoolRef, error) {
+func (cl *sdkResty) Create(spec PoolSpec) (PoolRef, error) {
 	req := MsgFromPoolSpec(spec)
 	var res PoolRefME
 	_, err := cl.resty.R().
@@ -35,11 +35,11 @@ func (cl *clientResty) Create(spec PoolSpec) (PoolRef, error) {
 	return MsgToPoolRef(res)
 }
 
-func (cl *clientResty) Poll(spec PollSpec) (procexec.ProcRef, error) {
+func (cl *sdkResty) Poll(spec PollSpec) (procexec.ProcRef, error) {
 	return procexec.ProcRef{}, nil
 }
 
-func (cl *clientResty) Retrieve(poolID id.ADT) (PoolSnap, error) {
+func (cl *sdkResty) Retrieve(poolID id.ADT) (PoolSnap, error) {
 	var res PoolSnapME
 	_, err := cl.resty.R().
 		SetResult(&res).
@@ -51,12 +51,12 @@ func (cl *clientResty) Retrieve(poolID id.ADT) (PoolSnap, error) {
 	return MsgToPoolSnap(res)
 }
 
-func (cl *clientResty) RetreiveRefs() ([]PoolRef, error) {
+func (cl *sdkResty) RetreiveRefs() ([]PoolRef, error) {
 	refs := []PoolRef{}
 	return refs, nil
 }
 
-func (cl *clientResty) Spawn(spec procexec.ProcSpec) (procexec.ProcRef, error) {
+func (cl *sdkResty) Spawn(spec procexec.ProcSpec) (procexec.ProcRef, error) {
 	req := procexec.MsgFromSpec(spec)
 	var res procexec.RefME
 	_, err := cl.resty.R().
@@ -70,7 +70,7 @@ func (cl *clientResty) Spawn(spec procexec.ProcSpec) (procexec.ProcRef, error) {
 	return procexec.MsgToRef(res)
 }
 
-func (cl *clientResty) Take(spec StepSpec) error {
+func (cl *sdkResty) Take(spec StepSpec) error {
 	req := MsgFromStepSpec(spec)
 	var res procexec.RefME
 	_, err := cl.resty.R().

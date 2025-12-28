@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/avt/data"
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/pol"
 	"orglang/orglang/avt/rn"
 	"orglang/orglang/avt/sym"
+	"orglang/orglang/lib/sd"
 
 	"orglang/orglang/aet/alias"
 )
@@ -286,7 +286,7 @@ type API interface {
 type service struct {
 	types    Repo
 	aliases  alias.Repo
-	operator data.Operator
+	operator sd.Operator
 	log      *slog.Logger
 }
 
@@ -298,7 +298,7 @@ func newAPI() API {
 func newService(
 	types Repo,
 	aliases alias.Repo,
-	operator data.Operator,
+	operator sd.Operator,
 	l *slog.Logger,
 ) *service {
 	return &service{types, aliases, operator, l}
@@ -310,7 +310,7 @@ func (s *service) Incept(qn sym.ADT) (_ TypeRef, err error) {
 	s.log.Debug("inception started", qnAttr)
 	newAlias := alias.Root{QN: qn, ID: id.New(), RN: rn.Initial()}
 	newType := TypeRec{TypeID: newAlias.ID, TypeRN: newAlias.RN, Title: newAlias.QN.SN()}
-	s.operator.Explicit(ctx, func(ds data.Source) error {
+	s.operator.Explicit(ctx, func(ds sd.Source) error {
 		err = s.aliases.Insert(ds, newAlias)
 		if err != nil {
 			return err
@@ -341,7 +341,7 @@ func (s *service) Create(spec TypeSpec) (_ TypeSnap, err error) {
 		Title:  newAlias.QN.SN(),
 		TermID: newTerm.Ident(),
 	}
-	s.operator.Explicit(ctx, func(ds data.Source) error {
+	s.operator.Explicit(ctx, func(ds sd.Source) error {
 		err = s.aliases.Insert(ds, newAlias)
 		if err != nil {
 			return err
@@ -375,7 +375,7 @@ func (s *service) Modify(snap TypeSnap) (_ TypeSnap, err error) {
 	idAttr := slog.Any("typeID", snap.TypeID)
 	s.log.Debug("modification started", idAttr)
 	var rec TypeRec
-	s.operator.Implicit(ctx, func(ds data.Source) error {
+	s.operator.Implicit(ctx, func(ds sd.Source) error {
 		rec, err = s.types.SelectTypeRecByID(ds, snap.TypeID)
 		return err
 	})
@@ -394,7 +394,7 @@ func (s *service) Modify(snap TypeSnap) (_ TypeSnap, err error) {
 		s.log.Error("modification failed", idAttr)
 		return TypeSnap{}, err
 	}
-	s.operator.Explicit(ctx, func(ds data.Source) error {
+	s.operator.Explicit(ctx, func(ds sd.Source) error {
 		if CheckSpec(snap.TypeTS, curSnap.TypeTS) != nil {
 			newTerm := ConvertSpecToRec(snap.TypeTS)
 			err = s.types.InsertTerm(ds, newTerm)
@@ -423,7 +423,7 @@ func (s *service) Modify(snap TypeSnap) (_ TypeSnap, err error) {
 func (s *service) Retrieve(recID id.ADT) (_ TypeSnap, err error) {
 	ctx := context.Background()
 	var root TypeRec
-	s.operator.Implicit(ctx, func(ds data.Source) error {
+	s.operator.Implicit(ctx, func(ds sd.Source) error {
 		root, err = s.types.SelectTypeRecByID(ds, recID)
 		return err
 	})
@@ -437,7 +437,7 @@ func (s *service) Retrieve(recID id.ADT) (_ TypeSnap, err error) {
 func (s *service) retrieveSnap(typeRec TypeRec) (_ TypeSnap, err error) {
 	ctx := context.Background()
 	var termRec TermRec
-	s.operator.Implicit(ctx, func(ds data.Source) error {
+	s.operator.Implicit(ctx, func(ds sd.Source) error {
 		termRec, err = s.types.SelectTermRecByID(ds, typeRec.TermID)
 		return err
 	})
@@ -455,7 +455,7 @@ func (s *service) retrieveSnap(typeRec TypeRec) (_ TypeSnap, err error) {
 
 func (s *service) RetreiveRefs() (refs []TypeRef, err error) {
 	ctx := context.Background()
-	s.operator.Implicit(ctx, func(ds data.Source) error {
+	s.operator.Implicit(ctx, func(ds sd.Source) error {
 		refs, err = s.types.SelectTypeRefs(ds)
 		return err
 	})
@@ -475,19 +475,19 @@ func CollectEnv(recs []TypeRec) []id.ADT {
 }
 
 type Repo interface {
-	InsertType(data.Source, TypeRec) error
-	UpdateType(data.Source, TypeRec) error
-	SelectTypeRefs(data.Source) ([]TypeRef, error)
-	SelectTypeRecByID(data.Source, id.ADT) (TypeRec, error)
-	SelectTypeRecsByIDs(data.Source, []id.ADT) ([]TypeRec, error)
-	SelectTypeRecByQN(data.Source, sym.ADT) (TypeRec, error)
-	SelectTypeRecsByQNs(data.Source, []sym.ADT) ([]TypeRec, error)
-	SelectTypeEnv(data.Source, []sym.ADT) (map[sym.ADT]TypeRec, error)
+	InsertType(sd.Source, TypeRec) error
+	UpdateType(sd.Source, TypeRec) error
+	SelectTypeRefs(sd.Source) ([]TypeRef, error)
+	SelectTypeRecByID(sd.Source, id.ADT) (TypeRec, error)
+	SelectTypeRecsByIDs(sd.Source, []id.ADT) ([]TypeRec, error)
+	SelectTypeRecByQN(sd.Source, sym.ADT) (TypeRec, error)
+	SelectTypeRecsByQNs(sd.Source, []sym.ADT) ([]TypeRec, error)
+	SelectTypeEnv(sd.Source, []sym.ADT) (map[sym.ADT]TypeRec, error)
 
-	InsertTerm(data.Source, TermRec) error
-	SelectTermRecByID(data.Source, id.ADT) (TermRec, error)
-	SelectTermRecsByIDs(data.Source, []id.ADT) ([]TermRec, error)
-	SelectTermEnv(data.Source, []id.ADT) (map[id.ADT]TermRec, error)
+	InsertTerm(sd.Source, TermRec) error
+	SelectTermRecByID(sd.Source, id.ADT) (TermRec, error)
+	SelectTermRecsByIDs(sd.Source, []id.ADT) ([]TermRec, error)
+	SelectTermEnv(sd.Source, []id.ADT) (map[id.ADT]TermRec, error)
 }
 
 // goverter:variables

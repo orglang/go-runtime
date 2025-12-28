@@ -3,7 +3,8 @@ package dec
 import (
 	"log/slog"
 
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/sym"
 )
@@ -46,7 +47,7 @@ type poolRec struct {
 
 type service struct {
 	sigs     repo
-	operator data.Operator
+	operator sd.Operator
 	log      *slog.Logger
 }
 

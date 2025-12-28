@@ -1,10 +1,10 @@
 package dec
 
 import (
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
 )
 
 // Port
 type repo interface {
-	Insert(data.Source, poolRec) error
+	Insert(sd.Source, poolRec) error
 }

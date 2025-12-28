@@ -1,4 +1,4 @@
-package core
+package cs
 
 import (
 	"log/slog"
@@ -6,12 +6,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// port
-type Keeper interface {
-	Load(key string, v any) error
-}
-
-// adapter
 type keeperViper struct {
 	viper  *viper.Viper
 	logger *slog.Logger

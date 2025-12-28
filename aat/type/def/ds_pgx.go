@@ -8,8 +8,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"orglang/orglang/avt/core"
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/lf"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/sym"
 )
@@ -28,10 +29,10 @@ func newRepo() Repo {
 	return &daoPgx{}
 }
 
-func (r *daoPgx) InsertType(source data.Source, rec TypeRec) error {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) InsertType(source sd.Source, rec TypeRec) error {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("id", rec.TypeID)
-	r.log.Log(ds.Ctx, core.LevelTrace, "entity insertion started", idAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity insertion started", idAttr)
 	dto, err := DataFromTypeRec(rec)
 	if err != nil {
 		r.log.Error("model mapping failed", idAttr)
@@ -70,14 +71,14 @@ func (r *daoPgx) InsertType(source data.Source, rec TypeRec) error {
 		r.log.Error("query execution failed", idAttr, slog.String("q", insertState))
 		return err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entity insertion succeeded", idAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity insertion succeeded", idAttr)
 	return nil
 }
 
-func (r *daoPgx) UpdateType(source data.Source, rec TypeRec) error {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) UpdateType(source sd.Source, rec TypeRec) error {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("id", rec.TypeID)
-	r.log.Log(ds.Ctx, core.LevelTrace, "entity update started", idAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity update started", idAttr)
 	dto, err := DataFromTypeRec(rec)
 	if err != nil {
 		r.log.Error("model mapping failed", idAttr)
@@ -115,12 +116,12 @@ func (r *daoPgx) UpdateType(source data.Source, rec TypeRec) error {
 		r.log.Error("query execution failed", idAttr, slog.String("q", insertSnap))
 		return err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entity update succeeded", idAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity update succeeded", idAttr)
 	return nil
 }
 
-func (r *daoPgx) SelectTypeRefs(source data.Source) ([]TypeRef, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectTypeRefs(source sd.Source) ([]TypeRef, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	query := `
 		SELECT
 			role_id, rev, title
@@ -136,12 +137,12 @@ func (r *daoPgx) SelectTypeRefs(source data.Source) ([]TypeRef, error) {
 		r.log.Error("rows collection failed")
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
 	return DataToTypeRefs(dtos)
 }
 
-func (r *daoPgx) SelectTypeRecByID(source data.Source, recID id.ADT) (TypeRec, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectTypeRecByID(source sd.Source, recID id.ADT) (TypeRec, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("id", recID)
 	rows, err := ds.Conn.Query(ds.Ctx, selectById, recID.String())
 	if err != nil {
@@ -154,12 +155,12 @@ func (r *daoPgx) SelectTypeRecByID(source data.Source, recID id.ADT) (TypeRec, e
 		r.log.Error("row collection failed", idAttr)
 		return TypeRec{}, err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entity selection succeeded", idAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeeded", idAttr)
 	return DataToTypeRec(dto)
 }
 
-func (r *daoPgx) SelectTypeRecByQN(source data.Source, recQN sym.ADT) (TypeRec, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectTypeRecByQN(source sd.Source, recQN sym.ADT) (TypeRec, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	fqnAttr := slog.Any("qn", recQN)
 	rows, err := ds.Conn.Query(ds.Ctx, selectByFQN, sym.ConvertToString(recQN))
 	if err != nil {
@@ -172,12 +173,12 @@ func (r *daoPgx) SelectTypeRecByQN(source data.Source, recQN sym.ADT) (TypeRec, 
 		r.log.Error("row collection failed", fqnAttr)
 		return TypeRec{}, err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entity selection succeeded", fqnAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeeded", fqnAttr)
 	return DataToTypeRec(dto)
 }
 
-func (r *daoPgx) SelectTypeRecsByIDs(source data.Source, recIDs []id.ADT) (_ []TypeRec, err error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectTypeRecsByIDs(source sd.Source, recIDs []id.ADT) (_ []TypeRec, err error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	if len(recIDs) == 0 {
 		return []TypeRec{}, nil
 	}
@@ -213,11 +214,11 @@ func (r *daoPgx) SelectTypeRecsByIDs(source data.Source, recIDs []id.ADT) (_ []T
 	if err != nil {
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
 	return DataToTypeRecs(dtos)
 }
 
-func (r *daoPgx) SelectTypeEnv(source data.Source, recQNs []sym.ADT) (map[sym.ADT]TypeRec, error) {
+func (r *daoPgx) SelectTypeEnv(source sd.Source, recQNs []sym.ADT) (map[sym.ADT]TypeRec, error) {
 	recs, err := r.SelectTypeRecsByQNs(source, recQNs)
 	if err != nil {
 		return nil, err
@@ -229,8 +230,8 @@ func (r *daoPgx) SelectTypeEnv(source data.Source, recQNs []sym.ADT) (map[sym.AD
 	return env, nil
 }
 
-func (r *daoPgx) SelectTypeRecsByQNs(source data.Source, recQNs []sym.ADT) (_ []TypeRec, err error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectTypeRecsByQNs(source sd.Source, recQNs []sym.ADT) (_ []TypeRec, err error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	if len(recQNs) == 0 {
 		return []TypeRec{}, nil
 	}
@@ -258,12 +259,12 @@ func (r *daoPgx) SelectTypeRecsByQNs(source data.Source, recQNs []sym.ADT) (_ []
 	if err != nil {
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
 	return DataToTypeRecs(dtos)
 }
 
-func (r *daoPgx) InsertTerm(source data.Source, rec TermRec) (err error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) InsertTerm(source sd.Source, rec TermRec) (err error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	dto := dataFromTermRec(rec)
 	query := `
 		INSERT INTO states (
@@ -297,8 +298,8 @@ func (r *daoPgx) InsertTerm(source data.Source, rec TermRec) (err error) {
 	return nil
 }
 
-func (r *daoPgx) SelectTermRecByID(source data.Source, recID id.ADT) (TermRec, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectTermRecByID(source sd.Source, recID id.ADT) (TermRec, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("id", recID)
 	query := `
 		WITH RECURSIVE top_states AS (
@@ -328,7 +329,7 @@ func (r *daoPgx) SelectTermRecByID(source data.Source, recID id.ADT) (TermRec, e
 		r.log.Error("entity selection failed", idAttr)
 		return nil, fmt.Errorf("no rows selected")
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entity selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeeded", slog.Any("dtos", dtos))
 	states := make(map[string]stateDS, len(dtos))
 	for _, dto := range dtos {
 		states[dto.ID] = dto
@@ -336,7 +337,7 @@ func (r *daoPgx) SelectTermRecByID(source data.Source, recID id.ADT) (TermRec, e
 	return statesToTermRec(states, states[recID.String()])
 }
 
-func (r *daoPgx) SelectTermEnv(source data.Source, recIDs []id.ADT) (map[id.ADT]TermRec, error) {
+func (r *daoPgx) SelectTermEnv(source sd.Source, recIDs []id.ADT) (map[id.ADT]TermRec, error) {
 	recs, err := r.SelectTermRecsByIDs(source, recIDs)
 	if err != nil {
 		return nil, err
@@ -348,8 +349,8 @@ func (r *daoPgx) SelectTermEnv(source data.Source, recIDs []id.ADT) (map[id.ADT]
 	return env, nil
 }
 
-func (r *daoPgx) SelectTermRecsByIDs(source data.Source, recIDs []id.ADT) (_ []TermRec, err error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectTermRecsByIDs(source sd.Source, recIDs []id.ADT) (_ []TermRec, err error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	batch := pgx.Batch{}
 	for _, rid := range recIDs {
 		batch.Queue(selectByID, rid.String())
@@ -381,7 +382,7 @@ func (r *daoPgx) SelectTermRecsByIDs(source data.Source, recIDs []id.ADT) (_ []T
 		}
 		recs = append(recs, rec)
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entities selection succeeded", slog.Any("recs", recs))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("recs", recs))
 	return recs, err
 }
 

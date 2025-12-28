@@ -34,3 +34,17 @@ func (dto SigRefME) Validate() error {
 		validation.Field(&dto.SigID, id.Required...),
 	)
 }
+
+func (dto SigSpecVP) Validate() error {
+	return validation.ValidateStruct(&dto,
+		validation.Field(&dto.SigNS, sym.Required...),
+		validation.Field(&dto.SigSN, sym.Required...),
+	)
+}
+
+func (dto SigRefVP) Validate() error {
+	return validation.ValidateStruct(&dto,
+		validation.Field(&dto.SigID, id.Required...),
+		validation.Field(&dto.Title, sym.Required...),
+	)
+}

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/sym"
 )
@@ -237,7 +238,7 @@ func CollectEnv(spec TermSpec) []id.ADT {
 
 type service struct {
 	procs    Repo
-	operator data.Operator
+	operator sd.Operator
 	log      *slog.Logger
 }
 
@@ -248,7 +249,7 @@ func newAPI() API {
 
 func newService(
 	procs Repo,
-	operator data.Operator,
+	operator sd.Operator,
 	l *slog.Logger,
 ) *service {
 	return &service{procs, operator, l}

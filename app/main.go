@@ -5,9 +5,9 @@ package main
 import (
 	"go.uber.org/fx"
 
-	"orglang/orglang/avt/core"
-	"orglang/orglang/avt/data"
-	"orglang/orglang/avt/msg"
+	"orglang/orglang/lib/lf"
+	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/wf"
 
 	"orglang/orglang/aet/alias"
 
@@ -22,10 +22,10 @@ import (
 
 func main() {
 	fx.New(
-		// avt
-		core.Module,
-		data.Module,
-		msg.Module,
+		// lib
+		wf.Module,
+		sd.Module,
+		lf.Module,
 		// aet
 		alias.Module,
 		// aat

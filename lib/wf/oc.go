@@ -1,4 +1,4 @@
-package msg
+package wf
 
 type props struct {
 	Protocol protocol `mapstructure:"protocol"`

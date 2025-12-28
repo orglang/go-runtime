@@ -45,7 +45,7 @@ This a visual programming language to support organization development and manag
 - `process`: Application level execution abstraction
 - `system`: Stack level execution abstraction
 
-## Feature-slice structure
+## Feature-sliced structure
 
 ### Framework agnostic
 
@@ -55,26 +55,36 @@ This a visual programming language to support organization development and manag
     - Service structs (core behaviors)
 - `me.go`: Pure message exchange (ME) logic
     - Exchange specific DTO's (borderline models)
-    - Message validation harness
-    - Message to domain mapping and vice versa
+- `vp.go`: Pure view presentation (VP) logic
+    - Presentation specific DTO's (borderline models)
 - `ds.go`: Pure data storage (DS) logic
     - Storage specific DTO's (borderline models)
     - Repository interfaces (secondary ports)
-    - Domain to data mapping and vice versa
 - `iv.go`: Pure input validation (IV) logic
+    - Message validation harness
+    - Props validation harness
+- `oc.go`: Pure option configuration (OC) logic
+    - Configuration specific DTO's (borderline models)
 - `tc.go`: Pure type conversion (TC) logic
+    - Domain to domain conversions
+    - Domain to message conversions and vice versa
+    - Domain to data conversions and vice versa
 
 ### Framework specific
 
-- `di_fx.go`: Fx (dependency injection system) specific component definitions
+- `di_fx.go`: Fx (dependency injection library) specific component definitions
 - `me_echo.go`: Echo (web framework) specific controllers (primary adapters)
+- `vp_echo.go`: Echo (web framework) specific presenters (primary adapters)
+- `me_resty.go`: Resty (HTTP client library) specific API implementations (secondary adapters for external use)
 - `ds_pgx.go`: pgx (PostgreSQL Driver and Toolkit) specific repository iplementations (secondary adapters for internal use)
-- `sdk_resty.go`: Resty (HTTP client) specific API implementations (secondary adapters for external use)
-- `iv_ozzo.go`: Ozzo (validation library) specific validation methods
-- `tc_goverter.go`: Goverter (tool for creating type-safe converters) specific conversion methods
+- `iv_ozzo.go`: Ozzo (validation library) specific validation harness
+- `oc_viper.go`: Viper (configuration library) specific configuration harness
+- `tc_goverter.go`: Goverter (type conversion tool) specific conversion harness
+- `vp_template.html`: HTML template engine (standart library) specific views
 
 ## Workflow
 
-- `task sources` - before commit in task branch
-- `task binaries` - before push in task branch
-- `task packages` - before pull request
+- `task sources` - before commit to task or feature branch
+- `task binaries` - before push to task or feature branch
+- `task distros` - before pull request to feature branch
+- `task stacks` - before pull request to main branch

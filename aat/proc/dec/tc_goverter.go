@@ -28,6 +28,20 @@ var (
 // goverter:variables
 // goverter:output:format assign-variable
 // goverter:extend orglang/orglang/avt/id:Convert.*
+// goverter:extend orglang/orglang/avt/rn:Convert.*
+// goverter:extend orglang/orglang/aat/type/def:Msg.*
+// goverter:extend Msg.*
+var (
+	ViewFromSigRef  func(ProcRef) SigRefVP
+	ViewToSigRef    func(SigRefVP) (ProcRef, error)
+	ViewFromSigRefs func([]ProcRef) []SigRefVP
+	ViewToSigRefs   func([]SigRefVP) ([]ProcRef, error)
+	ViewFromSigSnap func(ProcSnap) SigSnapVP
+)
+
+// goverter:variables
+// goverter:output:format assign-variable
+// goverter:extend orglang/orglang/avt/id:Convert.*
 // goverter:extend orglang/orglang/aat/type/def:Data.*
 var (
 	DataToSigRef     func(sigRefDS) (ProcRef, error)

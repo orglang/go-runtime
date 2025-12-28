@@ -9,25 +9,25 @@ import (
 	"orglang/orglang/avt/sym"
 )
 
-// Adapter
-type clientResty struct {
+// Client-side secondary adapter
+type sdkResty struct {
 	resty *resty.Client
 }
 
-func newClientResty() *clientResty {
+func newSdkResty() *sdkResty {
 	r := resty.New().SetBaseURL("http://localhost:8080/api/v1")
-	return &clientResty{r}
+	return &sdkResty{r}
 }
 
 func NewAPI() API {
-	return newClientResty()
+	return newSdkResty()
 }
 
-func (cl *clientResty) Incept(sigQN sym.ADT) (ProcRef, error) {
+func (cl *sdkResty) Incept(sigQN sym.ADT) (ProcRef, error) {
 	return ProcRef{}, nil
 }
 
-func (cl *clientResty) Create(spec ProcSpec) (ProcSnap, error) {
+func (cl *sdkResty) Create(spec ProcSpec) (ProcSnap, error) {
 	req := MsgFromSigSpec(spec)
 	var res SigSnapME
 	resp, err := cl.resty.R().
@@ -43,7 +43,7 @@ func (cl *clientResty) Create(spec ProcSpec) (ProcSnap, error) {
 	return MsgToSigSnap(res)
 }
 
-func (c *clientResty) Retrieve(id id.ADT) (ProcSnap, error) {
+func (c *sdkResty) Retrieve(id id.ADT) (ProcSnap, error) {
 	var res SigSnapME
 	resp, err := c.resty.R().
 		SetResult(&res).
@@ -58,7 +58,7 @@ func (c *clientResty) Retrieve(id id.ADT) (ProcSnap, error) {
 	return MsgToSigSnap(res)
 }
 
-func (c *clientResty) RetreiveRefs() ([]ProcRef, error) {
+func (c *sdkResty) RetreiveRefs() ([]ProcRef, error) {
 	refs := []ProcRef{}
 	return refs, nil
 }

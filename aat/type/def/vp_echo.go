@@ -6,10 +6,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/avt/core"
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/msg"
 	"orglang/orglang/avt/sym"
+	"orglang/orglang/lib/lf"
 )
 
 // Adapter
@@ -25,14 +25,14 @@ func newPresenterEcho(a API, r msg.Renderer, l *slog.Logger) *presenterEcho {
 }
 
 func (p *presenterEcho) PostOne(c echo.Context) error {
-	var dto TypeSpecView
+	var dto TypeSpecVP
 	err := c.Bind(&dto)
 	if err != nil {
 		p.log.Error("dto binding failed")
 		return err
 	}
 	ctx := c.Request().Context()
-	p.log.Log(ctx, core.LevelTrace, "role posting started", slog.Any("dto", dto))
+	p.log.Log(ctx, lf.LevelTrace, "role posting started", slog.Any("dto", dto))
 	err = dto.Validate()
 	if err != nil {
 		p.log.Error("dto validation failed")
@@ -53,7 +53,7 @@ func (p *presenterEcho) PostOne(c echo.Context) error {
 		p.log.Error("view rendering failed")
 		return err
 	}
-	p.log.Log(ctx, core.LevelTrace, "role posting succeeded", slog.Any("ref", ConvertSnapToRef(snap)))
+	p.log.Log(ctx, lf.LevelTrace, "role posting succeeded", slog.Any("ref", ConvertSnapToRef(snap)))
 	return c.HTMLBlob(http.StatusOK, html)
 }
 
@@ -79,7 +79,7 @@ func (p *presenterEcho) GetOne(c echo.Context) error {
 		return err
 	}
 	ctx := c.Request().Context()
-	p.log.Log(ctx, core.LevelTrace, "root getting started", slog.Any("dto", dto))
+	p.log.Log(ctx, lf.LevelTrace, "root getting started", slog.Any("dto", dto))
 	err = dto.Validate()
 	if err != nil {
 		p.log.Error("dto validation failed")
@@ -100,6 +100,6 @@ func (p *presenterEcho) GetOne(c echo.Context) error {
 		p.log.Error("view rendering failed")
 		return err
 	}
-	p.log.Log(ctx, core.LevelTrace, "root getting succeeded", slog.Any("id", snap.TypeID))
+	p.log.Log(ctx, lf.LevelTrace, "root getting succeeded", slog.Any("id", snap.TypeID))
 	return c.HTMLBlob(http.StatusOK, html)
 }

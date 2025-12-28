@@ -10,7 +10,7 @@ import (
 	"orglang/orglang/avt/msg"
 )
 
-// Adapter
+// Server-side primary adapter
 type handlerEcho struct {
 	api API
 	ssr msg.Renderer

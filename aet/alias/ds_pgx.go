@@ -3,9 +3,10 @@ package alias
 import (
 	"log/slog"
 	"math"
-	"orglang/orglang/avt/data"
 
 	"github.com/jackc/pgx/v5"
+
+	"orglang/orglang/lib/sd"
 )
 
 // Adapter
@@ -23,8 +24,8 @@ func newRepo() Repo {
 	return &daoPgx{}
 }
 
-func (r *daoPgx) Insert(source data.Source, root Root) error {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) Insert(source sd.Source, root Root) error {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("id", root.ID)
 	dto, err := DataFromRoot(root)
 	if err != nil {

@@ -6,8 +6,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"orglang/orglang/avt/core"
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/lf"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 )
 
@@ -25,11 +26,11 @@ func newDaoPgx(l *slog.Logger) *daoPgx {
 	return &daoPgx{l}
 }
 
-func (r *daoPgx) SelectMain(data.Source, id.ADT) (MainCfg, error) {
+func (r *daoPgx) SelectMain(sd.Source, id.ADT) (MainCfg, error) {
 	return MainCfg{}, nil
 }
 
-func (r *daoPgx) UpdateMain(data.Source, MainMod) error {
+func (r *daoPgx) UpdateMain(sd.Source, MainMod) error {
 	return nil
 }
 
@@ -41,8 +42,8 @@ type repoPgx2 struct {
 func newRepo2() SemRepo {
 	return &repoPgx2{}
 }
-func (r *repoPgx2) InsertSem(source data.Source, roots ...SemRec) error {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *repoPgx2) InsertSem(source sd.Source, roots ...SemRec) error {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	dtos, err := DataFromSemRecs(roots)
 	if err != nil {
 		r.log.Error("model mapping failed")
@@ -75,7 +76,7 @@ func (r *repoPgx2) InsertSem(source data.Source, roots ...SemRec) error {
 	return nil
 }
 
-func (r *repoPgx2) SelectSemByID(source data.Source, rid id.ADT) (SemRec, error) {
+func (r *repoPgx2) SelectSemByID(source sd.Source, rid id.ADT) (SemRec, error) {
 	query := `
 		SELECT
 			id, kind, pid, vid, spec
@@ -84,8 +85,8 @@ func (r *repoPgx2) SelectSemByID(source data.Source, rid id.ADT) (SemRec, error)
 	return r.execute(source, query, rid.String())
 }
 
-func (r *repoPgx2) execute(source data.Source, query string, arg string) (SemRec, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *repoPgx2) execute(source sd.Source, query string, arg string) (SemRec, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	rows, err := ds.Conn.Query(ds.Ctx, query, arg)
 	if err != nil {
 		r.log.Error("query execution failed", slog.String("q", query))
@@ -105,7 +106,7 @@ func (r *repoPgx2) execute(source data.Source, query string, arg string) (SemRec
 		r.log.Error("model mapping failed")
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entity selection succeeded", slog.Any("root", root))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeeded", slog.Any("root", root))
 	return root, nil
 }
 

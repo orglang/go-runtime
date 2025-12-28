@@ -7,14 +7,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/avt/core"
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/msg"
+	"orglang/orglang/lib/lf"
 
 	procexec "orglang/orglang/aat/proc/exec"
 )
 
-// Adapter
+// Server-side primary adapter
 type handlerEcho struct {
 	api API
 	ssr msg.Renderer
@@ -113,7 +113,7 @@ func (h *stepHandlerEcho) PostOne(c echo.Context) error {
 		return err
 	}
 	ctx := c.Request().Context()
-	h.log.Log(ctx, core.LevelTrace, "posting started", slog.Any("dto", dto))
+	h.log.Log(ctx, lf.LevelTrace, "posting started", slog.Any("dto", dto))
 	err = dto.Validate()
 	if err != nil {
 		h.log.Error("validation failed", slog.Any("dto", dto))

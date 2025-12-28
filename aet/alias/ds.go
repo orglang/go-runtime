@@ -1,11 +1,11 @@
 package alias
 
 import (
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
 )
 
 type Repo interface {
-	Insert(data.Source, Root) error
+	Insert(sd.Source, Root) error
 }
 
 type rootDS struct {

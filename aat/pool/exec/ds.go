@@ -3,7 +3,8 @@ package exec
 import (
 	"database/sql"
 
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 
 	procexec "orglang/orglang/aat/proc/exec"
@@ -11,12 +12,12 @@ import (
 
 // Port
 type Repo interface {
-	Insert(data.Source, PoolRec) error
-	InsertLiab(data.Source, procexec.Liab) error
-	SelectRefs(data.Source) ([]PoolRef, error)
-	SelectSubs(data.Source, id.ADT) (PoolSnap, error)
-	SelectProc(data.Source, id.ADT) (procexec.Cfg, error)
-	UpdateProc(data.Source, procexec.Mod) error
+	Insert(sd.Source, PoolRec) error
+	InsertLiab(sd.Source, procexec.Liab) error
+	SelectRefs(sd.Source) ([]PoolRef, error)
+	SelectSubs(sd.Source, id.ADT) (PoolSnap, error)
+	SelectProc(sd.Source, id.ADT) (procexec.Cfg, error)
+	UpdateProc(sd.Source, procexec.Mod) error
 }
 
 type poolRefDS struct {

@@ -89,3 +89,18 @@ var kindRequired = []validation.Rule{
 	validation.Required,
 	validation.In(OneKind, LinkKind, TensorKind, LolliKind, PlusKind, WithKind),
 }
+
+func (dto TypeSpecVP) Validate() error {
+	return validation.ValidateStruct(&dto,
+		validation.Field(&dto.NS, sym.Required...),
+		validation.Field(&dto.Name, sym.Required...),
+	)
+}
+
+func (dto TypeRefVP) Validate() error {
+	return validation.ValidateStruct(&dto,
+		validation.Field(&dto.RoleID, id.Required...),
+		validation.Field(&dto.RoleRN, rn.Optional...),
+		validation.Field(&dto.Title, sym.Required...),
+	)
+}

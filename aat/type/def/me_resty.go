@@ -9,25 +9,25 @@ import (
 	"orglang/orglang/avt/sym"
 )
 
-// Adapter
-type clientResty struct {
+// Client-side secondary adapter
+type sdkResty struct {
 	resty *resty.Client
 }
 
-func newClientResty() *clientResty {
+func newSdkResty() *sdkResty {
 	r := resty.New().SetBaseURL("http://localhost:8080/api/v1")
-	return &clientResty{r}
+	return &sdkResty{r}
 }
 
 func NewAPI() API {
-	return newClientResty()
+	return newSdkResty()
 }
 
-func (cl *clientResty) Incept(roleQN sym.ADT) (TypeRef, error) {
+func (cl *sdkResty) Incept(roleQN sym.ADT) (TypeRef, error) {
 	return TypeRef{}, nil
 }
 
-func (cl *clientResty) Create(spec TypeSpec) (TypeSnap, error) {
+func (cl *sdkResty) Create(spec TypeSpec) (TypeSnap, error) {
 	req := MsgFromTypeSpec(spec)
 	var res TypeSnapME
 	resp, err := cl.resty.R().
@@ -43,18 +43,18 @@ func (cl *clientResty) Create(spec TypeSpec) (TypeSnap, error) {
 	return MsgToTypeSnap(res)
 }
 
-func (c *clientResty) Modify(snap TypeSnap) (TypeSnap, error) {
+func (c *sdkResty) Modify(snap TypeSnap) (TypeSnap, error) {
 	return TypeSnap{}, nil
 }
 
-func (c *clientResty) Retrieve(rid id.ADT) (TypeSnap, error) {
+func (c *sdkResty) Retrieve(rid id.ADT) (TypeSnap, error) {
 	return TypeSnap{}, nil
 }
 
-func (c *clientResty) retrieveSnap(entity TypeRec) (TypeSnap, error) {
+func (c *sdkResty) retrieveSnap(entity TypeRec) (TypeSnap, error) {
 	return TypeSnap{}, nil
 }
 
-func (c *clientResty) RetreiveRefs() ([]TypeRef, error) {
+func (c *sdkResty) RetreiveRefs() ([]TypeRef, error) {
 	return []TypeRef{}, nil
 }

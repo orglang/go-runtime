@@ -7,8 +7,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"orglang/orglang/avt/core"
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/lf"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 )
 
@@ -26,8 +27,8 @@ func newRepo() Repo {
 	return &daoPgx{}
 }
 
-func (r *daoPgx) Insert(source data.Source, mod ProcRec) error {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) Insert(source sd.Source, mod ProcRec) error {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("id", mod.DecID)
 	dto, err := DataFromSigRec(mod)
 	if err != nil {
@@ -101,8 +102,8 @@ func (r *daoPgx) Insert(source data.Source, mod ProcRec) error {
 	return nil
 }
 
-func (r *daoPgx) SelectByID(source data.Source, rid id.ADT) (ProcSnap, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectByID(source sd.Source, rid id.ADT) (ProcSnap, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	idAttr := slog.Any("id", rid)
 	rows, err := ds.Conn.Query(ds.Ctx, selectById, rid.String())
 	if err != nil {
@@ -115,11 +116,11 @@ func (r *daoPgx) SelectByID(source data.Source, rid id.ADT) (ProcSnap, error) {
 		r.log.Error("row collection failed", idAttr)
 		return ProcSnap{}, err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entitiy selection succeeded", slog.Any("dto", dto))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entitiy selection succeeded", slog.Any("dto", dto))
 	return DataToSigSnap(dto)
 }
 
-func (r *daoPgx) SelectEnv(source data.Source, ids []id.ADT) (map[id.ADT]ProcRec, error) {
+func (r *daoPgx) SelectEnv(source sd.Source, ids []id.ADT) (map[id.ADT]ProcRec, error) {
 	sigs, err := r.SelectByIDs(source, ids)
 	if err != nil {
 		return nil, err
@@ -131,8 +132,8 @@ func (r *daoPgx) SelectEnv(source data.Source, ids []id.ADT) (map[id.ADT]ProcRec
 	return env, nil
 }
 
-func (r *daoPgx) SelectByIDs(source data.Source, ids []id.ADT) (_ []ProcRec, err error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectByIDs(source sd.Source, ids []id.ADT) (_ []ProcRec, err error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	if len(ids) == 0 {
 		return []ProcRec{}, nil
 	}
@@ -163,12 +164,12 @@ func (r *daoPgx) SelectByIDs(source data.Source, ids []id.ADT) (_ []ProcRec, err
 	if err != nil {
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, core.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
 	return DataToSigRecs(dtos)
 }
 
-func (r *daoPgx) SelectAll(source data.Source) ([]ProcRef, error) {
-	ds := data.MustConform[data.SourcePgx](source)
+func (r *daoPgx) SelectAll(source sd.Source) ([]ProcRef, error) {
+	ds := sd.MustConform[sd.SourcePgx](source)
 	query := `
 		select
 			sig_id, rev, title

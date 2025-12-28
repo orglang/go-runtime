@@ -1,9 +1,11 @@
 package def
 
-import "orglang/orglang/avt/data"
+import (
+	"orglang/orglang/lib/sd"
+)
 
 type Repo interface {
-	InsertProc(data.Source, ProcRec) error
+	InsertProc(sd.Source, ProcRec) error
 }
 
 type TermRecDS struct {

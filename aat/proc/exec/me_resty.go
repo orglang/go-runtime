@@ -6,21 +6,21 @@ import (
 	"orglang/orglang/avt/id"
 )
 
-// Adapter
-type clientResty struct {
+// Client-side secondary adapter
+type sdkResty struct {
 	resty *resty.Client
 }
 
-func newClientResty() *clientResty {
+func newSdkResty() *sdkResty {
 	r := resty.New().SetBaseURL("http://localhost:8080/api/v1")
-	return &clientResty{r}
+	return &sdkResty{r}
 }
 
 func NewAPI() API {
-	return newClientResty()
+	return newSdkResty()
 }
 
-func (cl *clientResty) Run(spec ProcSpec) error {
+func (cl *sdkResty) Run(spec ProcSpec) error {
 	req := MsgFromSpec(spec)
 	var res RefME
 	_, err := cl.resty.R().
@@ -34,7 +34,7 @@ func (cl *clientResty) Run(spec ProcSpec) error {
 	return nil
 }
 
-func (cl *clientResty) Retrieve(procID id.ADT) (ProcSnap, error) {
+func (cl *sdkResty) Retrieve(procID id.ADT) (ProcSnap, error) {
 	var res SnapME
 	_, err := cl.resty.R().
 		SetPathParam("id", procID.String()).

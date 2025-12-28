@@ -1,4 +1,4 @@
-package data
+package sd
 
 type props struct {
 	Protocol protocol `mapstructure:"protocol"`

@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/rn"
 	"orglang/orglang/avt/sym"
@@ -140,7 +141,7 @@ type Bnd struct {
 
 type service struct {
 	procs    repo
-	operator data.Operator
+	operator sd.Operator
 	log      *slog.Logger
 }
 
@@ -151,7 +152,7 @@ func newAPI() API {
 
 func newService(
 	procs repo,
-	operator data.Operator,
+	operator sd.Operator,
 	l *slog.Logger,
 ) *service {
 	return &service{procs, operator, l}
@@ -162,7 +163,7 @@ func (s *service) Run(spec ProcSpec) (err error) {
 	s.log.Debug("creation started", idAttr)
 	ctx := context.Background()
 	var mainCfg MainCfg
-	err = s.operator.Implicit(ctx, func(ds data.Source) error {
+	err = s.operator.Implicit(ctx, func(ds sd.Source) error {
 		mainCfg, err = s.procs.SelectMain(ds, spec.ExecID)
 		return err
 	})
@@ -181,7 +182,7 @@ func (s *service) Run(spec ProcSpec) (err error) {
 		s.log.Error("creation failed", idAttr)
 		return err
 	}
-	err = s.operator.Explicit(ctx, func(ds data.Source) error {
+	err = s.operator.Explicit(ctx, func(ds sd.Source) error {
 		err = s.procs.UpdateMain(ds, mainMod)
 		if err != nil {
 			s.log.Error("creation failed", idAttr)

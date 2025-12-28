@@ -1,16 +1,17 @@
 package dec
 
 import (
-	"orglang/orglang/avt/data"
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 )
 
 type Repo interface {
-	Insert(data.Source, ProcRec) error
-	SelectAll(data.Source) ([]ProcRef, error)
-	SelectByID(data.Source, id.ADT) (ProcSnap, error)
-	SelectByIDs(data.Source, []id.ADT) ([]ProcRec, error)
-	SelectEnv(data.Source, []id.ADT) (map[id.ADT]ProcRec, error)
+	Insert(sd.Source, ProcRec) error
+	SelectAll(sd.Source) ([]ProcRef, error)
+	SelectByID(sd.Source, id.ADT) (ProcSnap, error)
+	SelectByIDs(sd.Source, []id.ADT) ([]ProcRec, error)
+	SelectEnv(sd.Source, []id.ADT) (map[id.ADT]ProcRec, error)
 }
 
 type bndSpecDS struct {
