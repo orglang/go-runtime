@@ -6,19 +6,19 @@ import (
 	"log/slog"
 )
 
-type rendererStdlib struct {
-	registry *template.Template
-	log      *slog.Logger
+type RendererStdlib struct {
+	te  *template.Template
+	log *slog.Logger
 }
 
-func newRendererStdlib(t *template.Template, l *slog.Logger) *rendererStdlib {
-	name := slog.String("name", "rendererStdlib")
-	return &rendererStdlib{t, l.With(name)}
+func NewRendererStdlib(t *template.Template, l *slog.Logger) *RendererStdlib {
+	name := slog.String("name", "te.RendererStdlib")
+	return &RendererStdlib{t, l.With(name)}
 }
 
-func (r *rendererStdlib) Render(name string, data any) ([]byte, error) {
+func (r *RendererStdlib) Render(name string, data any) ([]byte, error) {
 	buf := new(bytes.Buffer)
-	err := r.registry.ExecuteTemplate(buf, name, data)
+	err := r.te.ExecuteTemplate(buf, name, data)
 	if err != nil {
 		r.log.Error("rendering failed", slog.Any("reason", err))
 	}

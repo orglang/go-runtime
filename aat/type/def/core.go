@@ -5,14 +5,24 @@ import (
 	"fmt"
 	"log/slog"
 
+	"orglang/orglang/lib/sd"
+
 	"orglang/orglang/avt/id"
 	"orglang/orglang/avt/pol"
 	"orglang/orglang/avt/rn"
 	"orglang/orglang/avt/sym"
-	"orglang/orglang/lib/sd"
 
 	"orglang/orglang/aet/alias"
 )
+
+type API interface {
+	Incept(sym.ADT) (TypeRef, error)
+	Create(TypeSpec) (TypeSnap, error)
+	Modify(TypeSnap) (TypeSnap, error)
+	Retrieve(id.ADT) (TypeSnap, error)
+	retrieveSnap(TypeRec) (TypeSnap, error)
+	RetreiveRefs() ([]TypeRef, error)
+}
 
 type TypeSpec struct {
 	TypeNS sym.ADT
@@ -274,15 +284,6 @@ type Context struct {
 	Liabs  map[sym.ADT]TermRec
 }
 
-type API interface {
-	Incept(sym.ADT) (TypeRef, error)
-	Create(TypeSpec) (TypeSnap, error)
-	Modify(TypeSnap) (TypeSnap, error)
-	Retrieve(id.ADT) (TypeSnap, error)
-	retrieveSnap(TypeRec) (TypeSnap, error)
-	RetreiveRefs() ([]TypeRef, error)
-}
-
 type service struct {
 	types    Repo
 	aliases  alias.Repo
@@ -474,31 +475,6 @@ func CollectEnv(recs []TypeRec) []id.ADT {
 	return termIDs
 }
 
-type Repo interface {
-	InsertType(sd.Source, TypeRec) error
-	UpdateType(sd.Source, TypeRec) error
-	SelectTypeRefs(sd.Source) ([]TypeRef, error)
-	SelectTypeRecByID(sd.Source, id.ADT) (TypeRec, error)
-	SelectTypeRecsByIDs(sd.Source, []id.ADT) ([]TypeRec, error)
-	SelectTypeRecByQN(sd.Source, sym.ADT) (TypeRec, error)
-	SelectTypeRecsByQNs(sd.Source, []sym.ADT) ([]TypeRec, error)
-	SelectTypeEnv(sd.Source, []sym.ADT) (map[sym.ADT]TypeRec, error)
-
-	InsertTerm(sd.Source, TermRec) error
-	SelectTermRecByID(sd.Source, id.ADT) (TermRec, error)
-	SelectTermRecsByIDs(sd.Source, []id.ADT) ([]TermRec, error)
-	SelectTermEnv(sd.Source, []id.ADT) (map[id.ADT]TermRec, error)
-}
-
-// goverter:variables
-// goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/aat/type/def:Convert.*
-var (
-	ConvertRecToRef  func(TypeRec) TypeRef
-	ConvertSnapToRef func(TypeSnap) TypeRef
-)
-
 func ErrSymMissingInEnv(want sym.ADT) error {
 	return fmt.Errorf("root missing in env: %v", want)
 }
@@ -509,80 +485,6 @@ func errConcurrentModification(got rn.ADT, want rn.ADT) error {
 
 func errOptimisticUpdate(got rn.ADT) error {
 	return fmt.Errorf("entity concurrent modification: got revision %v", got)
-}
-
-func ConvertSpecToRec(s TermSpec) TermRec {
-	if s == nil {
-		return nil
-	}
-	switch spec := s.(type) {
-	case OneSpec:
-		return OneRec{TermID: id.New()}
-	case LinkSpec:
-		return LinkRec{TermID: id.New(), TypeQN: spec.TypeQN}
-	case TensorSpec:
-		return TensorRec{
-			TermID: id.New(),
-			Y:      ConvertSpecToRec(spec.Y),
-			Z:      ConvertSpecToRec(spec.Z),
-		}
-	case LolliSpec:
-		return LolliRec{
-			TermID: id.New(),
-			Y:      ConvertSpecToRec(spec.Y),
-			Z:      ConvertSpecToRec(spec.Z),
-		}
-	case WithSpec:
-		choices := make(map[sym.ADT]TermRec, len(spec.Zs))
-		for lab, st := range spec.Zs {
-			choices[lab] = ConvertSpecToRec(st)
-		}
-		return WithRec{TermID: id.New(), Zs: choices}
-	case PlusSpec:
-		choices := make(map[sym.ADT]TermRec, len(spec.Zs))
-		for lab, rec := range spec.Zs {
-			choices[lab] = ConvertSpecToRec(rec)
-		}
-		return PlusRec{TermID: id.New(), Zs: choices}
-	default:
-		panic(ErrSpecTypeUnexpected(spec))
-	}
-}
-
-func ConvertRecToSpec(r TermRec) TermSpec {
-	if r == nil {
-		return nil
-	}
-	switch rec := r.(type) {
-	case OneRec:
-		return OneSpec{}
-	case LinkRec:
-		return LinkSpec{TypeQN: rec.TypeQN}
-	case TensorRec:
-		return TensorSpec{
-			Y: ConvertRecToSpec(rec.Y),
-			Z: ConvertRecToSpec(rec.Z),
-		}
-	case LolliRec:
-		return LolliSpec{
-			Y: ConvertRecToSpec(rec.Y),
-			Z: ConvertRecToSpec(rec.Z),
-		}
-	case WithRec:
-		choices := make(map[sym.ADT]TermSpec, len(rec.Zs))
-		for lab, rec := range rec.Zs {
-			choices[lab] = ConvertRecToSpec(rec)
-		}
-		return WithSpec{Zs: choices}
-	case PlusRec:
-		choices := make(map[sym.ADT]TermSpec, len(rec.Zs))
-		for lab, st := range rec.Zs {
-			choices[lab] = ConvertRecToSpec(st)
-		}
-		return PlusSpec{Zs: choices}
-	default:
-		panic(ErrRecTypeUnexpected(rec))
-	}
 }
 
 func CheckRef(got, want id.ADT) error {

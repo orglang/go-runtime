@@ -18,15 +18,10 @@ var (
 // goverter:extend orglang/orglang/avt/id:Convert.*
 // goverter:extend orglang/orglang/avt/rn:Convert.*
 // goverter:extend orglang/orglang/aat/proc/def:Data.*
-var (
-	DataFromMod func(Mod) (modDS, error)
-	DataFromBnd func(Bnd) bndDS
-)
-
-// goverter:variables
-// goverter:output:format assign-variable
 // goverter:extend data.*
 var (
+	DataFromMod     func(Mod) (modDS, error)
+	DataFromBnd     func(Bnd) bndDS
 	DataToSemRecs   func([]SemRecDS) ([]SemRec, error)
 	DataFromSemRecs func([]SemRec) ([]SemRecDS, error)
 )

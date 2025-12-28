@@ -6,8 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/avt/id"
 	"orglang/orglang/lib/lf"
+
+	"orglang/orglang/avt/id"
 )
 
 // Server-side primary adapter
@@ -17,8 +18,15 @@ type handlerEcho struct {
 }
 
 func newHandlerEcho(a API, l *slog.Logger) *handlerEcho {
-	name := slog.String("name", "roleHandlerEcho")
+	name := slog.String("name", "typedef.handlerEcho")
 	return &handlerEcho{a, l.With(name)}
+}
+
+func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
+	e.POST("/api/v1/roles", h.PostOne)
+	e.GET("/api/v1/roles/:id", h.GetOne)
+	e.PATCH("/api/v1/roles/:id", h.PatchOne)
+	return nil
 }
 
 func (h *handlerEcho) PostOne(c echo.Context) error {

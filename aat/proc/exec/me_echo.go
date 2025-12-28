@@ -19,6 +19,12 @@ func newHandlerEcho(a API, l *slog.Logger) *handlerEcho {
 	return &handlerEcho{a, l}
 }
 
+func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
+	e.GET("/api/v1/procs/:id", h.GetSnap)
+	e.POST("/api/v1/procs/:id/calls", h.PostCall)
+	return nil
+}
+
 func (h *handlerEcho) GetSnap(c echo.Context) error {
 	var dto IdentME
 	err := c.Bind(&dto)

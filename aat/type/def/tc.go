@@ -10,6 +10,80 @@ import (
 	"orglang/orglang/avt/sym"
 )
 
+func ConvertSpecToRec(s TermSpec) TermRec {
+	if s == nil {
+		return nil
+	}
+	switch spec := s.(type) {
+	case OneSpec:
+		return OneRec{TermID: id.New()}
+	case LinkSpec:
+		return LinkRec{TermID: id.New(), TypeQN: spec.TypeQN}
+	case TensorSpec:
+		return TensorRec{
+			TermID: id.New(),
+			Y:      ConvertSpecToRec(spec.Y),
+			Z:      ConvertSpecToRec(spec.Z),
+		}
+	case LolliSpec:
+		return LolliRec{
+			TermID: id.New(),
+			Y:      ConvertSpecToRec(spec.Y),
+			Z:      ConvertSpecToRec(spec.Z),
+		}
+	case WithSpec:
+		choices := make(map[sym.ADT]TermRec, len(spec.Zs))
+		for lab, st := range spec.Zs {
+			choices[lab] = ConvertSpecToRec(st)
+		}
+		return WithRec{TermID: id.New(), Zs: choices}
+	case PlusSpec:
+		choices := make(map[sym.ADT]TermRec, len(spec.Zs))
+		for lab, rec := range spec.Zs {
+			choices[lab] = ConvertSpecToRec(rec)
+		}
+		return PlusRec{TermID: id.New(), Zs: choices}
+	default:
+		panic(ErrSpecTypeUnexpected(spec))
+	}
+}
+
+func ConvertRecToSpec(r TermRec) TermSpec {
+	if r == nil {
+		return nil
+	}
+	switch rec := r.(type) {
+	case OneRec:
+		return OneSpec{}
+	case LinkRec:
+		return LinkSpec{TypeQN: rec.TypeQN}
+	case TensorRec:
+		return TensorSpec{
+			Y: ConvertRecToSpec(rec.Y),
+			Z: ConvertRecToSpec(rec.Z),
+		}
+	case LolliRec:
+		return LolliSpec{
+			Y: ConvertRecToSpec(rec.Y),
+			Z: ConvertRecToSpec(rec.Z),
+		}
+	case WithRec:
+		choices := make(map[sym.ADT]TermSpec, len(rec.Zs))
+		for lab, rec := range rec.Zs {
+			choices[lab] = ConvertRecToSpec(rec)
+		}
+		return WithSpec{Zs: choices}
+	case PlusRec:
+		choices := make(map[sym.ADT]TermSpec, len(rec.Zs))
+		for lab, st := range rec.Zs {
+			choices[lab] = ConvertRecToSpec(st)
+		}
+		return PlusSpec{Zs: choices}
+	default:
+		panic(ErrRecTypeUnexpected(rec))
+	}
+}
+
 func MsgFromTermSpec(s TermSpec) TermSpecME {
 	switch spec := s.(type) {
 	case OneSpec:

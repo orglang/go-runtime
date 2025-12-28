@@ -7,21 +7,28 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"orglang/orglang/avt/id"
-	"orglang/orglang/avt/msg"
 	"orglang/orglang/avt/sym"
 	"orglang/orglang/lib/lf"
+	"orglang/orglang/lib/te"
 )
 
 // Adapter
 type presenterEcho struct {
 	api API
-	ssr msg.Renderer
+	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newPresenterEcho(a API, r msg.Renderer, l *slog.Logger) *presenterEcho {
+func newPresenterEcho(a API, r te.Renderer, l *slog.Logger) *presenterEcho {
 	name := slog.String("name", "sigPresenterEcho")
 	return &presenterEcho{a, r, l.With(name)}
+}
+
+func cfgPresenterEcho(e *echo.Echo, p *presenterEcho) error {
+	e.POST("/ssr/signatures", p.PostOne)
+	e.GET("/ssr/signatures", p.GetMany)
+	e.GET("/ssr/signatures/:id", p.GetOne)
+	return nil
 }
 
 func (p *presenterEcho) PostOne(c echo.Context) error {

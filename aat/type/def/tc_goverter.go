@@ -3,6 +3,15 @@ package def
 // goverter:variables
 // goverter:output:format assign-variable
 // goverter:extend orglang/orglang/avt/id:Convert.*
+// goverter:extend orglang/orglang/aat/type/def:Convert.*
+var (
+	ConvertRecToRef  func(TypeRec) TypeRef
+	ConvertSnapToRef func(TypeSnap) TypeRef
+)
+
+// goverter:variables
+// goverter:output:format assign-variable
+// goverter:extend orglang/orglang/avt/id:Convert.*
 // goverter:extend orglang/orglang/avt/rn:Convert.*
 // goverter:extend orglang/orglang/aat/type/def:Msg.*
 // goverter:extend Msg.*

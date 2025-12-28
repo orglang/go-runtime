@@ -6,21 +6,24 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/avt/msg"
-
 	typedef "orglang/orglang/aat/type/def"
+	"orglang/orglang/lib/te"
 )
 
 // Adapter
 type handlerEcho struct {
 	api typedef.API
-	ssr msg.Renderer
+	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newHandlerEcho(a typedef.API, r msg.Renderer, l *slog.Logger) *handlerEcho {
-	name := slog.String("name", "webHandlerEcho")
+func newHandlerEcho(a typedef.API, r te.Renderer, l *slog.Logger) *handlerEcho {
+	name := slog.String("name", "web.handlerEcho")
 	return &handlerEcho{a, r, l.With(name)}
+}
+
+func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) {
+	e.GET("/", h.Home)
 }
 
 func (h *handlerEcho) Home(c echo.Context) error {

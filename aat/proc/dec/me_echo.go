@@ -7,19 +7,25 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"orglang/orglang/avt/id"
-	"orglang/orglang/avt/msg"
+	"orglang/orglang/lib/te"
 )
 
 // Server-side primary adapter
 type handlerEcho struct {
 	api API
-	ssr msg.Renderer
+	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newHandlerEcho(a API, r msg.Renderer, l *slog.Logger) *handlerEcho {
+func newHandlerEcho(a API, r te.Renderer, l *slog.Logger) *handlerEcho {
 	name := slog.String("name", "sigHandlerEcho")
 	return &handlerEcho{a, r, l.With(name)}
+}
+
+func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
+	e.POST("/api/v1/signatures", h.PostOne)
+	e.GET("/api/v1/signatures/:id", h.GetOne)
+	return nil
 }
 
 func (h *handlerEcho) PostOne(c echo.Context) error {

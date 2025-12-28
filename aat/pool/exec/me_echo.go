@@ -8,8 +8,8 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"orglang/orglang/avt/id"
-	"orglang/orglang/avt/msg"
 	"orglang/orglang/lib/lf"
+	"orglang/orglang/lib/te"
 
 	procexec "orglang/orglang/aat/proc/exec"
 )
@@ -17,13 +17,20 @@ import (
 // Server-side primary adapter
 type handlerEcho struct {
 	api API
-	ssr msg.Renderer
+	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newHandlerEcho(a API, r msg.Renderer, l *slog.Logger) *handlerEcho {
+func newHandlerEcho(a API, r te.Renderer, l *slog.Logger) *handlerEcho {
 	name := slog.String("name", "poolHandlerEcho")
 	return &handlerEcho{a, r, l.With(name)}
+}
+
+func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
+	e.POST("/api/v1/pools", h.PostOne)
+	e.GET("/api/v1/pools/:id", h.GetOne)
+	e.POST("/api/v1/pools/:id/procs", h.PostProc)
+	return nil
 }
 
 func (h *handlerEcho) PostOne(c echo.Context) error {
@@ -96,13 +103,18 @@ func (h *handlerEcho) PostProc(c echo.Context) error {
 // Adapter
 type stepHandlerEcho struct {
 	api API
-	ssr msg.Renderer
+	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newStepHandlerEcho(a API, r msg.Renderer, l *slog.Logger) *stepHandlerEcho {
+func newStepHandlerEcho(a API, r te.Renderer, l *slog.Logger) *stepHandlerEcho {
 	name := slog.String("name", "stepHandlerEcho")
 	return &stepHandlerEcho{a, r, l.With(name)}
+}
+
+func cfgStepHandlerEcho(e *echo.Echo, h *stepHandlerEcho) error {
+	e.POST("/api/v1/pools/:id/steps", h.PostOne)
+	return nil
 }
 
 func (h *stepHandlerEcho) PostOne(c echo.Context) error {
