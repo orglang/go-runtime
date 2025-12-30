@@ -116,7 +116,7 @@ func (r *daoPgx) SelectByID(source sd.Source, rid id.ADT) (ProcSnap, error) {
 		r.log.Error("row collection failed", idAttr)
 		return ProcSnap{}, err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entitiy selection succeeded", slog.Any("dto", dto))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entitiy selection succeed", slog.Any("dto", dto))
 	return DataToSigSnap(dto)
 }
 
@@ -164,7 +164,7 @@ func (r *daoPgx) SelectByIDs(source sd.Source, ids []id.ADT) (_ []ProcRec, err e
 	if err != nil {
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("dtos", dtos))
 	return DataToSigRecs(dtos)
 }
 

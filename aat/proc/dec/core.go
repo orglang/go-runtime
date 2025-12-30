@@ -96,7 +96,7 @@ func (s *service) Incept(procQN sym.ADT) (_ ProcRef, err error) {
 		s.log.Error("inception failed", qnAttr)
 		return ProcRef{}, err
 	}
-	s.log.Debug("inception succeeded", qnAttr, slog.Any("sigID", newRec.DecID))
+	s.log.Debug("inception succeed", qnAttr, slog.Any("sigID", newRec.DecID))
 	return ConvertRecToRef(newRec), nil
 }
 
@@ -121,7 +121,7 @@ func (s *service) Create(spec ProcSpec) (_ ProcSnap, err error) {
 		s.log.Error("creation failed", qnAttr)
 		return ProcSnap{}, err
 	}
-	s.log.Debug("creation succeeded", qnAttr, slog.Any("sigID", newRec.DecID))
+	s.log.Debug("creation succeed", qnAttr, slog.Any("sigID", newRec.DecID))
 	return ConvertRecToSnap(newRec), nil
 }
 

@@ -4,7 +4,7 @@ import (
 	"orglang/orglang/lib/cs"
 )
 
-func newStorageConfig(k cs.Keeper) (storagePC, error) {
+func newStoragePC(k cs.Keeper) (storagePC, error) {
 	pc := &storagePC{}
 	loadingErr := k.Load("storage", pc)
 	if loadingErr != nil {

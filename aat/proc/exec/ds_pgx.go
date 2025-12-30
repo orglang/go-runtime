@@ -106,7 +106,7 @@ func (r *repoPgx2) execute(source sd.Source, query string, arg string) (SemRec, 
 		r.log.Error("model mapping failed")
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeeded", slog.Any("root", root))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeed", slog.Any("root", root))
 	return root, nil
 }
 

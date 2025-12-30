@@ -30,6 +30,6 @@ func (k *keeperViper) Load(key string, val any) error {
 		k.log.Error("load failed", slog.String("key", key), slog.Any("reason", err))
 		return err
 	}
-	k.log.Info("load succeeded", slog.String("key", key), slog.Any("val", val))
+	k.log.Info("load succeed", slog.String("key", key), slog.Any("val", val))
 	return nil
 }

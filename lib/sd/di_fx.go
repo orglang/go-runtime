@@ -11,6 +11,6 @@ var Module = fx.Module("lib/sd", // storage driver
 	),
 	fx.Provide(
 		fx.Private,
-		newStorageConfig,
+		newStoragePC,
 	),
 )

@@ -9,6 +9,7 @@ import (
 func (dto exchangePC) Validate() error {
 	return validation.ValidateStruct(&dto,
 		validation.Field(&dto.Protocol, validation.Required),
+		validation.Field(&dto.Server, validation.Required),
 	)
 }
 
@@ -21,14 +22,14 @@ func (dto protocolPC) Validate() error {
 
 func (dto httpPC) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.Port, validation.Min(80), validation.Max(20000)),
+		validation.Field(&dto.Port, validation.Required, validation.Min(80), validation.Max(20000)),
 	)
 }
 
 func (dto serverPC) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.Mode, validation.In(echoMode)),
-		validation.Field(&dto.Echo, validation.Required.When(dto.Mode == echoMode)),
+		validation.Field(&dto.Mode, validation.Required, validation.In(echoMode)),
+		// validation.Field(&dto.Echo, validation.Required.When(dto.Mode == echoMode)),
 	)
 }
 

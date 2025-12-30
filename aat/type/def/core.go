@@ -326,7 +326,7 @@ func (s *service) Incept(qn sym.ADT) (_ TypeRef, err error) {
 		s.log.Error("inception failed", qnAttr)
 		return TypeRef{}, err
 	}
-	s.log.Debug("inception succeeded", qnAttr, slog.Any("roleID", newType.TypeID))
+	s.log.Debug("inception succeed", qnAttr, slog.Any("roleID", newType.TypeID))
 	return ConvertRecToRef(newType), nil
 }
 
@@ -361,7 +361,7 @@ func (s *service) Create(spec TypeSpec) (_ TypeSnap, err error) {
 		s.log.Error("creation failed", qnAttr)
 		return TypeSnap{}, err
 	}
-	s.log.Debug("creation succeeded", qnAttr, slog.Any("typeID", newType.TypeID))
+	s.log.Debug("creation succeed", qnAttr, slog.Any("typeID", newType.TypeID))
 	return TypeSnap{
 		TypeID: newType.TypeID,
 		TypeRN: newType.TypeRN,
@@ -417,7 +417,7 @@ func (s *service) Modify(snap TypeSnap) (_ TypeSnap, err error) {
 		s.log.Error("modification failed", idAttr)
 		return TypeSnap{}, err
 	}
-	s.log.Debug("modification succeeded", idAttr)
+	s.log.Debug("modification succeed", idAttr)
 	return snap, nil
 }
 

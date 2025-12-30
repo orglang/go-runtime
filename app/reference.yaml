@@ -3,9 +3,12 @@ exchange:
     modes: [http]
     http:
       port: 8080
-
+  server:
+    mode: echo
 storage:
   protocol:
     mode: postgres
     postgres:
       url: postgres://orglang:orglang@localhost:5432/orglang
+  driver:
+    mode: pgx

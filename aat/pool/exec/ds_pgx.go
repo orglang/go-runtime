@@ -44,7 +44,7 @@ func (r *daoPgx) Insert(source sd.Source, root PoolRec) (err error) {
 		r.log.Error("execution failed")
 		return err
 	}
-	r.log.Debug("insertion succeeded", slog.Any("poolID", root.ExecID))
+	r.log.Debug("insertion succeed", slog.Any("poolID", root.ExecID))
 	return nil
 }
 
@@ -61,7 +61,7 @@ func (r *daoPgx) InsertLiab(source sd.Source, liab procexec.Liab) (err error) {
 		r.log.Error("execution failed")
 		return err
 	}
-	r.log.Debug("insertion succeeded", slog.Any("poolID", liab.PoolID))
+	r.log.Debug("insertion succeed", slog.Any("poolID", liab.PoolID))
 	return nil
 }
 
@@ -100,7 +100,7 @@ func (r *daoPgx) SelectProc(source sd.Source, procID id.ADT) (procexec.Cfg, erro
 		r.log.Error("mapping failed", idAttr)
 		return procexec.Cfg{}, err
 	}
-	r.log.Debug("selection succeeded", idAttr)
+	r.log.Debug("selection succeed", idAttr)
 	return procexec.Cfg{
 		Chnls: core.IndexBy(procexec.ChnlPH, chnls),
 		Steps: core.IndexBy(procexec.ChnlID, steps),
@@ -196,7 +196,7 @@ func (r *daoPgx) UpdateProc(source sd.Source, mod procexec.Mod) (err error) {
 	if err != nil {
 		return err
 	}
-	r.log.Debug("update succeeded")
+	r.log.Debug("update succeed")
 	return nil
 }
 
@@ -219,7 +219,7 @@ func (r *daoPgx) SelectSubs(source sd.Source, poolID id.ADT) (PoolSnap, error) {
 		r.log.Error("mapping failed")
 		return PoolSnap{}, err
 	}
-	r.log.Debug("selection succeeded", idAttr)
+	r.log.Debug("selection succeed", idAttr)
 	return snap, nil
 }
 

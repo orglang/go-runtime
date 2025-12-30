@@ -4,7 +4,7 @@ import (
 	"orglang/orglang/lib/cs"
 )
 
-func newExchangeConfig(k cs.Keeper) (exchangePC, error) {
+func newExchangePC(k cs.Keeper) (exchangePC, error) {
 	pc := &exchangePC{}
 	loadingErr := k.Load("exchange", pc)
 	if loadingErr != nil {

@@ -268,10 +268,10 @@ func (s *service) createWith(
 			s.log.Debug("coordination half done", viaAttr)
 			return procMod, nil
 		}
-		s.log.Debug("coordination succeeded")
+		s.log.Debug("coordination succeed")
 		return procMod, nil
 	case procdef.SpawnSpecOld:
-		s.log.Debug("coordination succeeded")
+		s.log.Debug("coordination succeed")
 		return procMod, nil
 	default:
 		panic(procdef.ErrTermTypeUnexpected(ts))

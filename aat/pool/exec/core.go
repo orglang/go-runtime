@@ -119,7 +119,7 @@ func (s *service) Create(spec PoolSpec) (PoolRef, error) {
 		s.log.Error("creation failed")
 		return PoolRef{}, err
 	}
-	s.log.Debug("creation succeeded", slog.Any("poolID", impl.ExecID))
+	s.log.Debug("creation succeed", slog.Any("poolID", impl.ExecID))
 	return ConvertRecToRef(impl), nil
 }
 
@@ -220,7 +220,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 		procID = nextSpec.ProcID
 		termSpec = nextSpec.ProcTS
 	}
-	s.log.Debug("taking succeeded", idAttr)
+	s.log.Debug("taking succeed", idAttr)
 	return nil
 }
 
@@ -285,7 +285,7 @@ func (s *service) takeWith(
 				ProcID: svcStep.ProcID,
 				ProcTS: termImpl.Cont,
 			}
-			s.log.Debug("taking succeeded", viaAttr)
+			s.log.Debug("taking succeed", viaAttr)
 			return tranSpec, procMod, nil
 		default:
 			panic(procdef.ErrRecTypeUnexpected(svcStep.Cont))
@@ -342,7 +342,7 @@ func (s *service) takeWith(
 				ProcID: procCfg.ProcID,
 				ProcTS: termSpec.ContTS,
 			}
-			s.log.Debug("taking succeeded", viaAttr)
+			s.log.Debug("taking succeed", viaAttr)
 			return tranSpec, procMod, nil
 		case procdef.FwdRec:
 			rcvrViaBnd := procexec.Bnd{
@@ -358,7 +358,7 @@ func (s *service) takeWith(
 				ProcID: procCfg.ProcID,
 				ProcTS: termSpec,
 			}
-			s.log.Debug("taking succeeded", viaAttr)
+			s.log.Debug("taking succeed", viaAttr)
 			return tranSpec, procMod, nil
 		default:
 			panic(procdef.ErrRecTypeUnexpected(msgStep.Val))
@@ -457,7 +457,7 @@ func (s *service) takeWith(
 				ProcID: svcStep.ProcID,
 				ProcTS: termImpl.Cont,
 			}
-			s.log.Debug("taking succeeded", viaAttr)
+			s.log.Debug("taking succeed", viaAttr)
 			return tranSpec, procMod, nil
 		default:
 			panic(procdef.ErrRecTypeUnexpected(svcStep.Cont))
@@ -526,7 +526,7 @@ func (s *service) takeWith(
 				ProcID: procCfg.ProcID,
 				ProcTS: termSpec.ContTS,
 			}
-			s.log.Debug("taking succeeded", viaAttr)
+			s.log.Debug("taking succeed", viaAttr)
 			return tranSpec, procMod, nil
 		default:
 			panic(procdef.ErrRecTypeUnexpected(sndrMsgRec.Val))
@@ -604,7 +604,7 @@ func (s *service) takeWith(
 				ProcID: svcStep.ProcID,
 				ProcTS: termImpl.Conts[termSpec.Label],
 			}
-			s.log.Debug("taking succeeded", viaAttr)
+			s.log.Debug("taking succeed", viaAttr)
 			return tranSpec, procMod, nil
 		default:
 			panic(procdef.ErrRecTypeUnexpected(svcStep.Cont))
@@ -664,7 +664,7 @@ func (s *service) takeWith(
 				ProcID: procCfg.ProcID,
 				ProcTS: termSpec.Conts[termImpl.Label],
 			}
-			s.log.Debug("taking succeeded", viaAttr)
+			s.log.Debug("taking succeed", viaAttr)
 			return tranSpec, procMod, nil
 		default:
 			panic(procdef.ErrRecTypeUnexpected(msgStep.Val))
@@ -738,7 +738,7 @@ func (s *service) takeWith(
 			ProcID: procCfg.ProcID,
 			ProcTS: termSpec.Cont,
 		}
-		s.log.Debug("taking succeeded")
+		s.log.Debug("taking succeed")
 		return tranSpec, procMod, nil
 	case procdef.FwdSpec:
 		viaChnl, ok := procCfg.Chnls[termSpec.X]
@@ -778,7 +778,7 @@ func (s *service) takeWith(
 					ProcID: viaStep.ProcID,
 					ProcTS: viaStep.Cont,
 				}
-				s.log.Debug("taking succeeded", viaAttr)
+				s.log.Debug("taking succeed", viaAttr)
 				return tranSpec, procMod, nil
 			case procexec.MsgRec:
 				yBnd := procexec.Bnd{
@@ -794,7 +794,7 @@ func (s *service) takeWith(
 					ProcID: viaStep.ProcID,
 					ProcTS: viaStep.Val,
 				}
-				s.log.Debug("taking succeeded", viaAttr)
+				s.log.Debug("taking succeed", viaAttr)
 				return tranSpec, procMod, nil
 			case nil:
 				xBnd := procexec.Bnd{
@@ -840,7 +840,7 @@ func (s *service) takeWith(
 					ProcID: viaStep.ProcID,
 					ProcTS: viaStep.Cont,
 				}
-				s.log.Debug("taking succeeded", viaAttr)
+				s.log.Debug("taking succeed", viaAttr)
 				return tranSpec, procMod, nil
 			case procexec.MsgRec:
 				xBnd := procexec.Bnd{
@@ -856,7 +856,7 @@ func (s *service) takeWith(
 					ProcID: viaStep.ProcID,
 					ProcTS: viaStep.Val,
 				}
-				s.log.Debug("taking succeeded", viaAttr)
+				s.log.Debug("taking succeed", viaAttr)
 				return tranSpec, procMod, nil
 			case nil:
 				svcStep := procexec.SvcRec{

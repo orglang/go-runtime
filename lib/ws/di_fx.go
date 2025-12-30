@@ -10,6 +10,6 @@ var Module = fx.Module("lib/ws", // web server
 	),
 	fx.Provide(
 		fx.Private,
-		newExchangeConfig,
+		newExchangePC,
 	),
 )

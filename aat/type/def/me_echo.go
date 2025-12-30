@@ -54,7 +54,7 @@ func (h *handlerEcho) PostOne(c echo.Context) error {
 		h.log.Error("role creation failed")
 		return err
 	}
-	h.log.Log(ctx, lf.LevelTrace, "role posting succeeded", slog.Any("id", snap.TypeID))
+	h.log.Log(ctx, lf.LevelTrace, "role posting succeed", slog.Any("id", snap.TypeID))
 	return c.JSON(http.StatusCreated, MsgFromTypeSnap(snap))
 }
 
@@ -107,6 +107,6 @@ func (h *handlerEcho) PatchOne(c echo.Context) error {
 		h.log.Error("role modification failed")
 		return err
 	}
-	h.log.Log(ctx, lf.LevelTrace, "role patching succeeded", slog.Any("ref", ConvertSnapToRef(resSnap)))
+	h.log.Log(ctx, lf.LevelTrace, "role patching succeed", slog.Any("ref", ConvertSnapToRef(resSnap)))
 	return c.JSON(http.StatusOK, MsgFromTypeSnap(resSnap))
 }

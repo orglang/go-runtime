@@ -7,6 +7,7 @@ import (
 func (dto storagePC) Validate() error {
 	return validation.ValidateStruct(&dto,
 		validation.Field(&dto.Protocol, validation.Required),
+		validation.Field(&dto.Driver, validation.Required),
 	)
 }
 
@@ -25,8 +26,8 @@ func (dto postgresPC) Validate() error {
 
 func (dto driverPC) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.Mode, validation.In(pgxMode)),
-		validation.Field(&dto.Pgx, validation.Required.When(dto.Mode == pgxMode)),
+		validation.Field(&dto.Mode, validation.Required, validation.In(pgxMode)),
+		// validation.Field(&dto.Pgx, validation.Required.When(dto.Mode == pgxMode)),
 	)
 }
 

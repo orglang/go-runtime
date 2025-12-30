@@ -71,7 +71,7 @@ func (r *daoPgx) InsertType(source sd.Source, rec TypeRec) error {
 		r.log.Error("query execution failed", idAttr, slog.String("q", insertState))
 		return err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entity insertion succeeded", idAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity insertion succeed", idAttr)
 	return nil
 }
 
@@ -116,7 +116,7 @@ func (r *daoPgx) UpdateType(source sd.Source, rec TypeRec) error {
 		r.log.Error("query execution failed", idAttr, slog.String("q", insertSnap))
 		return err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entity update succeeded", idAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity update succeed", idAttr)
 	return nil
 }
 
@@ -137,7 +137,7 @@ func (r *daoPgx) SelectTypeRefs(source sd.Source) ([]TypeRef, error) {
 		r.log.Error("rows collection failed")
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("dtos", dtos))
 	return DataToTypeRefs(dtos)
 }
 
@@ -155,7 +155,7 @@ func (r *daoPgx) SelectTypeRecByID(source sd.Source, recID id.ADT) (TypeRec, err
 		r.log.Error("row collection failed", idAttr)
 		return TypeRec{}, err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeeded", idAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeed", idAttr)
 	return DataToTypeRec(dto)
 }
 
@@ -173,7 +173,7 @@ func (r *daoPgx) SelectTypeRecByQN(source sd.Source, recQN sym.ADT) (TypeRec, er
 		r.log.Error("row collection failed", fqnAttr)
 		return TypeRec{}, err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeeded", fqnAttr)
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeed", fqnAttr)
 	return DataToTypeRec(dto)
 }
 
@@ -214,7 +214,7 @@ func (r *daoPgx) SelectTypeRecsByIDs(source sd.Source, recIDs []id.ADT) (_ []Typ
 	if err != nil {
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("dtos", dtos))
 	return DataToTypeRecs(dtos)
 }
 
@@ -259,7 +259,7 @@ func (r *daoPgx) SelectTypeRecsByQNs(source sd.Source, recQNs []sym.ADT) (_ []Ty
 	if err != nil {
 		return nil, err
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("dtos", dtos))
 	return DataToTypeRecs(dtos)
 }
 
@@ -329,7 +329,7 @@ func (r *daoPgx) SelectTermRecByID(source sd.Source, recID id.ADT) (TermRec, err
 		r.log.Error("entity selection failed", idAttr)
 		return nil, fmt.Errorf("no rows selected")
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeeded", slog.Any("dtos", dtos))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeed", slog.Any("dtos", dtos))
 	states := make(map[string]stateDS, len(dtos))
 	for _, dto := range dtos {
 		states[dto.ID] = dto
@@ -382,7 +382,7 @@ func (r *daoPgx) SelectTermRecsByIDs(source sd.Source, recIDs []id.ADT) (_ []Ter
 		}
 		recs = append(recs, rec)
 	}
-	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeeded", slog.Any("recs", recs))
+	r.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("recs", recs))
 	return recs, err
 }
 

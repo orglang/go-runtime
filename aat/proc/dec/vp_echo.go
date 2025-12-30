@@ -61,7 +61,7 @@ func (p *presenterEcho) PostOne(c echo.Context) error {
 		p.log.Error("view rendering failed")
 		return err
 	}
-	p.log.Log(ctx, lf.LevelTrace, "root posting succeeded", slog.Any("ref", ref))
+	p.log.Log(ctx, lf.LevelTrace, "root posting succeed", slog.Any("ref", ref))
 	return c.HTMLBlob(http.StatusOK, html)
 }
 
@@ -108,6 +108,6 @@ func (p *presenterEcho) GetOne(c echo.Context) error {
 		p.log.Error("view rendering failed")
 		return err
 	}
-	p.log.Log(ctx, lf.LevelTrace, "root getting succeeded", slog.Any("id", snap.DecID))
+	p.log.Log(ctx, lf.LevelTrace, "root getting succeed", slog.Any("id", snap.DecID))
 	return c.HTMLBlob(http.StatusOK, html)
 }
