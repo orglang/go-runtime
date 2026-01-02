@@ -6,15 +6,15 @@ import (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
 var (
 	ConvertRecToRef func(PoolRec) PoolRef
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/aat/proc/def:Msg.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/proc/def:Msg.*
 var (
 	MsgToPoolSpec   func(PoolSpecME) (PoolSpec, error)
 	MsgFromPoolSpec func(PoolSpec) PoolSpecME
@@ -28,7 +28,7 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
 var (
 	DataToPoolRef    func(poolRefDS) (PoolRef, error)
 	DataFromPoolRef  func(PoolRef) poolRefDS

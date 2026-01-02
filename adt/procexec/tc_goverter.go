@@ -2,8 +2,8 @@ package procexec
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/aat/proc/def:Msg.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/proc/def:Msg.*
 var (
 	MsgFromSpec func(ProcSpec) SpecME
 	MsgToSpec   func(SpecME) (ProcSpec, error)
@@ -15,9 +15,9 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/avt/rn:Convert.*
-// goverter:extend orglang/orglang/aat/proc/def:Data.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/revnum:Convert.*
+// goverter:extend orglang/orglang/adt/proc/def:Data.*
 // goverter:extend data.*
 var (
 	DataFromMod     func(Mod) (modDS, error)

@@ -1,4 +1,4 @@
-package typealias
+package expalias
 
 import (
 	"orglang/orglang/adt/identity"

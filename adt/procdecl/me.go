@@ -1,14 +1,13 @@
 package procdecl
 
-type BndSpecME struct {
-	ChnlPH string `json:"chnl_ph"`
-	TypeQN string `json:"type_qn"`
-}
+import (
+	"orglang/orglang/adt/expctx"
+)
 
 type SigSpecME struct {
-	X     BndSpecME   `json:"x"`
-	SigQN string      `json:"sig_qn"`
-	Ys    []BndSpecME `json:"ys"`
+	X     expctx.BindClaimME   `json:"x"`
+	SigQN string               `json:"sig_qn"`
+	Ys    []expctx.BindClaimME `json:"ys"`
 }
 
 type IdentME struct {
@@ -22,9 +21,9 @@ type SigRefME struct {
 }
 
 type SigSnapME struct {
-	X     BndSpecME   `json:"x"`
-	SigID string      `json:"sig_id"`
-	Ys    []BndSpecME `json:"ys"`
-	Title string      `json:"title"`
-	SigRN int64       `json:"sig_rn"`
+	X     expctx.BindClaimME   `json:"x"`
+	SigID string               `json:"sig_id"`
+	Ys    []expctx.BindClaimME `json:"ys"`
+	Title string               `json:"title"`
+	SigRN int64                `json:"sig_rn"`
 }

@@ -1,6 +1,6 @@
 //go:build !goverter
 
-package typealias
+package expalias
 
 import (
 	"go.uber.org/fx"

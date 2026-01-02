@@ -45,7 +45,7 @@ func MsgFromTermSpec(t TermSpec) TermSpecME {
 			K: Recv,
 			Recv: &RecvSpecME{
 				X:    qualsym.ConvertToString(term.CommPH),
-				Y:    qualsym.ConvertToString(term.BindPH),
+				Y:    qualsym.ConvertToString(term.CommPH),
 				Cont: MsgFromTermSpec(term.ContTS),
 			},
 		}
@@ -413,7 +413,7 @@ func dataFromTermSpec(s TermSpec) (TermSpecDS, error) {
 			K: recvKind,
 			Recv: &recvSpecDS{
 				X:    qualsym.ConvertToString(spec.CommPH),
-				Y:    qualsym.ConvertToString(spec.BindPH),
+				Y:    qualsym.ConvertToString(spec.CommPH),
 				Cont: dto,
 			},
 		}, nil

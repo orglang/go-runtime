@@ -9,7 +9,7 @@ import (
 
 	"orglang/orglang/lib/sd"
 
-	"orglang/orglang/adt/chanctx"
+	"orglang/orglang/adt/expctx"
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/revnum"
 
@@ -102,8 +102,8 @@ func (r *daoPgx) SelectProc(source sd.Source, procID identity.ADT) (procexec.Cfg
 	}
 	r.log.Debug("selection succeed", idAttr)
 	return procexec.Cfg{
-		Chnls: chanctx.IndexBy(procexec.ChnlPH, chnls),
-		Steps: chanctx.IndexBy(procexec.ChnlID, steps),
+		Chnls: expctx.IndexBy(procexec.ChnlPH, chnls),
+		Steps: expctx.IndexBy(procexec.ChnlID, steps),
 	}, nil
 }
 

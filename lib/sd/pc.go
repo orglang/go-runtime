@@ -1,10 +1,10 @@
 package sd
 
 import (
-	"orglang/orglang/lib/cs"
+	"orglang/orglang/lib/ck"
 )
 
-func newStoragePC(k cs.Keeper) (storagePC, error) {
+func newStoragePC(k ck.Loader) (storagePC, error) {
 	pc := &storagePC{}
 	loadingErr := k.Load("storage", pc)
 	if loadingErr != nil {

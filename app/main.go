@@ -9,7 +9,7 @@ import (
 	"orglang/orglang/lib/sd"
 	"orglang/orglang/lib/ws"
 
-	"orglang/orglang/adt/typealias"
+	"orglang/orglang/adt/expalias"
 
 	poolexec "orglang/orglang/adt/poolexec"
 	"orglang/orglang/adt/procdecl"
@@ -27,7 +27,7 @@ func main() {
 		sd.Module,
 		lf.Module,
 		// aet
-		typealias.Module,
+		expalias.Module,
 		// aat
 		procdef.Module,
 		poolexec.Module,

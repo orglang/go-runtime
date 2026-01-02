@@ -61,7 +61,7 @@ func (r *daoPgx) Insert(source sd.Source, mod ProcRec) error {
 		"sig_id":   dto.SigID,
 		"rev_from": dto.SigRN,
 		"rev_to":   math.MaxInt64,
-		"chnl_key": dto.X.ChnlPH,
+		"chnl_key": dto.X.BindPH,
 		"role_fqn": dto.X.TypeQN,
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertPE, peArgs)
@@ -81,7 +81,7 @@ func (r *daoPgx) Insert(source sd.Source, mod ProcRec) error {
 			"sig_id":   dto.SigID,
 			"rev_from": dto.SigRN,
 			"rev_to":   math.MaxInt64,
-			"chnl_key": ce.ChnlPH,
+			"chnl_key": ce.BindPH,
 			"role_fqn": ce.TypeQN,
 		}
 		batch.Queue(insertCE, args)

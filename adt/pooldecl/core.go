@@ -5,6 +5,7 @@ import (
 
 	"orglang/orglang/lib/sd"
 
+	"orglang/orglang/adt/expctx"
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/qualsym"
 )
@@ -23,18 +24,13 @@ type PoolSpec struct {
 	PoolNS qualsym.ADT
 	PoolSN qualsym.ADT
 	// endpoint where pool acts as a provider for insiders
-	InsiderProvisionEP ChnlSpec
+	InsiderProvisionEP expctx.BindClaim
 	// endpoint where pool acts as a client for insiders
-	InsiderReceptionEP ChnlSpec
+	InsiderReceptionEP expctx.BindClaim
 	// endpoint where pool acts as a provider for outsiders
-	OutsiderProvisionEP ChnlSpec
+	OutsiderProvisionEP expctx.BindClaim
 	// endpoints where pool acts as a client for outsiders
-	OutsiderReceptionEPs []ChnlSpec
-}
-
-type ChnlSpec struct {
-	CommPH qualsym.ADT // may be blank
-	TypeQN qualsym.ADT
+	OutsiderReceptionEPs []expctx.BindClaim
 }
 
 type PoolRef struct {

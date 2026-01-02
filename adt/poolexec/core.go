@@ -705,7 +705,7 @@ func (s *service) takeWith(
 		procMod.Bnds = append(procMod.Bnds, sndrViaBnd)
 		rcvrViaBnd := procexec.Bnd{
 			ProcID: rcvrLiab.ProcID,
-			ChnlPH: rcvrSig.X.CommPH,
+			ChnlPH: rcvrSig.X.BindPH,
 			ChnlID: newViaID,
 			TermID: rcvrRole.TermID,
 			PoolRN: rcvrSnap.PoolRN.Next(),
@@ -726,7 +726,7 @@ func (s *service) takeWith(
 			procMod.Bnds = append(procMod.Bnds, sndrValBnd)
 			rcvrValBnd := procexec.Bnd{
 				ProcID: rcvrLiab.ProcID,
-				ChnlPH: rcvrSig.Ys[i].CommPH,
+				ChnlPH: rcvrSig.Ys[i].BindPH,
 				ChnlID: valChnl.ChnlID,
 				TermID: valChnl.TermID,
 				PoolRN: rcvrSnap.PoolRN.Next(),
@@ -1309,7 +1309,7 @@ func (s *service) checkClient(
 			}
 			gotVal, ok := procCtx.Assets[termSpec.Ys[i]]
 			if !ok {
-				err := procdef.ErrMissingInCtx(ep.CommPH)
+				err := procdef.ErrMissingInCtx(ep.BindPH)
 				s.log.Error("checking failed")
 				return err
 			}

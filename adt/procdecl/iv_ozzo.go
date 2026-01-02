@@ -3,23 +3,16 @@ package procdecl
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
-	"orglang/orglang/adt/chanctx"
+	"orglang/orglang/adt/expctx"
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/qualsym"
 )
-
-func (dto BndSpecME) Validate() error {
-	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.ChnlPH, qualsym.Optional...),
-		validation.Field(&dto.TypeQN, qualsym.Required...),
-	)
-}
 
 func (dto SigSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
 		validation.Field(&dto.X, validation.Required),
 		validation.Field(&dto.SigQN, qualsym.Required...),
-		validation.Field(&dto.Ys, chanctx.Optional...),
+		validation.Field(&dto.Ys, expctx.Optional...),
 	)
 }
 

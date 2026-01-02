@@ -12,7 +12,7 @@ import (
 	"orglang/orglang/adt/qualsym"
 	"orglang/orglang/adt/revnum"
 
-	"orglang/orglang/adt/typealias"
+	"orglang/orglang/adt/expalias"
 )
 
 type API interface {
@@ -286,7 +286,7 @@ type Context struct {
 
 type service struct {
 	types    Repo
-	aliases  typealias.Repo
+	aliases  expalias.Repo
 	operator sd.Operator
 	log      *slog.Logger
 }
@@ -298,7 +298,7 @@ func newAPI() API {
 
 func newService(
 	types Repo,
-	aliases typealias.Repo,
+	aliases expalias.Repo,
 	operator sd.Operator,
 	l *slog.Logger,
 ) *service {
@@ -309,7 +309,7 @@ func (s *service) Incept(qn qualsym.ADT) (_ TypeRef, err error) {
 	ctx := context.Background()
 	qnAttr := slog.Any("roleQN", qn)
 	s.log.Debug("inception started", qnAttr)
-	newAlias := typealias.Root{QN: qn, ID: identity.New(), RN: revnum.Initial()}
+	newAlias := expalias.Root{QN: qn, ID: identity.New(), RN: revnum.Initial()}
 	newType := TypeRec{TypeID: newAlias.ID, TypeRN: newAlias.RN, Title: newAlias.QN.SN()}
 	s.operator.Explicit(ctx, func(ds sd.Source) error {
 		err = s.aliases.Insert(ds, newAlias)
@@ -334,7 +334,7 @@ func (s *service) Create(spec TypeSpec) (_ TypeSnap, err error) {
 	ctx := context.Background()
 	qnAttr := slog.Any("typeQN", spec.TypeSN)
 	s.log.Debug("creation started", qnAttr, slog.Any("spec", spec))
-	newAlias := typealias.Root{QN: spec.TypeSN, ID: identity.New(), RN: revnum.Initial()}
+	newAlias := expalias.Root{QN: spec.TypeSN, ID: identity.New(), RN: revnum.Initial()}
 	newTerm := ConvertSpecToRec(spec.TypeTS)
 	newType := TypeRec{
 		TypeID: newAlias.ID,

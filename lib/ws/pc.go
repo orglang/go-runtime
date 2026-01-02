@@ -1,10 +1,10 @@
 package ws
 
 import (
-	"orglang/orglang/lib/cs"
+	"orglang/orglang/lib/ck"
 )
 
-func newExchangePC(k cs.Keeper) (exchangePC, error) {
+func newExchangePC(k ck.Loader) (exchangePC, error) {
 	pc := &exchangePC{}
 	loadingErr := k.Load("exchange", pc)
 	if loadingErr != nil {

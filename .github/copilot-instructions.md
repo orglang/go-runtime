@@ -15,13 +15,13 @@ This a visual programming language to support organization development and manag
   - `pooldecl`: Pool declaration aggregate
   - `pooldef`: Pool definition entity
   - `poolexec`: Pool execution aggregate
-  - `chanctx`: Resource context value object
+  - `expctx`: Expression context value object
   - `identity`: Identification value object
   - `polarity`: Polarization value object
   - `qualsym`: Qualified symbol value object
   - `revnum`: Revision number value object
 - `lib`: Reusable behavior definitions
-  - `cs`: Configuration source harness
+  - `ck`: Configuration keeper harness
   - `lf`: Logging framework harness
   - `sd`: Storage driver harness
   - `te`: Template engine harness

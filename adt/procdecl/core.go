@@ -7,11 +7,11 @@ import (
 
 	"orglang/orglang/lib/sd"
 
+	"orglang/orglang/adt/expalias"
+	"orglang/orglang/adt/expctx"
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/qualsym"
 	"orglang/orglang/adt/revnum"
-
-	"orglang/orglang/adt/typealias"
 )
 
 type API interface {
@@ -25,15 +25,9 @@ type ProcSpec struct {
 	ProcNS qualsym.ADT
 	ProcSN qualsym.ADT
 	// endpoint where process acts as a provider
-	ProvisionEP ChnlSpec
+	ProvisionEP expctx.BindClaim
 	// endpoints where process acts as a client
-	ReceptionEPs []ChnlSpec
-}
-
-// channel endpoint
-type ChnlSpec struct {
-	CommPH qualsym.ADT // may be blank
-	TypeQN qualsym.ADT
+	ReceptionEPs []expctx.BindClaim
 }
 
 type ProcRef struct {
@@ -43,25 +37,25 @@ type ProcRef struct {
 }
 
 type ProcRec struct {
-	X     ChnlSpec
+	X     expctx.BindClaim
 	DecID identity.ADT
-	Ys    []ChnlSpec
+	Ys    []expctx.BindClaim
 	Title string
 	DecRN revnum.ADT
 }
 
 // aka ExpDec or ExpDecDef without expression
 type ProcSnap struct {
-	X     ChnlSpec
+	X     expctx.BindClaim
 	DecID identity.ADT
-	Ys    []ChnlSpec
+	Ys    []expctx.BindClaim
 	Title string
 	DecRN revnum.ADT
 }
 
 type service struct {
 	procs    Repo
-	aliases  typealias.Repo
+	aliases  expalias.Repo
 	operator sd.Operator
 	log      *slog.Logger
 }
@@ -71,7 +65,7 @@ func newAPI() API {
 	return &service{}
 }
 
-func newService(procs Repo, aliases typealias.Repo, operator sd.Operator, l *slog.Logger) *service {
+func newService(procs Repo, aliases expalias.Repo, operator sd.Operator, l *slog.Logger) *service {
 	return &service{procs, aliases, operator, l}
 }
 
@@ -79,7 +73,7 @@ func (s *service) Incept(procQN qualsym.ADT) (_ ProcRef, err error) {
 	ctx := context.Background()
 	qnAttr := slog.Any("procQN", procQN)
 	s.log.Debug("inception started", qnAttr)
-	newAlias := typealias.Root{QN: procQN, ID: identity.New(), RN: revnum.Initial()}
+	newAlias := expalias.Root{QN: procQN, ID: identity.New(), RN: revnum.Initial()}
 	newRec := ProcRec{DecID: newAlias.ID, DecRN: newAlias.RN, Title: newAlias.QN.SN()}
 	s.operator.Explicit(ctx, func(ds sd.Source) error {
 		err = s.aliases.Insert(ds, newAlias)

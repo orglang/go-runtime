@@ -1,4 +1,4 @@
-package cs
+package ck
 
 import (
 	"log/slog"

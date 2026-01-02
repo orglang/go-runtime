@@ -2,7 +2,7 @@ package procdecl
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
 var (
 	ConvertSnapToRef func(ProcSnap) ProcRef
 	ConvertRecToRef  func(ProcRec) ProcRef
@@ -11,11 +11,10 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/sym:Convert.*
-// goverter:extend orglang/orglang/aat/type/def:Msg.*
+// goverter:extend orglang/orglang/adt/qualsym:Convert.*
+// goverter:extend orglang/orglang/adt/expctx:Msg.*
+// goverter:extend orglang/orglang/adt/typedef:Msg.*
 var (
-	MsgToBndSpec    func(BndSpecME) (ChnlSpec, error)
-	MsgFromBndSpec  func(ChnlSpec) BndSpecME
 	MsgToSigSpec    func(SigSpecME) (ProcSpec, error)
 	MsgFromSigSpec  func(ProcSpec) SigSpecME
 	MsgToSigRef     func(SigRefME) (ProcRef, error)
@@ -27,9 +26,9 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/avt/rn:Convert.*
-// goverter:extend orglang/orglang/aat/type/def:Msg.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/revnum:Convert.*
+// goverter:extend orglang/orglang/adt/typedef:Msg.*
 // goverter:extend Msg.*
 var (
 	ViewFromSigRef  func(ProcRef) SigRefVP
@@ -41,8 +40,9 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/aat/type/def:Data.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/expctx:Data.*
+// goverter:extend orglang/orglang/adt/typedef:Data.*
 var (
 	DataToSigRef     func(sigRefDS) (ProcRef, error)
 	DataFromSigRef   func(ProcRef) sigRefDS

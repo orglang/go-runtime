@@ -2,8 +2,8 @@ package typedef
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/aat/type/def:Convert.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/typedef:Convert.*
 var (
 	ConvertRecToRef  func(TypeRec) TypeRef
 	ConvertSnapToRef func(TypeSnap) TypeRef
@@ -11,9 +11,9 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/avt/rn:Convert.*
-// goverter:extend orglang/orglang/aat/type/def:Msg.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/revnum:Convert.*
+// goverter:extend orglang/orglang/adt/typedef:Msg.*
 // goverter:extend Msg.*
 var (
 	MsgFromTypeSpec  func(TypeSpec) TypeSpecME
@@ -32,9 +32,9 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/avt/rn:Convert.*
-// goverter:extend orglang/orglang/aat/type/def:Msg.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/revnum:Convert.*
+// goverter:extend orglang/orglang/adt/typedef:Msg.*
 var (
 	ViewFromTypeRef  func(TypeRef) TypeRefVP
 	ViewToTypeRef    func(TypeRefVP) (TypeRef, error)
@@ -45,9 +45,9 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/avt/id:Convert.*
-// goverter:extend orglang/orglang/avt/rn:Convert.*
-// goverter:extend orglang/orglang/aat/type/def:Data.*
+// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/orglang/adt/revnum:Convert.*
+// goverter:extend orglang/orglang/adt/typedef:Data.*
 // goverter:extend data.*
 // goverter:extend DataToTermRef
 // goverter:extend DataFromTermRef
