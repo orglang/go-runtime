@@ -11,15 +11,14 @@ import (
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/polarity"
-	"orglang/orglang/adt/procexp"
-	"orglang/orglang/adt/qualsym"
-	"orglang/orglang/adt/revnum"
-	"orglang/orglang/adt/typeexp"
-
 	"orglang/orglang/adt/procdec"
 	"orglang/orglang/adt/procdef"
 	"orglang/orglang/adt/procexec"
+	"orglang/orglang/adt/procexp"
+	"orglang/orglang/adt/qualsym"
+	"orglang/orglang/adt/revnum"
 	"orglang/orglang/adt/typedef"
+	"orglang/orglang/adt/typeexp"
 )
 
 // Port

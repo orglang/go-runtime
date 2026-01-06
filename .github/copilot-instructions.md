@@ -1,17 +1,17 @@
 # Orglang
 
-This a visual programming language to support organization development and management.
+This a programming language to support organization development and management.
 
 ## Repository structure
 
 - `app`: Runnable application definitions
   - `web`: Web application definitions
-- `adt`: Reusable abstract data types
+- `adt`: Reusable data types
   - `typedef`: Type definition aggregate
-  - `typeexp`: Type expression entity
+  - `typeexp`: Type expression value
   - `procdec`: Process declaration aggregate
   - `procdef`: Process definition entity
-  - `procexp`: Process expression entity
+  - `procexp`: Process expression value
   - `procexec`: Process execution aggregate
   - `pooldec`: Pool declaration aggregate
   - `pooldef`: Pool definition entity
@@ -22,7 +22,7 @@ This a visual programming language to support organization development and manag
   - `polarity`: Polarization value
   - `qualsym`: Qualified symbol value
   - `revnum`: Revision number value
-- `lib`: Reusable behavior definitions
+- `lib`: Reusable behavior types
   - `ck`: Configuration keeper harness
   - `lf`: Logging framework harness
   - `sd`: Storage driver harness
@@ -36,46 +36,46 @@ This a visual programming language to support organization development and manag
 - `stack`: System level definitions
 - `test`: End-to-end tests and harness
 
-## Abstraction layers
+## Abstraction aspects
 
-### Abstract data types
+### Abstraction scale
 
-- `aggregates`: Abstract aggregate types (AAT)
+- `aggregate`: Concurrency-aware abstraction
     - Consumed by controller adapters
     - Specified by `API` interfaces
     - Implemented by `Service` structs
-- `entities`: Abstract entity types (AET)
-    - Consumed by `Service` structs of `aggregate` types
+- `entity`: Identity-aware abstraction
+    - Consumed by `Service` structs
     - Specified by `Repo` interfaces
     - Implemented by DAO adapters
-- `values`: Abstract value types (AVT)
+- `value`: Classical data abstraction
+    - Consumed by `entity` or `aggregate` structs
     - Specified by `ADT` types and/or interfaces
-    - Used in `entity` or `aggregate` types
+    - Implemented by concrete types and/or structs
 
-### Entity usage abstractions
+### Abstraction lifecycle
 
-- `dec`: Entity declaration use case
-- `def`: Entity definition use case
-- `exp`: Entity expression use case
-- `eval`: Entity evaluation use case
+- `dec`: Declaration phase
+- `def`: Definition phase
+- `exp`: Expression phase
+- `exec`: Execution phase
 
-### Entity slicing abstractions
+### Abstraction slice
 
-- `ref`: Reference (machine-readable) slice for pointing out to entity
-- `link`: Link (human-readable) slice for pointing out to entity
-- `spec`: Specification slice for entity creation
-- `intro`: Introduction slice for entity acquaintance
-- `rec`: Record slice for entity retrieval
-- `snap`: Snapshot slice for entity retrieval
+- `ref`: Machine-readable pointer to an abstraction
+- `spec`: Specification for abstraction creation
+- `rec`: Record for abstraction retrieval (excluding sub abstractions)
+- `mod`: Modification for abstraction update (including sub abstractions)
+- `snap`: Snapshot for abstraction retrieval (including sub abstractions)
 
-### Artifact abstractions
+### Abstraction artifact 
 
 - `sources`: Human-readable source code artifacts
 - `binaries`: Machine-readable binary artifacts (optional)
 - `distros`: Distributable artifacts (images, archives, etc.)
 - `stacks`: Deployable artifacts (ansible playbooks, helm charts, etc.)
 
-## Feature-sliced structure
+## Abstraction structure
 
 ### Toolkit agnostic
 
@@ -93,7 +93,7 @@ This a visual programming language to support organization development and manag
 - `iv.go`: Pure input validation (IV) logic
     - Message validation harness
     - Props validation harness
-- `pc.go`: Pure properties configuration (PC) logic
+- `pc.go`: Pure property configuration (PC) logic
     - Configuration specific DTO's (borderline models)
 - `tc.go`: Pure type conversion (TC) logic
     - Domain to domain conversions
