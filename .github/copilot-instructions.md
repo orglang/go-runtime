@@ -30,9 +30,9 @@ Any software, in essence, is a pile of abstractions.
 
 Repository structure reflects abstraction kinds.
 
-- `app`: Runnable application definitions
-  - `web`: Web application definitions
-- `adt`: Reusable data types
+- `app`: Runnable program abstractions
+  - `web`: Web application program
+- `adt`: Reusable data abstractions
   - `typedef`: Type definition aggregate
   - `typeexp`: Type expression value
   - `procdec`: Process declaration aggregate
@@ -48,7 +48,7 @@ Repository structure reflects abstraction kinds.
   - `polarity`: Polarization value
   - `qualsym`: Qualified symbol value
   - `revnum`: Revision number value
-- `lib`: Reusable behavior types
+- `lib`: Reusable behavior abstractions
   - `ck`: Configuration keeper harness
   - `lf`: Logging framework harness
   - `sd`: Storage driver harness
@@ -56,7 +56,7 @@ Repository structure reflects abstraction kinds.
   - `ws`: Web server harness
 - `db`: Storage schema definitions
   - `postgres`: PostgreSQL specific definitions
-- `orch`: Orchestration harness definitions (local)
+- `orch`: Orchestration harness definitions
   - `task`: Task (build tool) harness definitions
 - `proto`: Prototype endeavors
 - `stack`: System level definitions
@@ -129,9 +129,9 @@ Code structure reflects abstraction aspects.
 #### Slice
 
 - `ref`: Machine-readable pointer to an abstraction
-- `spec`: Specification for abstraction creation
+- `spec`: Specification to create an abstraction
 - `rec`: Record for abstraction retrieval (excluding sub abstractions)
-- `mod`: Modification for abstraction update (including sub abstractions)
+- `mod`: Modification to change an abstraction (including sub abstractions)
 - `snap`: Snapshot for abstraction retrieval (including sub abstractions)
 
 #### Artifact
