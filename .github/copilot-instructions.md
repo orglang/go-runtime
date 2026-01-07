@@ -2,7 +2,13 @@
 
 This a programming language to support organization development and management.
 
-## Repository structure
+## Conceptualization
+
+Any software, in essence, is a pile of abstractions.
+
+### Kinds
+
+Repository structure reflects abstraction kinds.
 
 - `app`: Runnable application definitions
   - `web`: Web application definitions
@@ -36,48 +42,11 @@ This a programming language to support organization development and management.
 - `stack`: System level definitions
 - `test`: End-to-end tests and harness
 
-## Abstraction aspects
+### Layers
 
-### Abstraction scale
+Package structure reflects abstraction layers.
 
-- `aggregate`: Concurrency-aware abstraction
-    - Consumed by controller adapters
-    - Specified by `API` interfaces
-    - Implemented by `Service` structs
-- `entity`: Identity-aware abstraction
-    - Consumed by `Service` structs
-    - Specified by `Repo` interfaces
-    - Implemented by DAO adapters
-- `value`: Classical data abstraction
-    - Consumed by `entity` or `aggregate` structs
-    - Specified by `ADT` types and/or interfaces
-    - Implemented by concrete types and/or structs
-
-### Abstraction lifecycle
-
-- `dec`: Declaration phase
-- `def`: Definition phase
-- `exp`: Expression phase
-- `exec`: Execution phase
-
-### Abstraction slice
-
-- `ref`: Machine-readable pointer to an abstraction
-- `spec`: Specification for abstraction creation
-- `rec`: Record for abstraction retrieval (excluding sub abstractions)
-- `mod`: Modification for abstraction update (including sub abstractions)
-- `snap`: Snapshot for abstraction retrieval (including sub abstractions)
-
-### Abstraction artifact 
-
-- `sources`: Human-readable source code artifacts
-- `binaries`: Machine-readable binary artifacts (optional)
-- `distros`: Distributable artifacts (images, archives, etc.)
-- `stacks`: Deployable artifacts (ansible playbooks, helm charts, etc.)
-
-## Abstraction structure
-
-### Toolkit agnostic
+#### Toolkit agnostic
 
 - `core.go`: Pure domain logic
     - Domain models (core models)
@@ -100,7 +69,7 @@ This a programming language to support organization development and management.
     - Domain to message conversions and vice versa
     - Domain to data conversions and vice versa
 
-### Toolkit specific
+#### Toolkit specific
 
 - `di_fx.go`: Fx (dependency injection library) specific component definitions
 - `me_echo.go`: Echo (web framework) specific controller definitions (primary adapters)
@@ -111,9 +80,52 @@ This a programming language to support organization development and management.
 - `tc_goverter.go`: Goverter (type conversion tool) specific conversion definitions
 - `vp/bs5/*.html`: Go's built-in `html/template` and Bootstrap 5 (frontend toolkit) specific presentation definitions
 
-## Workflow
+### Aspects
 
-- `task sources` - before commit to task or feature branch
-- `task binaries` - before push to task or feature branch
-- `task distros` - before pull request to feature branch
-- `task stacks` - before pull request to main branch
+Code structure reflects abstraction aspects. 
+
+#### Scale
+
+- `aggregate`: Concurrency-aware abstraction
+    - Consumed by controller adapters
+    - Specified by `API` interfaces
+    - Implemented by `Service` structs
+- `entity`: Identity-aware abstraction
+    - Consumed by `Service` structs
+    - Specified by `Repo` interfaces
+    - Implemented by DAO adapters
+- `value`: Classical data abstraction
+    - Consumed by `entity` or `aggregate` structs
+    - Specified by `ADT` types and/or interfaces
+    - Implemented by concrete types and/or structs
+
+#### Lifecycle
+
+- `dec`: Abstraction declaration phase
+- `def`: Abstraction definition phase
+- `exp`: Abstraction expression phase
+- `exec`: Abstraction execution phase
+
+#### Slice
+
+- `ref`: Machine-readable pointer to an abstraction
+- `spec`: Specification for abstraction creation
+- `rec`: Record for abstraction retrieval (excluding sub abstractions)
+- `mod`: Modification for abstraction update (including sub abstractions)
+- `snap`: Snapshot for abstraction retrieval (including sub abstractions)
+
+#### Artifact
+
+- `sources`: Human-readable code of abstraction
+- `binaries`: Machine-readable code of abstraction
+- `distros`: Distribution-friendly binaries (images, archives, etc.)
+- `stacks`: Deployment-friendly definitions (ansible playbooks, helm charts, etc.)
+
+## Development
+
+### Workflow
+
+- `task sources` - before commit to task branch
+- `task binaries` - before push to task branch
+- `task distros` - before push or merge to feature branch
+- `task stacks` - before merge to main branch
