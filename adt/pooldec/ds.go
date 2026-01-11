@@ -6,5 +6,5 @@ import (
 
 // Port
 type repo interface {
-	Insert(db.Source, decRec) error
+	Insert(db.Source, DecRec) error
 }

@@ -21,28 +21,27 @@ func newAPI() API {
 }
 
 type DecSpec struct {
-	PoolNS qualsym.ADT
-	PoolSN qualsym.ADT
-	// endpoint where pool acts as a provider for insiders
-	InsiderProvisionEP termctx.BindClaim
-	// endpoint where pool acts as a client for insiders
-	InsiderReceptionEP termctx.BindClaim
-	// endpoint where pool acts as a provider for outsiders
-	OutsiderProvisionEP termctx.BindClaim
-	// endpoints where pool acts as a client for outsiders
-	OutsiderReceptionEPs []termctx.BindClaim
+	PoolQN qualsym.ADT
+	// Endpoints where pool acts as a provider for insiders
+	InsiderProvisionBCs []termctx.BindClaim
+	// Endpoints where pool acts as a client for insiders
+	InsiderReceptionBCs []termctx.BindClaim
+	// Endpoints where pool acts as a provider for outsiders
+	OutsiderProvisionBCs []termctx.BindClaim
+	// Endpoints where pool acts as a client for outsiders
+	OutsiderReceptionBCs []termctx.BindClaim
 }
 
 type DecRef struct {
 	DecID identity.ADT
 }
 
-type decRec struct {
+type DecRec struct {
 	DecID identity.ADT
 }
 
 type service struct {
-	sigs     repo
+	poolDecs repo
 	operator db.Operator
 	log      *slog.Logger
 }

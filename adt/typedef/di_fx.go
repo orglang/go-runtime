@@ -11,16 +11,16 @@ import (
 var Module = fx.Module("adt/typedef",
 	fx.Provide(
 		fx.Annotate(newService, fx.As(new(API))),
-		fx.Annotate(newDaoPgx, fx.As(new(Repo))),
+		fx.Annotate(newPgxDAO, fx.As(new(Repo))),
 	),
 	fx.Provide(
 		fx.Private,
 		newHandlerEcho,
-		newPresenterEcho,
+		newEchoPresenter,
 		fx.Annotate(newRendererStdlib, fx.As(new(te.Renderer))),
 	),
 	fx.Invoke(
 		cfgHandlerEcho,
-		cfgPresenterEcho,
+		cfgEchoPresenter,
 	),
 )

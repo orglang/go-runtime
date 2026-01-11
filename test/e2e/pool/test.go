@@ -9,6 +9,9 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/fx"
 
+	"orglang/orglang/lib/e2e"
+	"orglang/orglang/lib/rc"
+
 	"orglang/orglang/adt/pooldec"
 	"orglang/orglang/adt/poolexec"
 	"orglang/orglang/adt/procdec"
@@ -18,7 +21,6 @@ import (
 	"orglang/orglang/adt/termctx"
 	"orglang/orglang/adt/typedef"
 	"orglang/orglang/adt/typeexp"
-	"orglang/orglang/lib/e2e"
 )
 
 func TestPool(t *testing.T) {
@@ -35,7 +37,7 @@ func TestPool(t *testing.T) {
 
 type suite struct {
 	poolDecAPI  e2e.PoolDecAPI
-	poolExecAPI e2e.PoolExecAPI
+	poolXactAPI e2e.PoolExecAPI
 	procDecAPI  e2e.ProcDecAPI
 	procExecAPI e2e.ProcExecAPI
 	typeDefAPI  e2e.TypeDefAPI
@@ -49,13 +51,14 @@ func (s *suite) beforeAll(t *testing.T) {
 	}
 	t.Cleanup(func() { db.Close() })
 	s.db = db
-	app := fx.New(e2e.Module, fx.Populate(
-		s.poolDecAPI,
-		s.poolExecAPI,
-		s.procDecAPI,
-		s.procExecAPI,
-		s.typeDefAPI,
-	))
+	app := fx.New(rc.Module, e2e.Module,
+		fx.Populate(
+			s.poolDecAPI,
+			s.poolXactAPI,
+			s.procDecAPI,
+			s.procExecAPI,
+			s.typeDefAPI,
+		))
 	t.Cleanup(func() { app.Stop(t.Context()) })
 }
 
@@ -77,18 +80,18 @@ func (s *suite) beforeEach(t *testing.T) {
 func (s *suite) createRetreive(t *testing.T) {
 	// given
 	poolSpec1 := poolexec.ExecSpec{PoolQN: "pool-1"}
-	poolRef1, err := s.poolExecAPI.Create(poolSpec1)
+	poolRef1, err := s.poolXactAPI.Create(poolSpec1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// and
 	poolSpec2 := poolexec.ExecSpec{PoolQN: "pool-2", SupID: poolRef1.ExecID}
-	poolRef2, err := s.poolExecAPI.Create(poolSpec2)
+	poolRef2, err := s.poolXactAPI.Create(poolSpec2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// when
-	poolSnap1, err := s.poolExecAPI.Retrieve(poolRef1.ExecID)
+	poolSnap1, err := s.poolXactAPI.Retrieve(poolRef1.ExecID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,11 +132,11 @@ func (s *suite) waitClose(t *testing.T) {
 	mainReceptionPH := qualsym.New("main-reception-ph")
 	_, err = s.poolDecAPI.Create(pooldec.DecSpecME{
 		PoolSN: mainPoolSN.String(),
-		InsiderProvisionEP: termctx.BindClaimME{
+		InsiderProvisionBC: termctx.BindClaimME{
 			BindPH: mainProvisionPH.String(),
 			TypeQN: mainTypeSN.String(),
 		},
-		InsiderReceptionEP: termctx.BindClaimME{
+		InsiderReceptionBC: termctx.BindClaimME{
 			BindPH: mainReceptionPH.String(),
 			TypeQN: mainTypeSN.String(),
 		},
@@ -142,7 +145,7 @@ func (s *suite) waitClose(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	mainExecRef, err := s.poolExecAPI.Create(poolexec.ExecSpec{
+	mainExecRef, err := s.poolXactAPI.Create(poolexec.ExecSpec{
 		PoolQN: mainPoolSN,
 	})
 	if err != nil {
@@ -220,8 +223,8 @@ func (s *suite) waitClose(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	closerExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	closerExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -289,8 +292,8 @@ func (s *suite) waitClose(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	waiterExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	waiterExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -364,11 +367,11 @@ func (s *suite) recvSend(t *testing.T) {
 	mainReceptionPH := qualsym.New("main-reception-ph")
 	_, err = s.poolDecAPI.Create(pooldec.DecSpecME{
 		PoolSN: mainPoolSN.String(),
-		InsiderProvisionEP: termctx.BindClaimME{
+		InsiderProvisionBC: termctx.BindClaimME{
 			BindPH: mainProvisionPH.String(),
 			TypeQN: mainTypeSN.String(),
 		},
-		InsiderReceptionEP: termctx.BindClaimME{
+		InsiderReceptionBC: termctx.BindClaimME{
 			BindPH: mainReceptionPH.String(),
 			TypeQN: mainTypeSN.String(),
 		},
@@ -377,7 +380,7 @@ func (s *suite) recvSend(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	mainExecRef, err := s.poolExecAPI.Create(poolexec.ExecSpec{
+	mainExecRef, err := s.poolXactAPI.Create(poolexec.ExecSpec{
 		PoolQN: mainPoolSN,
 	})
 	if err != nil {
@@ -494,8 +497,8 @@ func (s *suite) recvSend(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	receiverExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	receiverExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -515,8 +518,8 @@ func (s *suite) recvSend(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	senderExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	senderExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -543,7 +546,7 @@ func (s *suite) caseLab(t *testing.T) {
 	s.beforeEach(t)
 	// given
 	mainPoolSN := qualsym.New("main-pool-sn")
-	mainExecRef, err := s.poolExecAPI.Create(poolexec.ExecSpec{
+	mainExecRef, err := s.poolXactAPI.Create(poolexec.ExecSpec{
 		PoolQN: mainPoolSN,
 	})
 	if err != nil {
@@ -630,8 +633,8 @@ func (s *suite) caseLab(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	followerExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	followerExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -660,8 +663,8 @@ func (s *suite) caseLab(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	deciderExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	deciderExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -688,7 +691,7 @@ func (s *suite) spawnCall(t *testing.T) {
 	s.beforeEach(t)
 	// given
 	mainPoolSN := qualsym.New("main-pool-sn")
-	mainExecRef, err := s.poolExecAPI.Create(poolexec.ExecSpec{
+	mainExecRef, err := s.poolXactAPI.Create(poolexec.ExecSpec{
 		PoolQN: mainPoolSN,
 	})
 	if err != nil {
@@ -740,7 +743,7 @@ func (s *suite) spawnCall(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	poolExecRef, err := s.poolExecAPI.Create(poolexec.ExecSpec{
+	poolExecRef, err := s.poolXactAPI.Create(poolexec.ExecSpec{
 		PoolQN: "pool-1",
 	})
 	if err != nil {
@@ -780,8 +783,8 @@ func (s *suite) spawnCall(t *testing.T) {
 	// and
 	x := qualsym.New("x")
 	// and
-	spawnerExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	spawnerExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -819,7 +822,7 @@ func (s *suite) fwd(t *testing.T) {
 	s.beforeEach(t)
 	// given
 	mainPoolQN := qualsym.New("main-pool-qn")
-	mainExecRef, err := s.poolExecAPI.Create(poolexec.ExecSpec{
+	mainExecRef, err := s.poolXactAPI.Create(poolexec.ExecSpec{
 		PoolQN: mainPoolQN,
 	})
 	if err != nil {
@@ -916,8 +919,8 @@ func (s *suite) fwd(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	closerExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	closerExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -936,8 +939,8 @@ func (s *suite) fwd(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	forwarderExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	forwarderExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -957,8 +960,8 @@ func (s *suite) fwd(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	waiterExecRef, err := s.poolExecAPI.Poll(poolexec.PollSpec{
-		PoolID: mainExecRef.ExecID,
+	waiterExecRef, err := s.poolXactAPI.Poll(poolexec.PollSpec{
+		ExecID: mainExecRef.ExecID,
 	})
 	if err != nil {
 		t.Fatal(err)

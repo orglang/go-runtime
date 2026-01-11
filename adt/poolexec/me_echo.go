@@ -8,137 +8,89 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"orglang/orglang/adt/identity"
-	"orglang/orglang/lib/lf"
 	"orglang/orglang/lib/te"
-
-	"orglang/orglang/adt/procexec"
 )
 
 // Server-side primary adapter
-type handlerEcho struct {
+type echoHandler struct {
 	api API
 	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newHandlerEcho(a API, r te.Renderer, l *slog.Logger) *handlerEcho {
-	name := slog.String("name", reflect.TypeFor[handlerEcho]().Name())
-	return &handlerEcho{a, r, l.With(name)}
+func newEchoHandler(a API, r te.Renderer, l *slog.Logger) *echoHandler {
+	name := slog.String("name", reflect.TypeFor[echoHandler]().Name())
+	return &echoHandler{a, r, l.With(name)}
 }
 
-func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
+func cfgEchoHandler(e *echo.Echo, h *echoHandler) error {
 	e.POST("/api/v1/pools", h.PostOne)
 	e.GET("/api/v1/pools/:id", h.GetOne)
 	e.POST("/api/v1/pools/:id/procs", h.PostProc)
 	return nil
 }
 
-func (h *handlerEcho) PostOne(c echo.Context) error {
+func (h *echoHandler) PostOne(c echo.Context) error {
 	var dto ExecSpecME
-	err := c.Bind(&dto)
-	if err != nil {
-		h.log.Error("binding failed", slog.Any("struct", reflect.TypeOf(dto)))
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
-	qnAttr := slog.Any("sigQN", dto.SigQN)
-	err = dto.Validate()
-	if err != nil {
-		h.log.Error("validation failed", qnAttr)
-		return err
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		h.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	spec, err := MsgToExecSpec(dto)
-	if err != nil {
-		h.log.Error("mapping failed", qnAttr)
-		return err
+	spec, conversionErr := MsgToExecSpec(dto)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	ref, err := h.api.Create(spec)
-	if err != nil {
-		return err
+	ref, creationErr := h.api.Run(spec)
+	if creationErr != nil {
+		return creationErr
 	}
 	return c.JSON(http.StatusCreated, MsgFromExecRef(ref))
 }
 
-func (h *handlerEcho) GetOne(c echo.Context) error {
+func (h *echoHandler) GetOne(c echo.Context) error {
 	var dto IdentME
-	err := c.Bind(&dto)
-	if err != nil {
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		return bindingErr
 	}
-	id, err := identity.ConvertFromString(dto.PoolID)
-	if err != nil {
-		return err
+	id, conversionErr := identity.ConvertFromString(dto.PoolID)
+	if conversionErr != nil {
+		return conversionErr
 	}
-	snap, err := h.api.Retrieve(id)
-	if err != nil {
-		return err
+	snap, retrievalErr := h.api.Retrieve(id)
+	if retrievalErr != nil {
+		return retrievalErr
 	}
 	return c.JSON(http.StatusOK, MsgFromExecSnap(snap))
 }
 
-func (h *handlerEcho) PostProc(c echo.Context) error {
+func (h *echoHandler) PostProc(c echo.Context) error {
 	var dto ExecSpecME
-	err := c.Bind(&dto)
-	if err != nil {
-		h.log.Error("binding failed", slog.Any("struct", reflect.TypeOf(dto)))
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
-	qnAttr := slog.Any("sigQN", dto.SigQN)
-	err = dto.Validate()
-	if err != nil {
-		h.log.Error("validation failed", qnAttr)
-		return err
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		h.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	spec, err := MsgToExecSpec(dto)
-	if err != nil {
-		h.log.Error("mapping failed", qnAttr)
-		return err
+	spec, conversionErr := MsgToExecSpec(dto)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	ref, err := h.api.Create(spec)
-	if err != nil {
-		return err
+	ref, creationErr := h.api.Run(spec)
+	if creationErr != nil {
+		return creationErr
 	}
 	return c.JSON(http.StatusCreated, MsgFromExecRef(ref))
-}
-
-// Adapter
-type stepHandlerEcho struct {
-	api API
-	ssr te.Renderer
-	log *slog.Logger
-}
-
-func newStepHandlerEcho(a API, r te.Renderer, l *slog.Logger) *stepHandlerEcho {
-	name := slog.String("name", reflect.TypeFor[stepHandlerEcho]().Name())
-	return &stepHandlerEcho{a, r, l.With(name)}
-}
-
-func cfgStepHandlerEcho(e *echo.Echo, h *stepHandlerEcho) error {
-	e.POST("/api/v1/pools/:id/steps", h.PostOne)
-	return nil
-}
-
-func (h *stepHandlerEcho) PostOne(c echo.Context) error {
-	var dto procexec.ExecSpecME
-	err := c.Bind(&dto)
-	if err != nil {
-		h.log.Error("binding failed")
-		return err
-	}
-	ctx := c.Request().Context()
-	h.log.Log(ctx, lf.LevelTrace, "posting started", slog.Any("dto", dto))
-	err = dto.Validate()
-	if err != nil {
-		h.log.Error("validation failed", slog.Any("dto", dto))
-		return err
-	}
-	spec, err := procexec.MsgToExecSpec(dto)
-	if err != nil {
-		h.log.Error("mapping failed", slog.Any("dto", dto))
-		return err
-	}
-	ref, err := h.api.Spawn(spec)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, procexec.MsgFromExecRef(ref))
 }

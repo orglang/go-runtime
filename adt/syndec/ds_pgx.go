@@ -10,26 +10,26 @@ import (
 	"orglang/orglang/lib/db"
 )
 
-type daoPgx struct {
+type pgxDAO struct {
 	log *slog.Logger
 }
 
-func newDaoPgx(l *slog.Logger) *daoPgx {
-	name := slog.String("name", reflect.TypeFor[daoPgx]().Name())
-	return &daoPgx{l.With(name)}
+func newPgxDAO(l *slog.Logger) *pgxDAO {
+	name := slog.String("name", reflect.TypeFor[pgxDAO]().Name())
+	return &pgxDAO{l.With(name)}
 }
 
 // for compilation purposes
 func newRepo() Repo {
-	return &daoPgx{}
+	return &pgxDAO{}
 }
 
-func (d *daoPgx) Insert(source db.Source, root DecRec) error {
+func (dao *pgxDAO) Insert(source db.Source, root DecRec) error {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("id", root.DecID)
 	dto, err := DataFromDecRec(root)
 	if err != nil {
-		d.log.Error("model mapping failed", idAttr)
+		dao.log.Error("model conversion failed", idAttr)
 		return err
 	}
 	query := `
@@ -46,7 +46,7 @@ func (d *daoPgx) Insert(source db.Source, root DecRec) error {
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, query, args)
 	if err != nil {
-		d.log.Error("query execution failed", idAttr, slog.String("q", query))
+		dao.log.Error("query execution failed", idAttr, slog.String("q", query))
 		return err
 	}
 	return nil

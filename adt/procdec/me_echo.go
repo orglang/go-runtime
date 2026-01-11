@@ -7,66 +7,65 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/lib/te"
-
 	"orglang/orglang/adt/identity"
 )
 
 // Server-side primary adapter
-type handlerEcho struct {
+type echoHandler struct {
 	api API
-	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newHandlerEcho(a API, r te.Renderer, l *slog.Logger) *handlerEcho {
-	name := slog.String("name", reflect.TypeFor[handlerEcho]().Name())
-	return &handlerEcho{a, r, l.With(name)}
+func newEchoHandler(a API, l *slog.Logger) *echoHandler {
+	name := slog.String("name", reflect.TypeFor[echoHandler]().Name())
+	return &echoHandler{a, l.With(name)}
 }
 
-func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
-	e.POST("/api/v1/declarations", h.PostOne)
-	e.GET("/api/v1/declarations/:id", h.GetOne)
+func cfgEchoHandler(e *echo.Echo, h *echoHandler) error {
+	e.POST("/api/v1/decs", h.PostOne)
+	e.GET("/api/v1/decs/:id", h.GetOne)
 	return nil
 }
 
-func (h *handlerEcho) PostOne(c echo.Context) error {
+func (h *echoHandler) PostOne(c echo.Context) error {
 	var dto DecSpecME
-	err := c.Bind(&dto)
-	if err != nil {
-		h.log.Error("dto binding failed", slog.Any("reason", err))
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
-	err = dto.Validate()
-	if err != nil {
-		h.log.Error("dto validation failed", slog.Any("reason", err), slog.Any("dto", dto))
-		return err
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		h.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	spec, err := MsgToDecSpec(dto)
-	if err != nil {
-		h.log.Error("dto conversion failed", slog.Any("reason", err), slog.Any("dto", dto))
-		return err
+	spec, conversionErr := MsgToDecSpec(dto)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	snap, err := h.api.Create(spec)
-	if err != nil {
-		return err
+	snap, creationErr := h.api.Create(spec)
+	if creationErr != nil {
+		return creationErr
 	}
 	return c.JSON(http.StatusCreated, MsgFromDecSnap(snap))
 }
 
-func (h *handlerEcho) GetOne(c echo.Context) error {
+func (h *echoHandler) GetOne(c echo.Context) error {
 	var dto IdentME
-	err := c.Bind(&dto)
-	if err != nil {
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
-	id, err := identity.ConvertFromString(dto.DecID)
-	if err != nil {
-		return err
+	id, conversionErr := identity.ConvertFromString(dto.DecID)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	snap, err := h.api.RetrieveSnap(id)
-	if err != nil {
-		return err
+	snap, retrievalErr := h.api.RetrieveSnap(id)
+	if retrievalErr != nil {
+		return retrievalErr
 	}
 	return c.JSON(http.StatusOK, MsgFromDecSnap(snap))
 }

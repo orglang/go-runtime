@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"math"
+	"reflect"
 
 	"github.com/jackc/pgx/v5"
 
@@ -14,25 +15,26 @@ import (
 )
 
 // Adapter
-type daoPgx struct {
+type pgxDAO struct {
 	log *slog.Logger
 }
 
-func newDaoPgx(l *slog.Logger) *daoPgx {
-	return &daoPgx{l}
+func newPgxDAO(l *slog.Logger) *pgxDAO {
+	name := slog.String("name", reflect.TypeFor[pgxDAO]().Name())
+	return &pgxDAO{l.With(name)}
 }
 
 // for compilation purposes
 func newRepo() Repo {
-	return &daoPgx{}
+	return &pgxDAO{}
 }
 
-func (d *daoPgx) Insert(source db.Source, mod DecRec) error {
+func (dao *pgxDAO) Insert(source db.Source, mod DecRec) error {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("id", mod.DecID)
 	dto, err := DataFromDecRec(mod)
 	if err != nil {
-		d.log.Error("model mapping failed", idAttr)
+		dao.log.Error("model conversion failed", idAttr)
 		return err
 	}
 	insertRoot := `
@@ -48,7 +50,7 @@ func (d *daoPgx) Insert(source db.Source, mod DecRec) error {
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertRoot, rootArgs)
 	if err != nil {
-		d.log.Error("query execution failed", idAttr, slog.String("q", insertRoot))
+		dao.log.Error("query execution failed", idAttr, slog.String("q", insertRoot))
 		return err
 	}
 	insertPE := `
@@ -66,7 +68,7 @@ func (d *daoPgx) Insert(source db.Source, mod DecRec) error {
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertPE, peArgs)
 	if err != nil {
-		d.log.Error("query execution failed", idAttr, slog.String("q", insertPE))
+		dao.log.Error("query execution failed", idAttr, slog.String("q", insertPE))
 		return err
 	}
 	insertCE := `
@@ -93,7 +95,7 @@ func (d *daoPgx) Insert(source db.Source, mod DecRec) error {
 	for range dto.Ys {
 		_, err = br.Exec()
 		if err != nil {
-			d.log.Error("query execution failed", idAttr, slog.String("q", insertCE))
+			dao.log.Error("query execution failed", idAttr, slog.String("q", insertCE))
 		}
 	}
 	if err != nil {
@@ -102,26 +104,26 @@ func (d *daoPgx) Insert(source db.Source, mod DecRec) error {
 	return nil
 }
 
-func (d *daoPgx) SelectByID(source db.Source, rid identity.ADT) (DecSnap, error) {
+func (dao *pgxDAO) SelectByID(source db.Source, rid identity.ADT) (DecSnap, error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("id", rid)
 	rows, err := ds.Conn.Query(ds.Ctx, selectById, rid.String())
 	if err != nil {
-		d.log.Error("query execution failed", idAttr, slog.String("q", selectById))
+		dao.log.Error("query execution failed", idAttr, slog.String("q", selectById))
 		return DecSnap{}, err
 	}
 	defer rows.Close()
 	dto, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[decSnapDS])
 	if err != nil {
-		d.log.Error("row collection failed", idAttr)
+		dao.log.Error("row collection failed", idAttr)
 		return DecSnap{}, err
 	}
-	d.log.Log(ds.Ctx, lf.LevelTrace, "entitiy selection succeed", slog.Any("dto", dto))
+	dao.log.Log(ds.Ctx, lf.LevelTrace, "entitiy selection succeed", slog.Any("dto", dto))
 	return DataToDecSnap(dto)
 }
 
-func (d *daoPgx) SelectEnv(source db.Source, ids []identity.ADT) (map[identity.ADT]DecRec, error) {
-	decs, err := d.SelectByIDs(source, ids)
+func (dao *pgxDAO) SelectEnv(source db.Source, ids []identity.ADT) (map[identity.ADT]DecRec, error) {
+	decs, err := dao.SelectByIDs(source, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +134,7 @@ func (d *daoPgx) SelectEnv(source db.Source, ids []identity.ADT) (map[identity.A
 	return env, nil
 }
 
-func (d *daoPgx) SelectByIDs(source db.Source, ids []identity.ADT) (_ []DecRec, err error) {
+func (dao *pgxDAO) SelectByIDs(source db.Source, ids []identity.ADT) (_ []DecRec, err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	if len(ids) == 0 {
 		return []DecRec{}, nil
@@ -152,23 +154,23 @@ func (d *daoPgx) SelectByIDs(source db.Source, ids []identity.ADT) (_ []DecRec, 
 	for _, rid := range ids {
 		rows, err := br.Query()
 		if err != nil {
-			d.log.Error("query execution failed", slog.Any("id", rid), slog.String("q", selectById))
+			dao.log.Error("query execution failed", slog.Any("id", rid), slog.String("q", selectById))
 		}
 		defer rows.Close()
 		dto, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[decRecDS])
 		if err != nil {
-			d.log.Error("row collection failed", slog.Any("id", rid))
+			dao.log.Error("row collection failed", slog.Any("id", rid))
 		}
 		dtos = append(dtos, dto)
 	}
 	if err != nil {
 		return nil, err
 	}
-	d.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("dtos", dtos))
+	dao.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("dtos", dtos))
 	return DataToDecRecs(dtos)
 }
 
-func (d *daoPgx) SelectAll(source db.Source) ([]DecRef, error) {
+func (dao *pgxDAO) SelectAll(source db.Source) ([]DecRef, error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	query := `
 		select
@@ -176,13 +178,13 @@ func (d *daoPgx) SelectAll(source db.Source) ([]DecRef, error) {
 		from dec_roots`
 	rows, err := ds.Conn.Query(ds.Ctx, query)
 	if err != nil {
-		d.log.Error("query execution failed", slog.String("q", query))
+		dao.log.Error("query execution failed", slog.String("q", query))
 		return nil, err
 	}
 	defer rows.Close()
 	dtos, err := pgx.CollectRows(rows, pgx.RowToStructByName[decRefDS])
 	if err != nil {
-		d.log.Error("rows collection failed")
+		dao.log.Error("rows collection failed")
 		return nil, err
 	}
 	return DataToDecRefs(dtos)

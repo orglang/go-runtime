@@ -11,10 +11,6 @@ type RestySDK struct {
 	Client *resty.Client
 }
 
-func NewRestySDK(client *resty.Client) *RestySDK {
-	return &RestySDK{client}
-}
-
 func (sdk *RestySDK) Run(spec ExecSpecME) error {
 	var res ExecRefME
 	_, err := sdk.Client.R().

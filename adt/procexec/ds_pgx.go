@@ -13,41 +13,41 @@ import (
 )
 
 // Adapter
-type daoPgx struct {
+type pgxDAO struct {
 	log *slog.Logger
 }
 
 // for compilation purposes
 func newRepo() execRepo {
-	return &daoPgx{}
+	return &pgxDAO{}
 }
 
-func newDaoPgx(l *slog.Logger) *daoPgx {
-	return &daoPgx{l}
+func newPgxDAO(l *slog.Logger) *pgxDAO {
+	return &pgxDAO{l}
 }
 
-func (d *daoPgx) SelectMain(db.Source, identity.ADT) (MainCfg, error) {
+func (dao *pgxDAO) SelectMain(db.Source, identity.ADT) (MainCfg, error) {
 	return MainCfg{}, nil
 }
 
-func (d *daoPgx) UpdateMain(db.Source, MainMod) error {
+func (dao *pgxDAO) UpdateMain(db.Source, MainMod) error {
 	return nil
 }
 
-type daoPgx2 struct {
+type pgxDAO2 struct {
 	log *slog.Logger
 }
 
 // for compilation purposes
 func newRepo2() SemRepo {
-	return &daoPgx2{}
+	return &pgxDAO2{}
 }
 
-func (d *daoPgx2) InsertSem(source db.Source, roots ...SemRec) error {
+func (dao *pgxDAO2) InsertSem(source db.Source, roots ...SemRec) error {
 	ds := db.MustConform[db.SourcePgx](source)
 	dtos, err := DataFromSemRecs(roots)
 	if err != nil {
-		d.log.Error("model mapping failed")
+		dao.log.Error("model conversion failed")
 		return err
 	}
 	batch := pgx.Batch{}
@@ -68,7 +68,7 @@ func (d *daoPgx2) InsertSem(source db.Source, roots ...SemRec) error {
 	for _, dto := range dtos {
 		_, err = br.Exec()
 		if err != nil {
-			d.log.Error("query execution failed", slog.Any("id", dto.ID), slog.String("q", insertRoot))
+			dao.log.Error("query execution failed", slog.Any("id", dto.ID), slog.String("q", insertRoot))
 		}
 	}
 	if err != nil {
@@ -77,20 +77,20 @@ func (d *daoPgx2) InsertSem(source db.Source, roots ...SemRec) error {
 	return nil
 }
 
-func (d *daoPgx2) SelectSemByID(source db.Source, rid identity.ADT) (SemRec, error) {
+func (dao *pgxDAO2) SelectSemByID(source db.Source, rid identity.ADT) (SemRec, error) {
 	query := `
 		SELECT
 			id, kind, pid, vid, spec
 		FROM steps
 		WHERE id = $1`
-	return d.execute(source, query, rid.String())
+	return dao.execute(source, query, rid.String())
 }
 
-func (d *daoPgx2) execute(source db.Source, query string, arg string) (SemRec, error) {
+func (dao *pgxDAO2) execute(source db.Source, query string, arg string) (SemRec, error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	rows, err := ds.Conn.Query(ds.Ctx, query, arg)
 	if err != nil {
-		d.log.Error("query execution failed", slog.String("q", query))
+		dao.log.Error("query execution failed", slog.String("q", query))
 		return nil, err
 	}
 	defer rows.Close()
@@ -99,15 +99,15 @@ func (d *daoPgx2) execute(source db.Source, query string, arg string) (SemRec, e
 		return nil, nil
 	}
 	if err != nil {
-		d.log.Error("row collection failed")
+		dao.log.Error("row collection failed")
 		return nil, err
 	}
 	root, err := dataToSemRec(dto)
 	if err != nil {
-		d.log.Error("model mapping failed")
+		dao.log.Error("model conversion failed")
 		return nil, err
 	}
-	d.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeed", slog.Any("root", root))
+	dao.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeed", slog.Any("root", root))
 	return root, nil
 }
 

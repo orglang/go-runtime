@@ -32,81 +32,78 @@ func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
 
 func (h *handlerEcho) PostOne(c echo.Context) error {
 	var dto DefSpecME
-	err := c.Bind(&dto)
-	if err != nil {
-		h.log.Error("dto binding failed")
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
 	ctx := c.Request().Context()
-	h.log.Log(ctx, lf.LevelTrace, "role posting started", slog.Any("dto", dto))
-	err = dto.Validate()
-	if err != nil {
-		h.log.Error("dto validation failed")
-		return err
+	h.log.Log(ctx, lf.LevelTrace, "posting started", slog.Any("dto", dto))
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		h.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	spec, err := MsgToDefSpec(dto)
-	if err != nil {
-		h.log.Error("dto mapping failed")
-		return err
+	spec, conversionErr := MsgToDefSpec(dto)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	snap, err := h.api.Create(spec)
-	if err != nil {
-		h.log.Error("role creation failed")
-		return err
+	snap, creationErr := h.api.Create(spec)
+	if creationErr != nil {
+		return creationErr
 	}
-	h.log.Log(ctx, lf.LevelTrace, "role posting succeed", slog.Any("id", snap.DefID))
+	h.log.Log(ctx, lf.LevelTrace, "posting succeed", slog.Any("id", snap.DefID))
 	return c.JSON(http.StatusCreated, MsgFromDefSnap(snap))
 }
 
 func (h *handlerEcho) GetOne(c echo.Context) error {
 	var dto IdentME
-	err := c.Bind(&dto)
-	if err != nil {
-		h.log.Error("dto binding failed")
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
-	err = dto.Validate()
-	if err != nil {
-		h.log.Error("dto validation failed")
-		return err
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		h.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	id, err := identity.ConvertFromString(dto.DefID)
-	if err != nil {
-		h.log.Error("dto mapping failed")
-		return err
+	id, conversionErr := identity.ConvertFromString(dto.DefID)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	snap, err := h.api.Retrieve(id)
-	if err != nil {
-		h.log.Error("root retrieval failed")
-		return err
+	snap, retrievalErr := h.api.Retrieve(id)
+	if retrievalErr != nil {
+		return retrievalErr
 	}
 	return c.JSON(http.StatusOK, MsgFromDefSnap(snap))
 }
 
 func (h *handlerEcho) PatchOne(c echo.Context) error {
 	var dto DefSnapME
-	err := c.Bind(&dto)
-	if err != nil {
-		h.log.Error("dto binding failed")
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
 	ctx := c.Request().Context()
-	h.log.Log(ctx, lf.LevelTrace, "role patching started", slog.Any("dto", dto))
-	err = dto.Validate()
-	if err != nil {
-		h.log.Error("dto validation failed")
-		return err
+	h.log.Log(ctx, lf.LevelTrace, "patching started", slog.Any("dto", dto))
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		h.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	reqSnap, err := MsgToDefSnap(dto)
-	if err != nil {
-		h.log.Error("dto mapping failed")
-		return err
+	reqSnap, conversionErr := MsgToDefSnap(dto)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	resSnap, err := h.api.Modify(reqSnap)
-	if err != nil {
-		h.log.Error("role modification failed")
-		return err
+	resSnap, modificationErr := h.api.Modify(reqSnap)
+	if modificationErr != nil {
+		return modificationErr
 	}
-	h.log.Log(ctx, lf.LevelTrace, "role patching succeed", slog.Any("ref", ConvertSnapToRef(resSnap)))
+	h.log.Log(ctx, lf.LevelTrace, "patching succeed", slog.Any("ref", ConvertSnapToRef(resSnap)))
 	return c.JSON(http.StatusOK, MsgFromDefSnap(resSnap))
 }

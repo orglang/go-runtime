@@ -10,55 +10,55 @@ import (
 )
 
 // Server-side primary adapter
-type handlerEcho struct {
+type echoHandler struct {
 	api API
 	log *slog.Logger
 }
 
-func newHandlerEcho(a API, l *slog.Logger) *handlerEcho {
-	return &handlerEcho{a, l}
+func newEchoHandler(a API, l *slog.Logger) *echoHandler {
+	return &echoHandler{a, l}
 }
 
-func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
+func cfgEchoHandler(e *echo.Echo, h *echoHandler) error {
 	e.GET("/api/v1/procs/:id", h.GetSnap)
 	e.POST("/api/v1/procs/:id/calls", h.PostCall)
 	return nil
 }
 
-func (h *handlerEcho) GetSnap(c echo.Context) error {
+func (h *echoHandler) GetSnap(c echo.Context) error {
 	var dto IdentME
-	err := c.Bind(&dto)
-	if err != nil {
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", dto))
+		return bindingErr
 	}
-	idAttr := slog.Any("procID", dto.ExecID)
-	id, err := identity.ConvertFromString(dto.ExecID)
-	if err != nil {
-		h.log.Error("mapping failed", idAttr)
-		return err
+	id, conversionErr := identity.ConvertFromString(dto.ExecID)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	snap, err := h.api.Retrieve(id)
-	if err != nil {
-		return err
+	snap, retrievalErr := h.api.Retrieve(id)
+	if retrievalErr != nil {
+		return retrievalErr
 	}
 	return c.JSON(http.StatusOK, MsgFromExecSnap(snap))
 }
 
-func (h *handlerEcho) PostCall(c echo.Context) error {
+func (h *echoHandler) PostCall(c echo.Context) error {
 	var dto ExecSpecME
-	err := c.Bind(&dto)
-	if err != nil {
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", dto))
+		return bindingErr
 	}
-	idAttr := slog.Any("procID", dto.ExecID)
-	spec, err := MsgToExecSpec(dto)
-	if err != nil {
-		h.log.Error("mapping failed", idAttr)
-		return err
+	spec, conversionErr := MsgToExecSpec(dto)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	err = h.api.Run(spec)
-	if err != nil {
-		return err
+	runningErr := h.api.Run(spec)
+	if runningErr != nil {
+		return runningErr
 	}
 	return c.NoContent(http.StatusOK)
 }

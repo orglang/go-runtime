@@ -1,4 +1,4 @@
-package poolexec
+package poolstep
 
 import (
 	"errors"
@@ -30,25 +30,7 @@ func newRepo() Repo {
 	return &pgxDAO{}
 }
 
-func (dao *pgxDAO) Insert(source db.Source, root ExecRec) (err error) {
-	ds := db.MustConform[db.SourcePgx](source)
-	dto := DataFromExecRec(root)
-	args := pgx.NamedArgs{
-		"pool_id":     dto.PoolID,
-		"proc_id":     dto.ProcID,
-		"sup_pool_id": dto.SupID,
-		"rev":         dto.PoolRN,
-	}
-	_, err = ds.Conn.Exec(ds.Ctx, insertRoot, args)
-	if err != nil {
-		dao.log.Error("execution failed")
-		return err
-	}
-	dao.log.Debug("insertion succeed", slog.Any("poolID", root.ExecID))
-	return nil
-}
-
-func (dao *pgxDAO) InsertLiab(source db.Source, liab procexec.Liab) (err error) {
+func (d *pgxDAO) InsertLiab(source db.Source, liab procexec.Liab) (err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	dto := DataFromLiab(liab)
 	args := pgx.NamedArgs{
@@ -58,63 +40,63 @@ func (dao *pgxDAO) InsertLiab(source db.Source, liab procexec.Liab) (err error) 
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertLiab, args)
 	if err != nil {
-		dao.log.Error("execution failed")
+		d.log.Error("execution failed")
 		return err
 	}
-	dao.log.Debug("insertion succeed", slog.Any("poolID", liab.PoolID))
+	d.log.Debug("insertion succeed", slog.Any("poolID", liab.PoolID))
 	return nil
 }
 
-func (dao *pgxDAO) SelectProc(source db.Source, procID identity.ADT) (procexec.Cfg, error) {
+func (d *pgxDAO) SelectProc(source db.Source, procID identity.ADT) (procexec.Cfg, error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("procID", procID)
 	chnlRows, err := ds.Conn.Query(ds.Ctx, selectChnls, procID.String())
 	if err != nil {
-		dao.log.Error("execution failed", idAttr)
+		d.log.Error("execution failed", idAttr)
 		return procexec.Cfg{}, err
 	}
 	defer chnlRows.Close()
 	chnlDtos, err := pgx.CollectRows(chnlRows, pgx.RowToStructByName[epDS])
 	if err != nil {
-		dao.log.Error("collection failed", idAttr, slog.Any("t", reflect.TypeOf(chnlDtos)))
+		d.log.Error("collection failed", idAttr, slog.Any("t", reflect.TypeOf(chnlDtos)))
 		return procexec.Cfg{}, err
 	}
 	chnls, err := DataToEPs(chnlDtos)
 	if err != nil {
-		dao.log.Error("conversion failed", idAttr)
+		d.log.Error("conversion failed", idAttr)
 		return procexec.Cfg{}, err
 	}
 	stepRows, err := ds.Conn.Query(ds.Ctx, selectSteps, procID.String())
 	if err != nil {
-		dao.log.Error("execution failed", idAttr)
+		d.log.Error("execution failed", idAttr)
 		return procexec.Cfg{}, err
 	}
 	defer stepRows.Close()
 	stepDtos, err := pgx.CollectRows(stepRows, pgx.RowToStructByName[procexec.SemRecDS])
 	if err != nil {
-		dao.log.Error("collection failed", idAttr, slog.Any("t", reflect.TypeOf(stepDtos)))
+		d.log.Error("collection failed", idAttr, slog.Any("t", reflect.TypeOf(stepDtos)))
 		return procexec.Cfg{}, err
 	}
 	steps, err := procexec.DataToSemRecs(stepDtos)
 	if err != nil {
-		dao.log.Error("conversion failed", idAttr)
+		d.log.Error("conversion failed", idAttr)
 		return procexec.Cfg{}, err
 	}
-	dao.log.Debug("selection succeed", idAttr)
+	d.log.Debug("selection succeed", idAttr)
 	return procexec.Cfg{
 		Chnls: termctx.IndexBy(procexec.ChnlPH, chnls),
 		Steps: termctx.IndexBy(procexec.ChnlID, steps),
 	}, nil
 }
 
-func (dao *pgxDAO) UpdateProc(source db.Source, mod procexec.Mod) (err error) {
+func (d *pgxDAO) UpdateProc(source db.Source, mod procexec.Mod) (err error) {
 	if len(mod.Locks) == 0 {
 		panic("empty locks")
 	}
 	ds := db.MustConform[db.SourcePgx](source)
 	dto, err := procexec.DataFromMod(mod)
 	if err != nil {
-		dao.log.Error("conversion failed")
+		d.log.Error("conversion failed")
 		return err
 	}
 	// bindings
@@ -137,7 +119,7 @@ func (dao *pgxDAO) UpdateProc(source db.Source, mod procexec.Mod) (err error) {
 		for _, dto := range dto.Bnds {
 			_, err = bndRes.Exec()
 			if err != nil {
-				dao.log.Error("execution failed", slog.Any("dto", dto))
+				d.log.Error("execution failed", slog.Any("dto", dto))
 			}
 		}
 		if err != nil {
@@ -163,7 +145,7 @@ func (dao *pgxDAO) UpdateProc(source db.Source, mod procexec.Mod) (err error) {
 		for _, dto := range dto.Steps {
 			_, err = stepRes.Exec()
 			if err != nil {
-				dao.log.Error("execution failed", slog.Any("dto", dto))
+				d.log.Error("execution failed", slog.Any("dto", dto))
 			}
 		}
 		if err != nil {
@@ -186,76 +168,21 @@ func (dao *pgxDAO) UpdateProc(source db.Source, mod procexec.Mod) (err error) {
 	for _, dto := range dto.Locks {
 		ct, err := rootRes.Exec()
 		if err != nil {
-			dao.log.Error("execution failed", slog.Any("dto", dto))
+			d.log.Error("execution failed", slog.Any("dto", dto))
 		}
 		if ct.RowsAffected() == 0 {
-			dao.log.Error("update failed")
+			d.log.Error("update failed")
 			return errOptimisticUpdate(revnum.ADT(dto.PoolRN))
 		}
 	}
 	if err != nil {
 		return err
 	}
-	dao.log.Debug("update succeed")
+	d.log.Debug("update succeed")
 	return nil
 }
 
-func (dao *pgxDAO) SelectSubs(source db.Source, poolID identity.ADT) (ExecSnap, error) {
-	ds := db.MustConform[db.SourcePgx](source)
-	idAttr := slog.Any("poolID", poolID)
-	rows, err := ds.Conn.Query(ds.Ctx, selectOrgSnap, poolID.String())
-	if err != nil {
-		dao.log.Error("execution failed", idAttr)
-		return ExecSnap{}, err
-	}
-	defer rows.Close()
-	dto, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[execSnapDS])
-	if err != nil {
-		dao.log.Error("collection failed", idAttr, slog.Any("struct", reflect.TypeOf(dto)))
-		return ExecSnap{}, err
-	}
-	snap, err := DataToExecSnap(dto)
-	if err != nil {
-		dao.log.Error("conversion failed")
-		return ExecSnap{}, err
-	}
-	dao.log.Debug("selection succeed", idAttr)
-	return snap, nil
-}
-
-func (dao *pgxDAO) SelectRefs(source db.Source) ([]ExecRef, error) {
-	ds := db.MustConform[db.SourcePgx](source)
-	query := `
-		select
-			pool_id, title
-		from pool_roots`
-	rows, err := ds.Conn.Query(ds.Ctx, query)
-	if err != nil {
-		dao.log.Error("execution failed", slog.String("q", query))
-		return nil, err
-	}
-	defer rows.Close()
-	dtos, err := pgx.CollectRows(rows, pgx.RowToStructByName[execRefDS])
-	if err != nil {
-		dao.log.Error("collection failed", slog.Any("t", reflect.TypeOf(dtos)))
-		return nil, err
-	}
-	refs, err := DataToExecRefs(dtos)
-	if err != nil {
-		dao.log.Error("conversion failed")
-		return nil, err
-	}
-	return refs, nil
-}
-
 const (
-	insertRoot = `
-		insert into pool_roots (
-			pool_id, title, proc_id, sup_pool_id, rev
-		) values (
-			@pool_id, @title, @proc_id, @sup_pool_id, @rev
-		)`
-
 	insertLiab = `
 		insert into pool_liabs (
 			pool_id, proc_id, rev
@@ -282,20 +209,6 @@ const (
 		set rev = @rev + 1
 		where pool_id = @pool_id
 			and rev = @rev`
-
-	selectOrgSnap = `
-		select
-			sup.pool_id,
-			sup.title,
-			jsonb_agg(json_build_object('pool_id', sub.pool_id, 'title', sub.title)) as subs
-		from pool_roots sup
-		left join pool_sups rel
-			on rel.sup_pool_id = sup.pool_id
-		left join pool_roots sub
-			on sub.pool_id = rel.pool_id
-			and sub.rev = rel.rev
-		where sup.pool_id = $1
-		group by sup.pool_id, sup.title`
 
 	selectChnls = `
 		with bnds as not materialized (

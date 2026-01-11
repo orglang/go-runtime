@@ -14,10 +14,6 @@ type RestySDK struct {
 	Client *resty.Client
 }
 
-func NewRestySDK(client *resty.Client) *RestySDK {
-	return &RestySDK{client}
-}
-
 func (sdk *RestySDK) Incept(typeQN qualsym.ADT) (DefRef, error) {
 	return DefRef{}, nil
 }

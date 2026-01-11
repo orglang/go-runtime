@@ -24,7 +24,7 @@ func (sdk *RestySDK) Create(spec DecSpec) (DecSnap, error) {
 	resp, err := sdk.Client.R().
 		SetResult(&res).
 		SetBody(&req).
-		Post("/declarations")
+		Post("/decs")
 	if err != nil {
 		return DecSnap{}, err
 	}
@@ -39,7 +39,7 @@ func (sdk *RestySDK) RetrieveSnap(id identity.ADT) (DecSnap, error) {
 	resp, err := sdk.Client.R().
 		SetResult(&res).
 		SetPathParam("id", id.String()).
-		Get("/declarations/{id}")
+		Get("/decs/{id}")
 	if err != nil {
 		return DecSnap{}, err
 	}

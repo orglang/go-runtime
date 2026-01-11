@@ -8,6 +8,6 @@ import (
 
 var Module = fx.Module("adt/procdef",
 	fx.Provide(
-		fx.Annotate(newDaoPgx, fx.As(new(Repo))),
+		fx.Annotate(newPgxDAO, fx.As(new(Repo))),
 	),
 )

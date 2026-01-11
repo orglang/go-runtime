@@ -7,10 +7,10 @@ import (
 type DecSpecME struct {
 	PoolNS               string
 	PoolSN               string
-	InsiderProvisionEP   termctx.BindClaimME
-	InsiderReceptionEP   termctx.BindClaimME
-	OutsiderProvisionEP  termctx.BindClaimME
-	OutsiderReceptionEPs []termctx.BindClaimME
+	InsiderProvisionBC   termctx.BindClaimME
+	InsiderReceptionBC   termctx.BindClaimME
+	OutsiderProvisionBCs []termctx.BindClaimME
+	OutsiderReceptionBCs []termctx.BindClaimME
 }
 
 type DecRefME struct{}

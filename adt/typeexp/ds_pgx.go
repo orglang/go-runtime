@@ -14,20 +14,20 @@ import (
 )
 
 // Adapter
-type daoPgx struct {
+type pgxDAO struct {
 	log *slog.Logger
 }
 
-func newDaoPgx(l *slog.Logger) *daoPgx {
-	return &daoPgx{l}
+func newPgxDAO(l *slog.Logger) *pgxDAO {
+	return &pgxDAO{l}
 }
 
 // for compilation purposes
 func newRepo() Repo {
-	return &daoPgx{}
+	return &pgxDAO{}
 }
 
-func (d *daoPgx) Insert(source db.Source, rec ExpRec) (err error) {
+func (dao *pgxDAO) Insert(source db.Source, rec ExpRec) (err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("termID", rec.Ident())
 	dto := DataFromTermRec(rec)
@@ -54,7 +54,7 @@ func (d *daoPgx) Insert(source db.Source, rec ExpRec) (err error) {
 	for range dto.States {
 		_, err = br.Exec()
 		if err != nil {
-			d.log.Error("query execution failed", idAttr, slog.String("q", query))
+			dao.log.Error("query execution failed", idAttr, slog.String("q", query))
 		}
 	}
 	if err != nil {
@@ -63,7 +63,7 @@ func (d *daoPgx) Insert(source db.Source, rec ExpRec) (err error) {
 	return nil
 }
 
-func (d *daoPgx) SelectRecByID(source db.Source, termID identity.ADT) (ExpRec, error) {
+func (dao *pgxDAO) SelectRecByID(source db.Source, termID identity.ADT) (ExpRec, error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("termID", termID)
 	query := `
@@ -79,20 +79,20 @@ func (d *daoPgx) SelectRecByID(source db.Source, termID identity.ADT) (ExpRec, e
 		SELECT * FROM top_states`
 	rows, err := ds.Conn.Query(ds.Ctx, query, termID.String())
 	if err != nil {
-		d.log.Error("query execution failed", idAttr, slog.String("q", query))
+		dao.log.Error("query execution failed", idAttr, slog.String("q", query))
 		return nil, err
 	}
 	defer rows.Close()
 	dtos, err := pgx.CollectRows(rows, pgx.RowToStructByName[stateDS])
 	if err != nil {
-		d.log.Error("row collection failed", idAttr)
+		dao.log.Error("row collection failed", idAttr)
 		return nil, err
 	}
 	if len(dtos) == 0 {
-		d.log.Error("entity selection failed", idAttr)
+		dao.log.Error("entity selection failed", idAttr)
 		return nil, fmt.Errorf("no rows selected")
 	}
-	d.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeed", slog.Any("dtos", dtos))
+	dao.log.Log(ds.Ctx, lf.LevelTrace, "entity selection succeed", slog.Any("dtos", dtos))
 	type_term_states := make(map[string]stateDS, len(dtos))
 	for _, dto := range dtos {
 		type_term_states[dto.ExpID] = dto
@@ -100,8 +100,8 @@ func (d *daoPgx) SelectRecByID(source db.Source, termID identity.ADT) (ExpRec, e
 	return statesToTermRec(type_term_states, type_term_states[termID.String()])
 }
 
-func (d *daoPgx) SelectEnv(source db.Source, termIDs []identity.ADT) (map[identity.ADT]ExpRec, error) {
-	recs, err := d.SelectRecsByIDs(source, termIDs)
+func (dao *pgxDAO) SelectEnv(source db.Source, termIDs []identity.ADT) (map[identity.ADT]ExpRec, error) {
+	recs, err := dao.SelectRecsByIDs(source, termIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (d *daoPgx) SelectEnv(source db.Source, termIDs []identity.ADT) (map[identi
 	return env, nil
 }
 
-func (d *daoPgx) SelectRecsByIDs(source db.Source, termIDs []identity.ADT) (_ []ExpRec, err error) {
+func (dao *pgxDAO) SelectRecsByIDs(source db.Source, termIDs []identity.ADT) (_ []ExpRec, err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	batch := pgx.Batch{}
 	for _, termID := range termIDs {
@@ -127,25 +127,25 @@ func (d *daoPgx) SelectRecsByIDs(source db.Source, termIDs []identity.ADT) (_ []
 		idAttr := slog.Any("termID", termID)
 		rows, err := br.Query()
 		if err != nil {
-			d.log.Error("query execution failed", idAttr, slog.String("q", selectByID))
+			dao.log.Error("query execution failed", idAttr, slog.String("q", selectByID))
 		}
 		defer rows.Close()
 		dtos, err := pgx.CollectRows(rows, pgx.RowToStructByName[stateDS])
 		if err != nil {
-			d.log.Error("rows collection failed", idAttr)
+			dao.log.Error("rows collection failed", idAttr)
 		}
 		if len(dtos) == 0 {
-			d.log.Error("entity selection failed", idAttr)
+			dao.log.Error("entity selection failed", idAttr)
 			return nil, ErrDoesNotExist(termID)
 		}
 		rec, err := DataToTermRec(&expRecDS{termID.String(), dtos})
 		if err != nil {
-			d.log.Error("model mapping failed", idAttr)
+			dao.log.Error("model conversion failed", idAttr)
 			return nil, err
 		}
 		recs = append(recs, rec)
 	}
-	d.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("recs", recs))
+	dao.log.Log(ds.Ctx, lf.LevelTrace, "entities selection succeed", slog.Any("recs", recs))
 	return recs, err
 }
 

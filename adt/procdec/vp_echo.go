@@ -15,100 +15,97 @@ import (
 )
 
 // Adapter
-type presenterEcho struct {
+type echoPresenter struct {
 	api API
 	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newPresenterEcho(a API, r te.Renderer, l *slog.Logger) *presenterEcho {
-	name := slog.String("name", reflect.TypeFor[presenterEcho]().Name())
-	return &presenterEcho{a, r, l.With(name)}
+func newEchoPresenter(a API, r te.Renderer, l *slog.Logger) *echoPresenter {
+	name := slog.String("name", reflect.TypeFor[echoPresenter]().Name())
+	return &echoPresenter{a, r, l.With(name)}
 }
 
-func cfgPresenterEcho(e *echo.Echo, p *presenterEcho) error {
-	e.POST("/ssr/declarations", p.PostOne)
-	e.GET("/ssr/declarations", p.GetMany)
-	e.GET("/ssr/declarations/:id", p.GetOne)
+func cfgEchoPresenter(e *echo.Echo, p *echoPresenter) error {
+	e.POST("/ssr/decs", p.PostOne)
+	e.GET("/ssr/decs", p.GetMany)
+	e.GET("/ssr/decs/:id", p.GetOne)
 	return nil
 }
 
-func (p *presenterEcho) PostOne(c echo.Context) error {
+func (p *echoPresenter) PostOne(c echo.Context) error {
 	var dto DecSpecVP
-	err := c.Bind(&dto)
-	if err != nil {
-		p.log.Error("dto binding failed")
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		p.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
 	ctx := c.Request().Context()
-	p.log.Log(ctx, lf.LevelTrace, "root posting started", slog.Any("dto", dto))
-	err = dto.Validate()
-	if err != nil {
-		p.log.Error("dto validation failed")
-		return err
+	p.log.Log(ctx, lf.LevelTrace, "posting started", slog.Any("dto", dto))
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		p.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	ns, err := qualsym.ConvertFromString(dto.ProcNS)
-	if err != nil {
-		p.log.Error("dto parsing failed")
-		return err
+	ns, conversionErr := qualsym.ConvertFromString(dto.ProcNS)
+	if conversionErr != nil {
+		p.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	ref, err := p.api.Incept(ns.New(dto.ProcSN))
-	if err != nil {
-		p.log.Error("root creation failed")
-		return err
+	ref, inceptionErr := p.api.Incept(ns.New(dto.ProcSN))
+	if inceptionErr != nil {
+		return inceptionErr
 	}
-	html, err := p.ssr.Render("view-one", ViewFromDecRef(ref))
-	if err != nil {
-		p.log.Error("view rendering failed")
-		return err
+	html, renderingErr := p.ssr.Render("view-one", ViewFromDecRef(ref))
+	if renderingErr != nil {
+		p.log.Error("rendering failed", slog.Any("ref", ref))
+		return renderingErr
 	}
-	p.log.Log(ctx, lf.LevelTrace, "root posting succeed", slog.Any("ref", ref))
+	p.log.Log(ctx, lf.LevelTrace, "posting succeed", slog.Any("ref", ref))
 	return c.HTMLBlob(http.StatusOK, html)
 }
 
-func (p *presenterEcho) GetMany(c echo.Context) error {
-	refs, err := p.api.RetreiveRefs()
-	if err != nil {
-		p.log.Error("refs retrieval failed")
-		return err
+func (p *echoPresenter) GetMany(c echo.Context) error {
+	refs, retrievalErr := p.api.RetreiveRefs()
+	if retrievalErr != nil {
+		return retrievalErr
 	}
-	html, err := p.ssr.Render("view-many", ViewFromDecRefs(refs))
-	if err != nil {
-		p.log.Error("view rendering failed")
-		return err
+	html, renderingErr := p.ssr.Render("view-many", ViewFromDecRefs(refs))
+	if renderingErr != nil {
+		p.log.Error("rendering failed", slog.Any("refs", refs))
+		return renderingErr
 	}
 	return c.HTMLBlob(http.StatusOK, html)
 }
 
-func (p *presenterEcho) GetOne(c echo.Context) error {
+func (p *echoPresenter) GetOne(c echo.Context) error {
 	var dto IdentME
-	err := c.Bind(&dto)
-	if err != nil {
-		p.log.Error("dto binding failed")
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		p.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
 	ctx := c.Request().Context()
-	p.log.Log(ctx, lf.LevelTrace, "root getting started", slog.Any("dto", dto))
-	err = dto.Validate()
-	if err != nil {
-		p.log.Error("dto validation failed")
-		return err
+	p.log.Log(ctx, lf.LevelTrace, "getting started", slog.Any("dto", dto))
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		p.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	id, err := identity.ConvertFromString(dto.DecID)
-	if err != nil {
-		p.log.Error("dto mapping failed")
-		return err
+	id, conversionErr := identity.ConvertFromString(dto.DecID)
+	if conversionErr != nil {
+		p.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	snap, err := p.api.RetrieveSnap(id)
-	if err != nil {
-		p.log.Error("snap retrieval failed")
-		return err
+	snap, retrievalErr := p.api.RetrieveSnap(id)
+	if retrievalErr != nil {
+		return retrievalErr
 	}
-	html, err := p.ssr.Render("view-one", ViewFromDecSnap(snap))
-	if err != nil {
-		p.log.Error("view rendering failed")
-		return err
+	html, renderingErr := p.ssr.Render("view-one", ViewFromDecSnap(snap))
+	if renderingErr != nil {
+		p.log.Error("rendering failed", slog.Any("snap", snap))
+		return renderingErr
 	}
-	p.log.Log(ctx, lf.LevelTrace, "root getting succeed", slog.Any("id", snap.DecID))
+	p.log.Log(ctx, lf.LevelTrace, "getting succeed", slog.Any("id", snap.DecID))
 	return c.HTMLBlob(http.StatusOK, html)
 }

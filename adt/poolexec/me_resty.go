@@ -29,11 +29,11 @@ func (sdk *RestySDK) Poll(spec PollSpec) (procexec.ExecRef, error) {
 	return procexec.ExecRef{}, nil
 }
 
-func (sdk *RestySDK) Retrieve(poolID identity.ADT) (ExecSnap, error) {
+func (sdk *RestySDK) Retrieve(execID identity.ADT) (ExecSnap, error) {
 	var res ExecSnapME
 	_, err := sdk.Client.R().
 		SetResult(&res).
-		SetPathParam("id", poolID.String()).
+		SetPathParam("id", execID.String()).
 		Get("/pools/{id}")
 	if err != nil {
 		return ExecSnap{}, err
@@ -58,19 +58,4 @@ func (sdk *RestySDK) Spawn(spec procexec.ExecSpec) (procexec.ExecRef, error) {
 		return procexec.ExecRef{}, err
 	}
 	return procexec.MsgToExecRef(res)
-}
-
-func (sdk *RestySDK) Take(spec StepSpec) error {
-	req := MsgFromStepSpec(spec)
-	var res procexec.ExecRefME
-	_, err := sdk.Client.R().
-		SetResult(&res).
-		SetBody(&req).
-		SetPathParam("poolID", spec.PoolID.String()).
-		SetPathParam("procID", spec.ProcID.String()).
-		Post("/pools/{poolID}/procs/{procID}/steps")
-	if err != nil {
-		return err
-	}
-	return nil
 }

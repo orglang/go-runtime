@@ -22,8 +22,6 @@ var (
 	MsgFromExecRef  func(ExecRef) ExecRefME
 	MsgToExecSnap   func(ExecSnapME) (ExecSnap, error)
 	MsgFromExecSnap func(ExecSnap) ExecSnapME
-	MsgFromStepSpec func(StepSpec) StepSpecME
-	MsgToStepSpec   func(StepSpecME) (StepSpec, error)
 )
 
 // goverter:variables

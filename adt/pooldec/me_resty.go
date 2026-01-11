@@ -9,10 +9,6 @@ type RestySDK struct {
 	Client *resty.Client
 }
 
-func NewRestySDK(client *resty.Client) *RestySDK {
-	return &RestySDK{client}
-}
-
 func (sdk *RestySDK) Create(spec DecSpecME) (DecRefME, error) {
 	return DecRefME{}, nil
 }

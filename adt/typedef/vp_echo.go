@@ -16,100 +16,97 @@ import (
 )
 
 // Adapter
-type presenterEcho struct {
+type echoPresenter struct {
 	api API
 	ssr te.Renderer
 	log *slog.Logger
 }
 
-func newPresenterEcho(a API, r te.Renderer, l *slog.Logger) *presenterEcho {
-	name := slog.String("name", reflect.TypeFor[presenterEcho]().Name())
-	return &presenterEcho{a, r, l.With(name)}
+func newEchoPresenter(a API, r te.Renderer, l *slog.Logger) *echoPresenter {
+	name := slog.String("name", reflect.TypeFor[echoPresenter]().Name())
+	return &echoPresenter{a, r, l.With(name)}
 }
 
-func cfgPresenterEcho(e *echo.Echo, p *presenterEcho) error {
+func cfgEchoPresenter(e *echo.Echo, p *echoPresenter) error {
 	e.POST("/ssr/types", p.PostOne)
 	e.GET("/ssr/types", p.GetMany)
 	e.GET("/ssr/types/:id", p.GetOne)
 	return nil
 }
 
-func (p *presenterEcho) PostOne(c echo.Context) error {
+func (p *echoPresenter) PostOne(c echo.Context) error {
 	var dto DefSpecVP
-	err := c.Bind(&dto)
-	if err != nil {
-		p.log.Error("dto binding failed")
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		p.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
 	ctx := c.Request().Context()
-	p.log.Log(ctx, lf.LevelTrace, "role posting started", slog.Any("dto", dto))
-	err = dto.Validate()
-	if err != nil {
-		p.log.Error("dto validation failed")
-		return err
+	p.log.Log(ctx, lf.LevelTrace, "posting started", slog.Any("dto", dto))
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		p.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	ns, err := qualsym.ConvertFromString(dto.TypeNS)
-	if err != nil {
-		p.log.Error("dto parsing failed")
-		return err
+	ns, conversionErr := qualsym.ConvertFromString(dto.TypeNS)
+	if conversionErr != nil {
+		p.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	snap, err := p.api.Create(DefSpec{TypeQN: ns.New(dto.TypeSN), TypeES: typeexp.OneSpec{}})
-	if err != nil {
-		p.log.Error("role creation failed")
-		return err
+	snap, creationErr := p.api.Create(DefSpec{TypeQN: ns.New(dto.TypeSN), TypeES: typeexp.OneSpec{}})
+	if creationErr != nil {
+		return creationErr
 	}
-	html, err := p.ssr.Render("view-one", ViewFromDefSnap(snap))
-	if err != nil {
-		p.log.Error("view rendering failed")
-		return err
+	html, renderingErr := p.ssr.Render("view-one", ViewFromDefSnap(snap))
+	if renderingErr != nil {
+		p.log.Error("rendering failed", slog.Any("snap", snap))
+		return renderingErr
 	}
-	p.log.Log(ctx, lf.LevelTrace, "role posting succeed", slog.Any("ref", ConvertSnapToRef(snap)))
+	p.log.Log(ctx, lf.LevelTrace, "posting succeed", slog.Any("ref", ConvertSnapToRef(snap)))
 	return c.HTMLBlob(http.StatusOK, html)
 }
 
-func (p *presenterEcho) GetMany(c echo.Context) error {
-	refs, err := p.api.RetreiveRefs()
-	if err != nil {
-		p.log.Error("refs retrieval failed")
-		return err
+func (p *echoPresenter) GetMany(c echo.Context) error {
+	refs, retrievalErr := p.api.RetreiveRefs()
+	if retrievalErr != nil {
+		return retrievalErr
 	}
-	html, err := p.ssr.Render("view-many", ViewFromDefRefs(refs))
-	if err != nil {
-		p.log.Error("view rendering failed")
-		return err
+	html, renderingErr := p.ssr.Render("view-many", ViewFromDefRefs(refs))
+	if renderingErr != nil {
+		p.log.Error("rendering failed", slog.Any("refs", refs))
+		return renderingErr
 	}
 	return c.HTMLBlob(http.StatusOK, html)
 }
 
-func (p *presenterEcho) GetOne(c echo.Context) error {
+func (p *echoPresenter) GetOne(c echo.Context) error {
 	var dto IdentME
-	err := c.Bind(&dto)
-	if err != nil {
-		p.log.Error("dto binding failed")
-		return err
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		p.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
 	}
 	ctx := c.Request().Context()
-	p.log.Log(ctx, lf.LevelTrace, "root getting started", slog.Any("dto", dto))
-	err = dto.Validate()
-	if err != nil {
-		p.log.Error("dto validation failed")
-		return err
+	p.log.Log(ctx, lf.LevelTrace, "getting started", slog.Any("dto", dto))
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		p.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
 	}
-	id, err := identity.ConvertFromString(dto.DefID)
-	if err != nil {
-		p.log.Error("dto mapping failed")
-		return err
+	id, conversionErr := identity.ConvertFromString(dto.DefID)
+	if conversionErr != nil {
+		p.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
 	}
-	snap, err := p.api.Retrieve(id)
-	if err != nil {
-		p.log.Error("root retrieval failed")
-		return err
+	snap, retrievalErr := p.api.Retrieve(id)
+	if retrievalErr != nil {
+		return retrievalErr
 	}
-	html, err := p.ssr.Render("view-one", ViewFromDefSnap(snap))
-	if err != nil {
-		p.log.Error("view rendering failed")
-		return err
+	html, renderingErr := p.ssr.Render("view-one", ViewFromDefSnap(snap))
+	if renderingErr != nil {
+		p.log.Error("rendering failed", slog.Any("snap", snap))
+		return renderingErr
 	}
-	p.log.Log(ctx, lf.LevelTrace, "root getting succeed", slog.Any("id", snap.DefID))
+	p.log.Log(ctx, lf.LevelTrace, "getting succeed", slog.Any("ref", ConvertSnapToRef(snap)))
 	return c.HTMLBlob(http.StatusOK, html)
 }
