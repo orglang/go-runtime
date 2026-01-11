@@ -7,8 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"orglang/orglang/lib/db"
 	"orglang/orglang/lib/lf"
-	"orglang/orglang/lib/sd"
 
 	"orglang/orglang/adt/identity"
 )
@@ -27,8 +27,8 @@ func newRepo() Repo {
 	return &daoPgx{}
 }
 
-func (d *daoPgx) Insert(source sd.Source, mod DecRec) error {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) Insert(source db.Source, mod DecRec) error {
+	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("id", mod.DecID)
 	dto, err := DataFromDecRec(mod)
 	if err != nil {
@@ -102,8 +102,8 @@ func (d *daoPgx) Insert(source sd.Source, mod DecRec) error {
 	return nil
 }
 
-func (d *daoPgx) SelectByID(source sd.Source, rid identity.ADT) (DecSnap, error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectByID(source db.Source, rid identity.ADT) (DecSnap, error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("id", rid)
 	rows, err := ds.Conn.Query(ds.Ctx, selectById, rid.String())
 	if err != nil {
@@ -120,7 +120,7 @@ func (d *daoPgx) SelectByID(source sd.Source, rid identity.ADT) (DecSnap, error)
 	return DataToDecSnap(dto)
 }
 
-func (d *daoPgx) SelectEnv(source sd.Source, ids []identity.ADT) (map[identity.ADT]DecRec, error) {
+func (d *daoPgx) SelectEnv(source db.Source, ids []identity.ADT) (map[identity.ADT]DecRec, error) {
 	decs, err := d.SelectByIDs(source, ids)
 	if err != nil {
 		return nil, err
@@ -132,8 +132,8 @@ func (d *daoPgx) SelectEnv(source sd.Source, ids []identity.ADT) (map[identity.A
 	return env, nil
 }
 
-func (d *daoPgx) SelectByIDs(source sd.Source, ids []identity.ADT) (_ []DecRec, err error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectByIDs(source db.Source, ids []identity.ADT) (_ []DecRec, err error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	if len(ids) == 0 {
 		return []DecRec{}, nil
 	}
@@ -168,8 +168,8 @@ func (d *daoPgx) SelectByIDs(source sd.Source, ids []identity.ADT) (_ []DecRec, 
 	return DataToDecRecs(dtos)
 }
 
-func (d *daoPgx) SelectAll(source sd.Source) ([]DecRef, error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectAll(source db.Source) ([]DecRef, error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	query := `
 		select
 			dec_id, rev, title

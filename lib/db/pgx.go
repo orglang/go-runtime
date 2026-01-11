@@ -1,4 +1,4 @@
-package sd
+package db
 
 import (
 	"context"
@@ -11,8 +11,8 @@ func newOperator(pool *pgxpool.Pool) Operator {
 	return &OperatorPgx{pool}
 }
 
-func newDriverPgx(pc storagePC, lc fx.Lifecycle) (*pgxpool.Pool, error) {
-	config, err := pgxpool.ParseConfig(pc.Protocol.Postgres.Url)
+func newPgxDriver(dto storageCS, lc fx.Lifecycle) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(dto.Protocol.Postgres.Url)
 	if err != nil {
 		return nil, err
 	}

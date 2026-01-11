@@ -3,16 +3,16 @@ package typeexp
 import (
 	"database/sql"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 )
 
 type Repo interface {
-	Insert(sd.Source, ExpRec) error
-	SelectRecByID(sd.Source, identity.ADT) (ExpRec, error)
-	SelectRecsByIDs(sd.Source, []identity.ADT) ([]ExpRec, error)
-	SelectEnv(sd.Source, []identity.ADT) (map[identity.ADT]ExpRec, error)
+	Insert(db.Source, ExpRec) error
+	SelectRecByID(db.Source, identity.ADT) (ExpRec, error)
+	SelectRecsByIDs(db.Source, []identity.ADT) ([]ExpRec, error)
+	SelectEnv(db.Source, []identity.ADT) (map[identity.ADT]ExpRec, error)
 }
 
 type expKindDS int

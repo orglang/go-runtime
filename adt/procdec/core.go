@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/qualsym"
@@ -54,7 +54,7 @@ type DecSnap struct {
 type service struct {
 	procDecs Repo
 	synDecs  syndec.Repo
-	operator sd.Operator
+	operator db.Operator
 	log      *slog.Logger
 }
 
@@ -63,7 +63,7 @@ func newAPI() API {
 	return &service{}
 }
 
-func newService(procs Repo, aliases syndec.Repo, operator sd.Operator, l *slog.Logger) *service {
+func newService(procs Repo, aliases syndec.Repo, operator db.Operator, l *slog.Logger) *service {
 	return &service{procs, aliases, operator, l}
 }
 
@@ -73,7 +73,7 @@ func (s *service) Incept(procQN qualsym.ADT) (_ DecRef, err error) {
 	s.log.Debug("inception started", qnAttr)
 	newSyn := syndec.DecRec{DecQN: procQN, DecID: identity.New(), DecRN: revnum.Initial()}
 	newRec := DecRec{DecID: newSyn.DecID, DecRN: newSyn.DecRN, Title: newSyn.DecQN.SN()}
-	s.operator.Explicit(ctx, func(ds sd.Source) error {
+	s.operator.Explicit(ctx, func(ds db.Source) error {
 		err = s.synDecs.Insert(ds, newSyn)
 		if err != nil {
 			return err
@@ -102,7 +102,7 @@ func (s *service) Create(spec DecSpec) (_ DecSnap, err error) {
 		Ys:    spec.ReceptionEPs,
 		DecRN: revnum.Initial(),
 	}
-	s.operator.Explicit(ctx, func(ds sd.Source) error {
+	s.operator.Explicit(ctx, func(ds db.Source) error {
 		err = s.procDecs.Insert(ds, newRec)
 		if err != nil {
 			return err
@@ -119,7 +119,7 @@ func (s *service) Create(spec DecSpec) (_ DecSnap, err error) {
 
 func (s *service) RetrieveSnap(decID identity.ADT) (snap DecSnap, err error) {
 	ctx := context.Background()
-	s.operator.Implicit(ctx, func(ds sd.Source) error {
+	s.operator.Implicit(ctx, func(ds db.Source) error {
 		snap, err = s.procDecs.SelectByID(ds, decID)
 		return err
 	})
@@ -132,7 +132,7 @@ func (s *service) RetrieveSnap(decID identity.ADT) (snap DecSnap, err error) {
 
 func (s *service) RetreiveRefs() (refs []DecRef, err error) {
 	ctx := context.Background()
-	s.operator.Implicit(ctx, func(ds sd.Source) error {
+	s.operator.Implicit(ctx, func(ds db.Source) error {
 		refs, err = s.procDecs.SelectAll(ds)
 		return err
 	})

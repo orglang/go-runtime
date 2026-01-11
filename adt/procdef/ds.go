@@ -1,11 +1,11 @@
 package procdef
 
 import (
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 )
 
 type Repo interface {
-	InsertProc(sd.Source, DefRec) error
+	InsertProc(db.Source, DefRec) error
 }
 
 type ExpRecDS struct {

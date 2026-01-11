@@ -51,9 +51,10 @@ Repository structure reflects abstraction kinds.
   - `qualsym`: Qualified symbol value
   - `revnum`: Revision number value
 - `lib`: Reusable behavior abstractions
-  - `ck`: Configuration keeper harness
+  - `db`: Database drivers
+  - `kv`: Key-value store drivers
   - `lf`: Logging framework harness
-  - `sd`: Storage driver harness
+  - `rc`: REST client harness
   - `te`: Template engine harness
   - `ws`: Web server harness
 - `db`: Storage schema definitions
@@ -75,17 +76,17 @@ Package structure reflects abstraction layers.
     - API interfaces (primary ports)
     - Service structs (core behaviors)
 - `me.go`: Pure message exchange (ME) logic
-    - Exchange specific DTO's (edge models)
+    - Message related DTO's (edge models)
 - `vp.go`: Pure view presentation (VP) logic
-    - Presentation specific DTO's (edge models)
+    - View related DTO's (edge models)
 - `ds.go`: Pure data storage (DS) logic
-    - Storage specific DTO's (edge models)
+    - Data related DTO's (edge models)
     - Repository interfaces (secondary ports)
 - `iv.go`: Pure input validation (IV) logic
-    - Message validation harness
-    - Props validation harness
-- `pc.go`: Pure property configuration (PC) logic
-    - Configuration specific DTO's (edge models)
+    - Message related validation
+    - Config related validation
+- `cs.go`: Pure config storage (CS) logic
+    - Config related DTO's (edge models)
 - `tc.go`: Pure type conversion (TC) logic
     - Domain to domain conversions
     - Domain to message conversions and vice versa

@@ -1,11 +1,11 @@
 package procexp
 
 import (
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 )
 
 type Repo interface {
-	Insert(sd.Source, ExpRec) error
+	Insert(db.Source, ExpRec) error
 }
 
 type ExpSpecDS struct {

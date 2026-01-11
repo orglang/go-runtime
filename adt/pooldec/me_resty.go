@@ -5,19 +5,14 @@ import (
 )
 
 // Client-side secondary adapter
-type sdkResty struct {
-	resty *resty.Client
+type RestySDK struct {
+	Client *resty.Client
 }
 
-func newSdkResty() *sdkResty {
-	r := resty.New().SetBaseURL("http://localhost:8080/api/v1")
-	return &sdkResty{r}
+func NewRestySDK(client *resty.Client) *RestySDK {
+	return &RestySDK{client}
 }
 
-func NewAPI() API {
-	return newSdkResty()
-}
-
-func (cl *sdkResty) Create(spec DecSpec) (DecRef, error) {
-	return DecRef{}, nil
+func (sdk *RestySDK) Create(spec DecSpecME) (DecRefME, error) {
+	return DecRefME{}, nil
 }

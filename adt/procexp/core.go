@@ -70,19 +70,10 @@ type FwdSpec struct {
 
 func (s FwdSpec) Via() qualsym.ADT { return s.X }
 
-// аналог SendSpec, но значения отправляются балком
-type CallSpecOld struct {
-	X     qualsym.ADT
-	SigPH qualsym.ADT // import
-	Ys    []qualsym.ADT
-}
-
-func (s CallSpecOld) Via() qualsym.ADT { return s.SigPH }
-
 type CallSpec struct {
 	CommPH qualsym.ADT
 	BindPH qualsym.ADT
-	ProcSN qualsym.ADT
+	ProcQN qualsym.ADT
 	ValPHs []qualsym.ADT // channel bulk
 	ContES ExpSpec
 }
@@ -101,9 +92,10 @@ type SpawnSpecOld struct {
 func (s SpawnSpecOld) Via() qualsym.ADT { return s.X }
 
 type SpawnSpec struct {
-	CommPH qualsym.ADT
-	ProcSN qualsym.ADT
-	ContES ExpSpec
+	CommPH  qualsym.ADT
+	ProcQN  qualsym.ADT
+	BindPHs []qualsym.ADT
+	ContES  ExpSpec
 }
 
 func (s SpawnSpec) Via() qualsym.ADT { return s.CommPH }
@@ -220,8 +212,8 @@ func collectEnvRec(s ExpSpec, env []identity.ADT) []identity.ADT {
 			env = collectEnvRec(cont, env)
 		}
 		return env
-	case SpawnSpecOld:
-		return collectEnvRec(spec.ContES, append(env, spec.SigID))
+	case SpawnSpec:
+		return collectEnvRec(spec.ContES, env)
 	default:
 		return env
 	}

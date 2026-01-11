@@ -10,27 +10,22 @@ import (
 )
 
 // Client-side secondary adapter
-type sdkResty struct {
-	resty *resty.Client
+type RestySDK struct {
+	Client *resty.Client
 }
 
-func newSdkResty() *sdkResty {
-	r := resty.New().SetBaseURL("http://localhost:8080/api/v1")
-	return &sdkResty{r}
+func NewRestySDK(client *resty.Client) *RestySDK {
+	return &RestySDK{client}
 }
 
-func NewAPI() API {
-	return newSdkResty()
-}
-
-func (cl *sdkResty) Incept(typeQN qualsym.ADT) (DefRef, error) {
+func (sdk *RestySDK) Incept(typeQN qualsym.ADT) (DefRef, error) {
 	return DefRef{}, nil
 }
 
-func (cl *sdkResty) Create(spec DefSpec) (DefSnap, error) {
+func (sdk *RestySDK) Create(spec DefSpec) (DefSnap, error) {
 	req := MsgFromDefSpec(spec)
 	var res DefSnapME
-	resp, err := cl.resty.R().
+	resp, err := sdk.Client.R().
 		SetResult(&res).
 		SetBody(&req).
 		Post("/types")
@@ -43,18 +38,18 @@ func (cl *sdkResty) Create(spec DefSpec) (DefSnap, error) {
 	return MsgToDefSnap(res)
 }
 
-func (c *sdkResty) Modify(snap DefSnap) (DefSnap, error) {
+func (sdk *RestySDK) Modify(snap DefSnap) (DefSnap, error) {
 	return DefSnap{}, nil
 }
 
-func (c *sdkResty) Retrieve(defID identity.ADT) (DefSnap, error) {
+func (sdk *RestySDK) Retrieve(defID identity.ADT) (DefSnap, error) {
 	return DefSnap{}, nil
 }
 
-func (c *sdkResty) retrieveSnap(rec DefRec) (DefSnap, error) {
+func (sdk *RestySDK) retrieveSnap(rec DefRec) (DefSnap, error) {
 	return DefSnap{}, nil
 }
 
-func (c *sdkResty) RetreiveRefs() ([]DefRef, error) {
+func (sdk *RestySDK) RetreiveRefs() ([]DefRef, error) {
 	return []DefRef{}, nil
 }

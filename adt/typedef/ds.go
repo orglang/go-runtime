@@ -1,21 +1,21 @@
 package typedef
 
 import (
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/qualsym"
 )
 
 type Repo interface {
-	Insert(sd.Source, DefRec) error
-	Update(sd.Source, DefRec) error
-	SelectRefs(sd.Source) ([]DefRef, error)
-	SelectRecByID(sd.Source, identity.ADT) (DefRec, error)
-	SelectRecsByIDs(sd.Source, []identity.ADT) ([]DefRec, error)
-	SelectRecByQN(sd.Source, qualsym.ADT) (DefRec, error)
-	SelectRecsByQNs(sd.Source, []qualsym.ADT) ([]DefRec, error)
-	SelectEnv(sd.Source, []qualsym.ADT) (map[qualsym.ADT]DefRec, error)
+	Insert(db.Source, DefRec) error
+	Update(db.Source, DefRec) error
+	SelectRefs(db.Source) ([]DefRef, error)
+	SelectRecByID(db.Source, identity.ADT) (DefRec, error)
+	SelectRecsByIDs(db.Source, []identity.ADT) ([]DefRec, error)
+	SelectRecByQN(db.Source, qualsym.ADT) (DefRec, error)
+	SelectRecsByQNs(db.Source, []qualsym.ADT) ([]DefRec, error)
+	SelectEnv(db.Source, []qualsym.ADT) (map[qualsym.ADT]DefRec, error)
 }
 
 type defRefDS struct {

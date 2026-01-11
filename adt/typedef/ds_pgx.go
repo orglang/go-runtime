@@ -7,8 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"orglang/orglang/lib/db"
 	"orglang/orglang/lib/lf"
-	"orglang/orglang/lib/sd"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/qualsym"
@@ -27,8 +27,8 @@ func newRepo() Repo {
 	return &daoPgx{}
 }
 
-func (d *daoPgx) Insert(source sd.Source, rec DefRec) error {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) Insert(source db.Source, rec DefRec) error {
+	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("defID", rec.DefID)
 	d.log.Log(ds.Ctx, lf.LevelTrace, "entity insertion started", idAttr)
 	dto, err := DataFromDefRec(rec)
@@ -73,8 +73,8 @@ func (d *daoPgx) Insert(source sd.Source, rec DefRec) error {
 	return nil
 }
 
-func (d *daoPgx) Update(source sd.Source, rec DefRec) error {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) Update(source db.Source, rec DefRec) error {
+	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("defID", rec.DefID)
 	d.log.Log(ds.Ctx, lf.LevelTrace, "entity update started", idAttr)
 	dto, err := DataFromDefRec(rec)
@@ -118,8 +118,8 @@ func (d *daoPgx) Update(source sd.Source, rec DefRec) error {
 	return nil
 }
 
-func (d *daoPgx) SelectRefs(source sd.Source) ([]DefRef, error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectRefs(source db.Source) ([]DefRef, error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	query := `
 		SELECT
 			def_id, def_rn, title
@@ -139,8 +139,8 @@ func (d *daoPgx) SelectRefs(source sd.Source) ([]DefRef, error) {
 	return DataToDefRefs(dtos)
 }
 
-func (d *daoPgx) SelectRecByID(source sd.Source, defID identity.ADT) (DefRec, error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectRecByID(source db.Source, defID identity.ADT) (DefRec, error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("defID", defID)
 	rows, err := ds.Conn.Query(ds.Ctx, selectById, defID.String())
 	if err != nil {
@@ -157,8 +157,8 @@ func (d *daoPgx) SelectRecByID(source sd.Source, defID identity.ADT) (DefRec, er
 	return DataToDefRec(dto)
 }
 
-func (d *daoPgx) SelectRecByQN(source sd.Source, typeQN qualsym.ADT) (DefRec, error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectRecByQN(source db.Source, typeQN qualsym.ADT) (DefRec, error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	fqnAttr := slog.Any("typeQN", typeQN)
 	rows, err := ds.Conn.Query(ds.Ctx, selectByFQN, qualsym.ConvertToString(typeQN))
 	if err != nil {
@@ -175,8 +175,8 @@ func (d *daoPgx) SelectRecByQN(source sd.Source, typeQN qualsym.ADT) (DefRec, er
 	return DataToDefRec(dto)
 }
 
-func (d *daoPgx) SelectRecsByIDs(source sd.Source, defIDs []identity.ADT) (_ []DefRec, err error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectRecsByIDs(source db.Source, defIDs []identity.ADT) (_ []DefRec, err error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	if len(defIDs) == 0 {
 		return []DefRec{}, nil
 	}
@@ -216,7 +216,7 @@ func (d *daoPgx) SelectRecsByIDs(source sd.Source, defIDs []identity.ADT) (_ []D
 	return DataToDefRecs(dtos)
 }
 
-func (d *daoPgx) SelectEnv(source sd.Source, typeQNs []qualsym.ADT) (map[qualsym.ADT]DefRec, error) {
+func (d *daoPgx) SelectEnv(source db.Source, typeQNs []qualsym.ADT) (map[qualsym.ADT]DefRec, error) {
 	recs, err := d.SelectRecsByQNs(source, typeQNs)
 	if err != nil {
 		return nil, err
@@ -228,8 +228,8 @@ func (d *daoPgx) SelectEnv(source sd.Source, typeQNs []qualsym.ADT) (map[qualsym
 	return env, nil
 }
 
-func (d *daoPgx) SelectRecsByQNs(source sd.Source, typeQNs []qualsym.ADT) (_ []DefRec, err error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectRecsByQNs(source db.Source, typeQNs []qualsym.ADT) (_ []DefRec, err error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	if len(typeQNs) == 0 {
 		return []DefRec{}, nil
 	}

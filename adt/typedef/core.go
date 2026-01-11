@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/qualsym"
@@ -58,7 +58,7 @@ type service struct {
 	typeDefs Repo
 	typeExps typeexp.Repo
 	synDecs  syndec.Repo
-	operator sd.Operator
+	operator db.Operator
 	log      *slog.Logger
 }
 
@@ -71,7 +71,7 @@ func newService(
 	typeDefs Repo,
 	typeExps typeexp.Repo,
 	synDecs syndec.Repo,
-	operator sd.Operator,
+	operator db.Operator,
 	l *slog.Logger,
 ) *service {
 	return &service{typeDefs, typeExps, synDecs, operator, l}
@@ -83,7 +83,7 @@ func (s *service) Incept(typeQN qualsym.ADT) (_ DefRef, err error) {
 	s.log.Debug("inception started", qnAttr)
 	newAlias := syndec.DecRec{DecQN: typeQN, DecID: identity.New(), DecRN: revnum.Initial()}
 	newType := DefRec{DefID: newAlias.DecID, DefRN: newAlias.DecRN, Title: newAlias.DecQN.SN()}
-	s.operator.Explicit(ctx, func(ds sd.Source) error {
+	s.operator.Explicit(ctx, func(ds db.Source) error {
 		err = s.synDecs.Insert(ds, newAlias)
 		if err != nil {
 			return err
@@ -114,7 +114,7 @@ func (s *service) Create(spec DefSpec) (_ DefSnap, err error) {
 		Title: newAlias.DecQN.SN(),
 		ExpID: newTerm.Ident(),
 	}
-	s.operator.Explicit(ctx, func(ds sd.Source) error {
+	s.operator.Explicit(ctx, func(ds db.Source) error {
 		err = s.synDecs.Insert(ds, newAlias)
 		if err != nil {
 			return err
@@ -148,7 +148,7 @@ func (s *service) Modify(snap DefSnap) (_ DefSnap, err error) {
 	idAttr := slog.Any("defID", snap.DefID)
 	s.log.Debug("modification started", idAttr)
 	var rec DefRec
-	s.operator.Implicit(ctx, func(ds sd.Source) error {
+	s.operator.Implicit(ctx, func(ds db.Source) error {
 		rec, err = s.typeDefs.SelectRecByID(ds, snap.DefID)
 		return err
 	})
@@ -167,7 +167,7 @@ func (s *service) Modify(snap DefSnap) (_ DefSnap, err error) {
 		s.log.Error("modification failed", idAttr)
 		return DefSnap{}, err
 	}
-	s.operator.Explicit(ctx, func(ds sd.Source) error {
+	s.operator.Explicit(ctx, func(ds db.Source) error {
 		if typeexp.CheckSpec(snap.TypeES, curSnap.TypeES) != nil {
 			newTerm := typeexp.ConvertSpecToRec(snap.TypeES)
 			err = s.typeExps.Insert(ds, newTerm)
@@ -196,7 +196,7 @@ func (s *service) Modify(snap DefSnap) (_ DefSnap, err error) {
 func (s *service) Retrieve(defID identity.ADT) (_ DefSnap, err error) {
 	ctx := context.Background()
 	var root DefRec
-	s.operator.Implicit(ctx, func(ds sd.Source) error {
+	s.operator.Implicit(ctx, func(ds db.Source) error {
 		root, err = s.typeDefs.SelectRecByID(ds, defID)
 		return err
 	})
@@ -210,7 +210,7 @@ func (s *service) Retrieve(defID identity.ADT) (_ DefSnap, err error) {
 func (s *service) retrieveSnap(rec DefRec) (_ DefSnap, err error) {
 	ctx := context.Background()
 	var termRec typeexp.ExpRec
-	s.operator.Implicit(ctx, func(ds sd.Source) error {
+	s.operator.Implicit(ctx, func(ds db.Source) error {
 		termRec, err = s.typeExps.SelectRecByID(ds, rec.ExpID)
 		return err
 	})
@@ -228,7 +228,7 @@ func (s *service) retrieveSnap(rec DefRec) (_ DefSnap, err error) {
 
 func (s *service) RetreiveRefs() (refs []DefRef, err error) {
 	ctx := context.Background()
-	s.operator.Implicit(ctx, func(ds sd.Source) error {
+	s.operator.Implicit(ctx, func(ds db.Source) error {
 		refs, err = s.typeDefs.SelectRefs(ds)
 		return err
 	})

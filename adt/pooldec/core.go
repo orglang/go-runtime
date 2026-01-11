@@ -3,7 +3,7 @@ package pooldec
 import (
 	"log/slog"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/qualsym"
@@ -43,7 +43,7 @@ type decRec struct {
 
 type service struct {
 	sigs     repo
-	operator sd.Operator
+	operator db.Operator
 	log      *slog.Logger
 }
 

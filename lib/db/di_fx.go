@@ -1,16 +1,16 @@
-package sd
+package db
 
 import (
 	"go.uber.org/fx"
 )
 
-var Module = fx.Module("lib/sd", // storage driver
+var Module = fx.Module("lib/db",
 	fx.Provide(
-		newDriverPgx,
+		newPgxDriver,
 		fx.Annotate(newOperator, fx.As(new(Operator))),
 	),
 	fx.Provide(
 		fx.Private,
-		newStoragePC,
+		newStorageCS,
 	),
 )

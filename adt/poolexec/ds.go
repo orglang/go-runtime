@@ -3,7 +3,7 @@ package poolexec
 import (
 	"database/sql"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/procexec"
@@ -11,12 +11,12 @@ import (
 
 // Port
 type Repo interface {
-	Insert(sd.Source, ExecRec) error
-	InsertLiab(sd.Source, procexec.Liab) error
-	SelectRefs(sd.Source) ([]ExecRef, error)
-	SelectSubs(sd.Source, identity.ADT) (ExecSnap, error)
-	SelectProc(sd.Source, identity.ADT) (procexec.Cfg, error)
-	UpdateProc(sd.Source, procexec.Mod) error
+	Insert(db.Source, ExecRec) error
+	InsertLiab(db.Source, procexec.Liab) error
+	SelectRefs(db.Source) ([]ExecRef, error)
+	SelectSubs(db.Source, identity.ADT) (ExecSnap, error)
+	SelectProc(db.Source, identity.ADT) (procexec.Cfg, error)
+	UpdateProc(db.Source, procexec.Mod) error
 }
 
 type execRefDS struct {

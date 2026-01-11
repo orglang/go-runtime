@@ -5,8 +5,9 @@ package main
 import (
 	"go.uber.org/fx"
 
+	"orglang/orglang/lib/db"
 	"orglang/orglang/lib/lf"
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/rc"
 	"orglang/orglang/lib/ws"
 
 	"orglang/orglang/adt/poolexec"
@@ -22,9 +23,10 @@ import (
 func main() {
 	fx.New(
 		// lib
-		ws.Module,
-		sd.Module,
+		db.Module,
 		lf.Module,
+		rc.Module,
+		ws.Module,
 		// adt
 		syndec.Module,
 		poolexec.Module,

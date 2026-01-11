@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/procexp"
@@ -35,7 +35,7 @@ type DefSnap struct {
 
 type service struct {
 	procs    Repo
-	operator sd.Operator
+	operator db.Operator
 	log      *slog.Logger
 }
 
@@ -46,7 +46,7 @@ func newAPI() API {
 
 func newService(
 	procs Repo,
-	operator sd.Operator,
+	operator db.Operator,
 	l *slog.Logger,
 ) *service {
 	return &service{procs, operator, l}
@@ -58,22 +58,6 @@ func (s *service) Create(spec DefSpec) (DefRef, error) {
 
 func (s *service) Retrieve(recID identity.ADT) (DefRec, error) {
 	return DefRec{}, nil
-}
-
-func collectEnvRec(s procexp.ExpSpec, env []identity.ADT) []identity.ADT {
-	switch spec := s.(type) {
-	case procexp.RecvSpec:
-		return collectEnvRec(spec.ContES, env)
-	case procexp.CaseSpec:
-		for _, cont := range spec.ContESs {
-			env = collectEnvRec(cont, env)
-		}
-		return env
-	case procexp.SpawnSpecOld:
-		return collectEnvRec(spec.ContES, append(env, spec.SigID))
-	default:
-		return env
-	}
 }
 
 func ErrDoesNotExist(want identity.ADT) error {

@@ -35,6 +35,10 @@ func (s ADT) NS() ADT {
 	return ADT(sym[0:strings.LastIndex(sym, sep)])
 }
 
+func (s ADT) String() string {
+	return string(s)
+}
+
 const (
 	sep = "."
 )

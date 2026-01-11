@@ -7,8 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"orglang/orglang/lib/db"
 	"orglang/orglang/lib/lf"
-	"orglang/orglang/lib/sd"
 
 	"orglang/orglang/adt/identity"
 )
@@ -27,8 +27,8 @@ func newRepo() Repo {
 	return &daoPgx{}
 }
 
-func (d *daoPgx) Insert(source sd.Source, rec ExpRec) (err error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) Insert(source db.Source, rec ExpRec) (err error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("termID", rec.Ident())
 	dto := DataFromTermRec(rec)
 	query := `
@@ -63,8 +63,8 @@ func (d *daoPgx) Insert(source sd.Source, rec ExpRec) (err error) {
 	return nil
 }
 
-func (d *daoPgx) SelectRecByID(source sd.Source, termID identity.ADT) (ExpRec, error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectRecByID(source db.Source, termID identity.ADT) (ExpRec, error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("termID", termID)
 	query := `
 		WITH RECURSIVE top_states AS (
@@ -100,7 +100,7 @@ func (d *daoPgx) SelectRecByID(source sd.Source, termID identity.ADT) (ExpRec, e
 	return statesToTermRec(type_term_states, type_term_states[termID.String()])
 }
 
-func (d *daoPgx) SelectEnv(source sd.Source, termIDs []identity.ADT) (map[identity.ADT]ExpRec, error) {
+func (d *daoPgx) SelectEnv(source db.Source, termIDs []identity.ADT) (map[identity.ADT]ExpRec, error) {
 	recs, err := d.SelectRecsByIDs(source, termIDs)
 	if err != nil {
 		return nil, err
@@ -112,8 +112,8 @@ func (d *daoPgx) SelectEnv(source sd.Source, termIDs []identity.ADT) (map[identi
 	return env, nil
 }
 
-func (d *daoPgx) SelectRecsByIDs(source sd.Source, termIDs []identity.ADT) (_ []ExpRec, err error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) SelectRecsByIDs(source db.Source, termIDs []identity.ADT) (_ []ExpRec, err error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	batch := pgx.Batch{}
 	for _, termID := range termIDs {
 		batch.Queue(selectByID, termID.String())

@@ -30,43 +30,43 @@ func (dto ExpSpecME) Validate() error {
 
 func (dto CloseSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.X, validation.Required),
+		validation.Field(&dto.CommPH, validation.Required),
 	)
 }
 
 func (dto WaitSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.X, validation.Required),
+		validation.Field(&dto.CommPH, validation.Required),
 		validation.Field(&dto.ContES, validation.Required),
 	)
 }
 
 func (dto SendSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.X, validation.Required),
-		validation.Field(&dto.Y, validation.Required),
+		validation.Field(&dto.CommPH, validation.Required),
+		validation.Field(&dto.ValPH, validation.Required),
 	)
 }
 
 func (dto RecvSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.X, validation.Required),
-		validation.Field(&dto.Y, validation.Required),
+		validation.Field(&dto.CommPH, validation.Required),
+		validation.Field(&dto.BindPH, validation.Required),
 		validation.Field(&dto.ContES, validation.Required),
 	)
 }
 
 func (dto LabSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.X, validation.Required),
+		validation.Field(&dto.CommPH, validation.Required),
 		validation.Field(&dto.Label, qualsym.Required...),
 	)
 }
 
 func (dto CaseSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.X, validation.Required),
-		validation.Field(&dto.Brs,
+		validation.Field(&dto.CommPH, validation.Required),
+		validation.Field(&dto.ContBSs,
 			validation.Required,
 			validation.Length(1, 10),
 			validation.Each(validation.Required),
@@ -83,17 +83,17 @@ func (dto BranchSpecME) Validate() error {
 
 func (dto CallSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.X, validation.Required),
+		validation.Field(&dto.CommPH, validation.Required),
 		validation.Field(&dto.ProcQN, identity.Required...),
-		validation.Field(&dto.Ys, termctx.Optional...),
+		validation.Field(&dto.ValPHs, termctx.Optional...),
 	)
 }
 
 func (dto SpawnSpecME) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.X, validation.Required),
+		validation.Field(&dto.CommPH, validation.Required),
 		validation.Field(&dto.DecID, identity.Required...),
-		validation.Field(&dto.Ys, termctx.Optional...),
+		validation.Field(&dto.BindPHs, termctx.Optional...),
 	)
 }
 

@@ -1,4 +1,4 @@
-package sd
+package db
 
 import (
 	"context"
@@ -7,7 +7,13 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"orglang/orglang/adt/identity"
 )
+
+type Selector interface {
+	Select(id identity.ADT)
+}
 
 type Source interface {
 	source()

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/procdec"
@@ -142,7 +142,7 @@ type Bnd struct {
 
 type service struct {
 	procs    execRepo
-	operator sd.Operator
+	operator db.Operator
 	log      *slog.Logger
 }
 
@@ -153,7 +153,7 @@ func newAPI() API {
 
 func newService(
 	procs execRepo,
-	operator sd.Operator,
+	operator db.Operator,
 	l *slog.Logger,
 ) *service {
 	return &service{procs, operator, l}
@@ -164,7 +164,7 @@ func (s *service) Run(spec ExecSpec) (err error) {
 	s.log.Debug("creation started", idAttr)
 	ctx := context.Background()
 	var mainCfg MainCfg
-	err = s.operator.Implicit(ctx, func(ds sd.Source) error {
+	err = s.operator.Implicit(ctx, func(ds db.Source) error {
 		mainCfg, err = s.procs.SelectMain(ds, spec.ExecID)
 		return err
 	})
@@ -183,7 +183,7 @@ func (s *service) Run(spec ExecSpec) (err error) {
 		s.log.Error("creation failed", idAttr)
 		return err
 	}
-	err = s.operator.Explicit(ctx, func(ds sd.Source) error {
+	err = s.operator.Explicit(ctx, func(ds db.Source) error {
 		err = s.procs.UpdateMain(ds, mainMod)
 		if err != nil {
 			s.log.Error("creation failed", idAttr)
@@ -246,18 +246,18 @@ func (s *service) createWith(
 	_ error,
 ) {
 	switch termSpec := ts.(type) {
-	case procexp.CallSpecOld:
-		viaCord, ok := procCfg.Bnds[termSpec.X]
+	case procexp.CallSpec:
+		viaCord, ok := procCfg.Bnds[termSpec.CommPH]
 		if !ok {
-			err := procdef.ErrMissingInCfg(termSpec.X)
+			err := procdef.ErrMissingInCfg(termSpec.CommPH)
 			s.log.Error("coordination failed")
 			return MainMod{}, err
 		}
 		viaAttr := slog.Any("cordID", viaCord.CordID)
-		for _, chnlPH := range termSpec.Ys {
+		for _, valPH := range termSpec.ValPHs {
 			sndrValBnd := Bnd{
 				ProcID: procCfg.ExecID,
-				ChnlPH: chnlPH,
+				ChnlPH: valPH,
 				ProcRN: -procCfg.ExecRN.Next(),
 			}
 			procMod.Bnds = append(procMod.Bnds, sndrValBnd)
@@ -271,7 +271,7 @@ func (s *service) createWith(
 		}
 		s.log.Debug("coordination succeed")
 		return procMod, nil
-	case procexp.SpawnSpecOld:
+	case procexp.SpawnSpec:
 		s.log.Debug("coordination succeed")
 		return procMod, nil
 	default:

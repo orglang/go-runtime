@@ -6,8 +6,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"orglang/orglang/lib/db"
 	"orglang/orglang/lib/lf"
-	"orglang/orglang/lib/sd"
 
 	"orglang/orglang/adt/identity"
 )
@@ -26,11 +26,11 @@ func newDaoPgx(l *slog.Logger) *daoPgx {
 	return &daoPgx{l}
 }
 
-func (d *daoPgx) SelectMain(sd.Source, identity.ADT) (MainCfg, error) {
+func (d *daoPgx) SelectMain(db.Source, identity.ADT) (MainCfg, error) {
 	return MainCfg{}, nil
 }
 
-func (d *daoPgx) UpdateMain(sd.Source, MainMod) error {
+func (d *daoPgx) UpdateMain(db.Source, MainMod) error {
 	return nil
 }
 
@@ -43,8 +43,8 @@ func newRepo2() SemRepo {
 	return &daoPgx2{}
 }
 
-func (d *daoPgx2) InsertSem(source sd.Source, roots ...SemRec) error {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx2) InsertSem(source db.Source, roots ...SemRec) error {
+	ds := db.MustConform[db.SourcePgx](source)
 	dtos, err := DataFromSemRecs(roots)
 	if err != nil {
 		d.log.Error("model mapping failed")
@@ -77,7 +77,7 @@ func (d *daoPgx2) InsertSem(source sd.Source, roots ...SemRec) error {
 	return nil
 }
 
-func (d *daoPgx2) SelectSemByID(source sd.Source, rid identity.ADT) (SemRec, error) {
+func (d *daoPgx2) SelectSemByID(source db.Source, rid identity.ADT) (SemRec, error) {
 	query := `
 		SELECT
 			id, kind, pid, vid, spec
@@ -86,8 +86,8 @@ func (d *daoPgx2) SelectSemByID(source sd.Source, rid identity.ADT) (SemRec, err
 	return d.execute(source, query, rid.String())
 }
 
-func (d *daoPgx2) execute(source sd.Source, query string, arg string) (SemRec, error) {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx2) execute(source db.Source, query string, arg string) (SemRec, error) {
+	ds := db.MustConform[db.SourcePgx](source)
 	rows, err := ds.Conn.Query(ds.Ctx, query, arg)
 	if err != nil {
 		d.log.Error("query execution failed", slog.String("q", query))

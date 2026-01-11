@@ -4,12 +4,12 @@ import (
 	"go.uber.org/fx"
 )
 
-var Module = fx.Module("lib/ws", // web server
+var Module = fx.Module("lib/ws",
 	fx.Provide(
-		newServerEcho,
+		newEchoServer,
 	),
 	fx.Provide(
 		fx.Private,
-		newExchangePC,
+		newExchangeCS,
 	),
 )

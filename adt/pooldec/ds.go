@@ -1,10 +1,10 @@
 package pooldec
 
 import (
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 )
 
 // Port
 type repo interface {
-	Insert(sd.Source, decRec) error
+	Insert(db.Source, decRec) error
 }

@@ -3,20 +3,20 @@ package procexec
 import (
 	"database/sql"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/procexp"
 )
 
 type execRepo interface {
-	SelectMain(sd.Source, identity.ADT) (MainCfg, error)
-	UpdateMain(sd.Source, MainMod) error
+	SelectMain(db.Source, identity.ADT) (MainCfg, error)
+	UpdateMain(db.Source, MainMod) error
 }
 
 type SemRepo interface {
-	InsertSem(sd.Source, ...SemRec) error
-	SelectSemByID(sd.Source, identity.ADT) (SemRec, error)
+	InsertSem(db.Source, ...SemRec) error
+	SelectSemByID(db.Source, identity.ADT) (SemRec, error)
 }
 
 type modDS struct {

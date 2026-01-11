@@ -7,25 +7,19 @@ import (
 )
 
 // Client-side secondary adapter
-type sdkResty struct {
-	resty *resty.Client
+type RestySDK struct {
+	Client *resty.Client
 }
 
-func newSdkResty() *sdkResty {
-	r := resty.New().SetBaseURL("http://localhost:8080/api/v1")
-	return &sdkResty{r}
+func NewRestySDK(client *resty.Client) *RestySDK {
+	return &RestySDK{client}
 }
 
-func NewAPI() API {
-	return newSdkResty()
-}
-
-func (cl *sdkResty) Run(spec ExecSpec) error {
-	req := MsgFromExecSpec(spec)
+func (sdk *RestySDK) Run(spec ExecSpecME) error {
 	var res ExecRefME
-	_, err := cl.resty.R().
-		SetPathParam("id", spec.ExecID.String()).
-		SetBody(&req).
+	_, err := sdk.Client.R().
+		SetPathParam("id", spec.ExecID).
+		SetBody(&spec).
 		SetResult(&res).
 		Post("/procs/{id}/calls")
 	if err != nil {
@@ -34,14 +28,14 @@ func (cl *sdkResty) Run(spec ExecSpec) error {
 	return nil
 }
 
-func (cl *sdkResty) Retrieve(procID identity.ADT) (ExecSnap, error) {
+func (sdk *RestySDK) Retrieve(procID identity.ADT) (ExecSnapME, error) {
 	var res ExecSnapME
-	_, err := cl.resty.R().
+	_, err := sdk.Client.R().
 		SetPathParam("id", procID.String()).
 		SetResult(&res).
 		Get("/procs/{id}")
 	if err != nil {
-		return ExecSnap{}, err
+		return ExecSnapME{}, err
 	}
-	return MsgToExecSnap(res)
+	return res, nil
 }

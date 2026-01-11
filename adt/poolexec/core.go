@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/polarity"
@@ -69,7 +69,7 @@ type service struct {
 	procs    procdec.Repo
 	types    typedef.Repo
 	terms    typeexp.Repo
-	operator sd.Operator
+	operator db.Operator
 	log      *slog.Logger
 }
 
@@ -83,7 +83,7 @@ func newService(
 	procs procdec.Repo,
 	types typedef.Repo,
 	terms typeexp.Repo,
-	operator sd.Operator,
+	operator db.Operator,
 	l *slog.Logger,
 ) *service {
 	return &service{pools, procs, types, terms, operator, l}
@@ -103,7 +103,7 @@ func (s *service) Create(spec ExecSpec) (ExecRef, error) {
 		ProcID: impl.ProcID,
 		PoolRN: impl.PoolRN,
 	}
-	err := s.operator.Explicit(ctx, func(ds sd.Source) error {
+	err := s.operator.Explicit(ctx, func(ds db.Source) error {
 		err := s.pools.Insert(ds, impl)
 		if err != nil {
 			s.log.Error("creation failed")
@@ -144,7 +144,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 	termSpec := spec.ProcES
 	for termSpec != nil {
 		var procCfg procexec.Cfg
-		err = s.operator.Implicit(ctx, func(ds sd.Source) error {
+		err = s.operator.Implicit(ctx, func(ds db.Source) error {
 			procCfg, err = s.pools.SelectProc(ds, procID)
 			return err
 		})
@@ -157,7 +157,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 		}
 		sigIDs := procexp.CollectEnv(termSpec)
 		var sigs map[identity.ADT]procdec.DecRec
-		err = s.operator.Implicit(ctx, func(ds sd.Source) error {
+		err = s.operator.Implicit(ctx, func(ds db.Source) error {
 			sigs, err = s.procs.SelectEnv(ds, sigIDs)
 			return err
 		})
@@ -167,7 +167,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 		}
 		typeQNs := procdec.CollectEnv(maps.Values(sigs))
 		var types map[qualsym.ADT]typedef.DefRec
-		err = s.operator.Implicit(ctx, func(ds sd.Source) error {
+		err = s.operator.Implicit(ctx, func(ds db.Source) error {
 			types, err = s.types.SelectEnv(ds, typeQNs)
 			return err
 		})
@@ -178,7 +178,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 		envIDs := typedef.CollectEnv(maps.Values(types))
 		ctxIDs := CollectCtx(maps.Values(procCfg.Chnls))
 		var terms map[identity.ADT]typeexp.ExpRec
-		err = s.operator.Implicit(ctx, func(ds sd.Source) error {
+		err = s.operator.Implicit(ctx, func(ds db.Source) error {
 			terms, err = s.terms.SelectEnv(ds, append(envIDs, ctxIDs...))
 			return err
 		})
@@ -200,7 +200,7 @@ func (s *service) Take(spec StepSpec) (err error) {
 			s.log.Error("taking failed", idAttr)
 			return err
 		}
-		err = s.operator.Explicit(ctx, func(ds sd.Source) error {
+		err = s.operator.Explicit(ctx, func(ds db.Source) error {
 			err = s.pools.UpdateProc(ds, procMod)
 			if err != nil {
 				s.log.Error("taking failed", idAttr)
@@ -881,7 +881,7 @@ func (s *service) takeWith(
 
 func (s *service) Retrieve(poolID identity.ADT) (snap ExecSnap, err error) {
 	ctx := context.Background()
-	err = s.operator.Implicit(ctx, func(ds sd.Source) error {
+	err = s.operator.Implicit(ctx, func(ds db.Source) error {
 		snap, err = s.pools.SelectSubs(ds, poolID)
 		return err
 	})
@@ -894,7 +894,7 @@ func (s *service) Retrieve(poolID identity.ADT) (snap ExecSnap, err error) {
 
 func (s *service) RetreiveRefs() (refs []ExecRef, err error) {
 	ctx := context.Background()
-	err = s.operator.Implicit(ctx, func(ds sd.Source) error {
+	err = s.operator.Implicit(ctx, func(ds db.Source) error {
 		refs, err = s.pools.SelectRefs(ds)
 		return err
 	})

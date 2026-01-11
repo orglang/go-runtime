@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 )
 
 type daoPgx struct {
@@ -24,8 +24,8 @@ func newRepo() Repo {
 	return &daoPgx{}
 }
 
-func (d *daoPgx) Insert(source sd.Source, root DecRec) error {
-	ds := sd.MustConform[sd.SourcePgx](source)
+func (d *daoPgx) Insert(source db.Source, root DecRec) error {
+	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("id", root.DecID)
 	dto, err := DataFromDecRec(root)
 	if err != nil {

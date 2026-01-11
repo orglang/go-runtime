@@ -1,11 +1,11 @@
 package syndec
 
 import (
-	"orglang/orglang/lib/sd"
+	"orglang/orglang/lib/db"
 )
 
 type Repo interface {
-	Insert(sd.Source, DecRec) error
+	Insert(db.Source, DecRec) error
 }
 
 type decRecDS struct {

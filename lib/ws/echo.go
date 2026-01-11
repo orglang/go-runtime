@@ -10,9 +10,9 @@ import (
 	"go.uber.org/fx"
 )
 
-func newServerEcho(pc exchangePC, l *slog.Logger, lc fx.Lifecycle) *echo.Echo {
+func newEchoServer(dto exchangeCS, l *slog.Logger, lc fx.Lifecycle) *echo.Echo {
 	e := echo.New()
-	log := l.With(slog.String("name", "serverEcho"))
+	log := l.With(slog.String("name", "echoServer"))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogMethod:   true,
 		LogURI:      true,
@@ -34,7 +34,7 @@ func newServerEcho(pc exchangePC, l *slog.Logger, lc fx.Lifecycle) *echo.Echo {
 	lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				go e.Start(fmt.Sprintf(":%v", pc.Protocol.Http.Port))
+				go e.Start(fmt.Sprintf(":%v", dto.Protocol.Http.Port))
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
