@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"math"
+	"reflect"
 
 	"github.com/jackc/pgx/v5"
 
@@ -19,7 +20,8 @@ type pgxDAO struct {
 }
 
 func newPgxDAO(l *slog.Logger) *pgxDAO {
-	return &pgxDAO{l}
+	name := slog.String("name", reflect.TypeFor[pgxDAO]().Name())
+	return &pgxDAO{l.With(name)}
 }
 
 // for compilation purposes

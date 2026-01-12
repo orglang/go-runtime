@@ -20,8 +20,9 @@ var (
 // goverter:extend orglang/orglang/adt/procdef:Data.*
 // goverter:extend data.*
 var (
-	DataFromMod     func(Mod) (modDS, error)
-	DataFromBnd     func(Bnd) bndDS
-	DataToSemRecs   func([]SemRecDS) ([]SemRec, error)
-	DataFromSemRecs func([]SemRec) ([]SemRecDS, error)
+	DataFromMod  func(Mod) (modDS, error)
+	DataFromBnd  func(Bnd) bindDS
+	DataToLiab   func(liabDS) (Liab, error)
+	DataFromLiab func(Liab) liabDS
+	DataToEPs    func([]epDS) ([]EP, error)
 )

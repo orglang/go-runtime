@@ -3,10 +3,13 @@ package procexec
 import (
 	"log/slog"
 	"net/http"
+	"reflect"
 
 	"github.com/labstack/echo/v4"
 
 	"orglang/orglang/adt/identity"
+	"orglang/orglang/adt/procstep"
+	"orglang/orglang/lib/lf"
 )
 
 // Server-side primary adapter
@@ -21,7 +24,8 @@ func newEchoHandler(a API, l *slog.Logger) *echoHandler {
 
 func cfgEchoHandler(e *echo.Echo, h *echoHandler) error {
 	e.GET("/api/v1/procs/:id", h.GetSnap)
-	e.POST("/api/v1/procs/:id/calls", h.PostCall)
+	e.POST("/api/v1/procs/:id/execs", h.PostCall)
+	e.POST("/api/v1/pools/:id/steps", h.PostOne)
 	return nil
 }
 
@@ -59,6 +63,32 @@ func (h *echoHandler) PostCall(c echo.Context) error {
 	runningErr := h.api.Run(spec)
 	if runningErr != nil {
 		return runningErr
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+func (h *echoHandler) PostOne(c echo.Context) error {
+	var dto procstep.StepSpecME
+	bindingErr := c.Bind(&dto)
+	if bindingErr != nil {
+		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
+		return bindingErr
+	}
+	ctx := c.Request().Context()
+	h.log.Log(ctx, lf.LevelTrace, "posting started", slog.Any("dto", dto))
+	validationErr := dto.Validate()
+	if validationErr != nil {
+		h.log.Error("validation failed", slog.Any("dto", dto))
+		return validationErr
+	}
+	spec, conversionErr := procstep.MsgToStepSpec(dto)
+	if conversionErr != nil {
+		h.log.Error("conversion failed", slog.Any("dto", dto))
+		return conversionErr
+	}
+	takingErr := h.api.Take(spec)
+	if takingErr != nil {
+		return takingErr
 	}
 	return c.NoContent(http.StatusOK)
 }

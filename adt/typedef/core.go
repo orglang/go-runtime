@@ -3,6 +3,7 @@ package typedef
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log/slog"
 
 	"orglang/orglang/lib/db"
@@ -119,7 +120,7 @@ func (s *service) Create(spec DefSpec) (_ DefSnap, err error) {
 		if err != nil {
 			return err
 		}
-		err = s.typeExps.Insert(ds, newTerm)
+		err = s.typeExps.InsertRec(ds, newTerm)
 		if err != nil {
 			return err
 		}
@@ -170,7 +171,7 @@ func (s *service) Modify(snap DefSnap) (_ DefSnap, err error) {
 	s.operator.Explicit(ctx, func(ds db.Source) error {
 		if typeexp.CheckSpec(snap.TypeES, curSnap.TypeES) != nil {
 			newTerm := typeexp.ConvertSpecToRec(snap.TypeES)
-			err = s.typeExps.Insert(ds, newTerm)
+			err = s.typeExps.InsertRec(ds, newTerm)
 			if err != nil {
 				return err
 			}
@@ -239,9 +240,9 @@ func (s *service) RetreiveRefs() (refs []DefRef, err error) {
 	return refs, nil
 }
 
-func CollectEnv(recs []DefRec) []identity.ADT {
+func CollectEnv(recs iter.Seq[DefRec]) []identity.ADT {
 	termIDs := []identity.ADT{}
-	for _, r := range recs {
+	for r := range recs {
 		termIDs = append(termIDs, r.ExpID)
 	}
 	return termIDs

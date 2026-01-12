@@ -234,17 +234,17 @@ func DataFromTermRef(ref ExpRef) *ExpRefDS {
 	rid := ref.Ident().String()
 	switch ref.(type) {
 	case OneRef, OneRec:
-		return &ExpRefDS{K: oneKind, ExpID: rid}
+		return &ExpRefDS{K: oneExp, ExpID: rid}
 	case LinkRef, LinkRec:
-		return &ExpRefDS{K: linkKind, ExpID: rid}
+		return &ExpRefDS{K: linkExp, ExpID: rid}
 	case TensorRef, TensorRec:
-		return &ExpRefDS{K: tensorKind, ExpID: rid}
+		return &ExpRefDS{K: tensorExp, ExpID: rid}
 	case LolliRef, LolliRec:
-		return &ExpRefDS{K: lolliKind, ExpID: rid}
+		return &ExpRefDS{K: lolliExp, ExpID: rid}
 	case PlusRef, PlusRec:
-		return &ExpRefDS{K: plusKind, ExpID: rid}
+		return &ExpRefDS{K: plusExp, ExpID: rid}
 	case WithRef, WithRec:
-		return &ExpRefDS{K: withKind, ExpID: rid}
+		return &ExpRefDS{K: withExp, ExpID: rid}
 	default:
 		panic(ErrRefTypeUnexpected(ref))
 	}
@@ -259,17 +259,17 @@ func DataToTermRef(dto *ExpRefDS) (ExpRef, error) {
 		return nil, err
 	}
 	switch dto.K {
-	case oneKind:
+	case oneExp:
 		return OneRef{rid}, nil
-	case linkKind:
+	case linkExp:
 		return LinkRef{rid}, nil
-	case tensorKind:
+	case tensorExp:
 		return TensorRef{rid}, nil
-	case lolliKind:
+	case lolliExp:
 		return LolliRef{rid}, nil
-	case plusKind:
+	case plusExp:
 		return PlusRef{rid}, nil
-	case withKind:
+	case withExp:
 		return WithRef{rid}, nil
 	default:
 		panic(errUnexpectedKind(dto.K))
@@ -302,15 +302,15 @@ func statesToTermRec(states map[string]stateDS, st stateDS) (ExpRec, error) {
 		return nil, err
 	}
 	switch st.K {
-	case oneKind:
+	case oneExp:
 		return OneRec{ExpID: stID}, nil
-	case linkKind:
+	case linkExp:
 		roleQN, err := qualsym.ConvertFromString(st.Spec.Link)
 		if err != nil {
 			return nil, err
 		}
 		return LinkRec{ExpID: stID, TypeQN: roleQN}, nil
-	case tensorKind:
+	case tensorExp:
 		b, err := statesToTermRec(states, states[st.Spec.Tensor.ValES])
 		if err != nil {
 			return nil, err
@@ -320,7 +320,7 @@ func statesToTermRec(states map[string]stateDS, st stateDS) (ExpRec, error) {
 			return nil, err
 		}
 		return TensorRec{ExpID: stID, Y: b, Z: c}, nil
-	case lolliKind:
+	case lolliExp:
 		y, err := statesToTermRec(states, states[st.Spec.Lolli.ValES])
 		if err != nil {
 			return nil, err
@@ -330,7 +330,7 @@ func statesToTermRec(states map[string]stateDS, st stateDS) (ExpRec, error) {
 			return nil, err
 		}
 		return LolliRec{ExpID: stID, Y: y, Z: z}, nil
-	case plusKind:
+	case plusExp:
 		choices := make(map[qualsym.ADT]ExpRec, len(st.Spec.Plus))
 		for _, ch := range st.Spec.Plus {
 			choice, err := statesToTermRec(states, states[ch.ContES])
@@ -340,7 +340,7 @@ func statesToTermRec(states map[string]stateDS, st stateDS) (ExpRec, error) {
 			choices[qualsym.ADT(ch.Lab)] = choice
 		}
 		return PlusRec{ExpID: stID, Zs: choices}, nil
-	case withKind:
+	case withExp:
 		choices := make(map[qualsym.ADT]ExpRec, len(st.Spec.With))
 		for _, ch := range st.Spec.With {
 			choice, err := statesToTermRec(states, states[ch.ContES])
@@ -363,13 +363,13 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 	stID := r.Ident().String()
 	switch root := r.(type) {
 	case OneRec:
-		st := stateDS{ExpID: stID, K: oneKind, FromID: fromID}
+		st := stateDS{ExpID: stID, K: oneExp, FromID: fromID}
 		dto.States = append(dto.States, st)
 		return stID, nil
 	case LinkRec:
 		st := stateDS{
 			ExpID:  stID,
-			K:      linkKind,
+			K:      linkExp,
 			FromID: fromID,
 			Spec: expSpecDS{
 				Link: qualsym.ConvertToString(root.TypeQN),
@@ -388,7 +388,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 		}
 		st := stateDS{
 			ExpID:  stID,
-			K:      tensorKind,
+			K:      tensorExp,
 			FromID: fromID,
 			Spec: expSpecDS{
 				Tensor: &prodDS{val, cont},
@@ -407,7 +407,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 		}
 		st := stateDS{
 			ExpID:  stID,
-			K:      lolliKind,
+			K:      lolliExp,
 			FromID: fromID,
 			Spec: expSpecDS{
 				Lolli: &prodDS{val, cont},
@@ -426,7 +426,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 		}
 		st := stateDS{
 			ExpID:  stID,
-			K:      plusKind,
+			K:      plusExp,
 			FromID: fromID,
 			Spec:   expSpecDS{Plus: choices},
 		}
@@ -443,7 +443,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 		}
 		st := stateDS{
 			ExpID:  stID,
-			K:      withKind,
+			K:      withExp,
 			FromID: fromID,
 			Spec:   expSpecDS{With: choices},
 		}

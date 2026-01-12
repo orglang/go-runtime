@@ -12,47 +12,47 @@ type ExpSpec interface {
 }
 
 type CloseSpec struct {
-	CommPH qualsym.ADT
+	CommChnlPH qualsym.ADT
 }
 
-func (s CloseSpec) Via() qualsym.ADT { return s.CommPH }
+func (s CloseSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type WaitSpec struct {
-	CommPH qualsym.ADT
-	ContES ExpSpec
+	CommChnlPH qualsym.ADT
+	ContES     ExpSpec
 }
 
-func (s WaitSpec) Via() qualsym.ADT { return s.CommPH }
+func (s WaitSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type SendSpec struct {
-	CommPH qualsym.ADT // via
-	ValPH  qualsym.ADT // val
+	CommChnlPH qualsym.ADT
+	ValChnlPH  qualsym.ADT
 }
 
-func (s SendSpec) Via() qualsym.ADT { return s.CommPH }
+func (s SendSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type RecvSpec struct {
-	CommPH qualsym.ADT
-	BindPH qualsym.ADT
-	ContES ExpSpec
+	CommChnlPH qualsym.ADT
+	BindChnlPH qualsym.ADT
+	ContES     ExpSpec
 }
 
-func (s RecvSpec) Via() qualsym.ADT { return s.CommPH }
+func (s RecvSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type LabSpec struct {
-	CommPH qualsym.ADT
-	Label  qualsym.ADT
-	ContES ExpSpec
+	CommChnlPH qualsym.ADT
+	LabelQN    qualsym.ADT
+	ContES     ExpSpec
 }
 
-func (s LabSpec) Via() qualsym.ADT { return s.CommPH }
+func (s LabSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type CaseSpec struct {
-	CommPH  qualsym.ADT
-	ContESs map[qualsym.ADT]ExpSpec
+	CommChnlPH qualsym.ADT
+	ContESs    map[qualsym.ADT]ExpSpec
 }
 
-func (s CaseSpec) Via() qualsym.ADT { return s.CommPH }
+func (s CaseSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 // aka ExpName
 type LinkSpec struct {
@@ -64,21 +64,21 @@ type LinkSpec struct {
 func (s LinkSpec) Via() qualsym.ADT { return "" }
 
 type FwdSpec struct {
-	X qualsym.ADT // old via (from)
-	Y qualsym.ADT // new via (to)
+	CommChnlPH qualsym.ADT // old via (from)
+	ContChnlPH qualsym.ADT // new via (to)
 }
 
-func (s FwdSpec) Via() qualsym.ADT { return s.X }
+func (s FwdSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type CallSpec struct {
-	CommPH qualsym.ADT
-	BindPH qualsym.ADT
-	ProcQN qualsym.ADT
-	ValPHs []qualsym.ADT // channel bulk
-	ContES ExpSpec
+	CommChnlPH qualsym.ADT
+	BindChnlPH qualsym.ADT
+	ProcQN     qualsym.ADT
+	ValChnlPHs []qualsym.ADT // channel bulk
+	ContES     ExpSpec
 }
 
-func (s CallSpec) Via() qualsym.ADT { return s.CommPH }
+func (s CallSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 // аналог RecvSpec, но значения принимаются балком
 type SpawnSpecOld struct {
@@ -92,39 +92,39 @@ type SpawnSpecOld struct {
 func (s SpawnSpecOld) Via() qualsym.ADT { return s.X }
 
 type SpawnSpec struct {
-	CommPH  qualsym.ADT
-	ProcQN  qualsym.ADT
-	BindPHs []qualsym.ADT
-	ContES  ExpSpec
+	CommChnlPH  qualsym.ADT
+	ProcQN      qualsym.ADT
+	BindChnlPHs []qualsym.ADT
+	ContES      ExpSpec
 }
 
-func (s SpawnSpec) Via() qualsym.ADT { return s.CommPH }
+func (s SpawnSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type AcqureSpec struct {
-	CommPH qualsym.ADT
-	ContES ExpSpec
+	CommChnlPH qualsym.ADT
+	ContES     ExpSpec
 }
 
-func (s AcqureSpec) Via() qualsym.ADT { return s.CommPH }
+func (s AcqureSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type AcceptSpec struct {
-	CommPH qualsym.ADT
-	ContES ExpSpec
+	CommChnlPH qualsym.ADT
+	ContES     ExpSpec
 }
 
-func (s AcceptSpec) Via() qualsym.ADT { return s.CommPH }
+func (s AcceptSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type DetachSpec struct {
-	CommPH qualsym.ADT
+	CommChnlPH qualsym.ADT
 }
 
-func (s DetachSpec) Via() qualsym.ADT { return s.CommPH }
+func (s DetachSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type ReleaseSpec struct {
-	CommPH qualsym.ADT
+	CommChnlPH qualsym.ADT
 }
 
-func (s ReleaseSpec) Via() qualsym.ADT { return s.CommPH }
+func (s ReleaseSpec) Via() qualsym.ADT { return s.CommChnlPH }
 
 type ExpRec interface {
 	ExpSpec
@@ -132,70 +132,70 @@ type ExpRec interface {
 }
 
 type CloseRec struct {
-	X qualsym.ADT
+	CommChnlPH qualsym.ADT
 }
 
-func (r CloseRec) Via() qualsym.ADT { return r.X }
+func (r CloseRec) Via() qualsym.ADT { return r.CommChnlPH }
 
 func (CloseRec) impl() {}
 
 type WaitRec struct {
-	X      qualsym.ADT
-	ContES ExpSpec
+	CommChnlPH qualsym.ADT
+	ContES     ExpSpec
 }
 
-func (r WaitRec) Via() qualsym.ADT { return r.X }
+func (r WaitRec) Via() qualsym.ADT { return r.CommChnlPH }
 
 func (WaitRec) impl() {}
 
 type SendRec struct {
-	X     qualsym.ADT
-	A     identity.ADT
-	B     identity.ADT
-	ExpID identity.ADT
+	CommChnlPH qualsym.ADT
+	ContChnlID identity.ADT
+	ValChnlID  identity.ADT
+	ValExpID   identity.ADT
 }
 
-func (r SendRec) Via() qualsym.ADT { return r.X }
+func (r SendRec) Via() qualsym.ADT { return r.CommChnlPH }
 
 func (SendRec) impl() {}
 
 type RecvRec struct {
-	X      qualsym.ADT
-	A      identity.ADT
-	Y      qualsym.ADT
-	ContES ExpSpec
+	CommChnlPH qualsym.ADT
+	ContChnlID identity.ADT
+	ValChnlPH  qualsym.ADT
+	ContES     ExpSpec
 }
 
-func (r RecvRec) Via() qualsym.ADT { return r.X }
+func (r RecvRec) Via() qualsym.ADT { return r.CommChnlPH }
 
 func (RecvRec) impl() {}
 
 type LabRec struct {
-	X     qualsym.ADT
-	A     identity.ADT
-	Label qualsym.ADT
+	CommChnlPH qualsym.ADT
+	ContChnlID identity.ADT
+	LabelQN    qualsym.ADT
 }
 
-func (r LabRec) Via() qualsym.ADT { return r.X }
+func (r LabRec) Via() qualsym.ADT { return r.CommChnlPH }
 
 func (LabRec) impl() {}
 
 type CaseRec struct {
-	X       qualsym.ADT
-	A       identity.ADT
-	ContESs map[qualsym.ADT]ExpSpec
+	CommChnlPH qualsym.ADT
+	ContChnlID identity.ADT
+	ContESs    map[qualsym.ADT]ExpSpec
 }
 
-func (r CaseRec) Via() qualsym.ADT { return r.X }
+func (r CaseRec) Via() qualsym.ADT { return r.CommChnlPH }
 
 func (CaseRec) impl() {}
 
 type FwdRec struct {
-	X qualsym.ADT
-	B identity.ADT // to
+	CommChnlPH qualsym.ADT
+	ContChnlID identity.ADT
 }
 
-func (r FwdRec) Via() qualsym.ADT { return r.X }
+func (r FwdRec) Via() qualsym.ADT { return r.CommChnlPH }
 
 func (FwdRec) impl() {}
 
@@ -203,8 +203,8 @@ func CollectEnv(spec ExpSpec) []identity.ADT {
 	return collectEnvRec(spec, []identity.ADT{})
 }
 
-func collectEnvRec(s ExpSpec, env []identity.ADT) []identity.ADT {
-	switch spec := s.(type) {
+func collectEnvRec(es ExpSpec, env []identity.ADT) []identity.ADT {
+	switch spec := es.(type) {
 	case RecvSpec:
 		return collectEnvRec(spec.ContES, env)
 	case CaseSpec:

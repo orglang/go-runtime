@@ -1,4 +1,4 @@
-package poolstep
+package procstep
 
 import (
 	"orglang/orglang/adt/procexp"
@@ -7,5 +7,5 @@ import (
 type StepSpecME struct {
 	ExecID string            `json:"exec_id"`
 	ProcID string            `json:"proc_id"`
-	Term   procexp.ExpSpecME `json:"term"`
+	ProcES procexp.ExpSpecME `json:"proc_es"`
 }

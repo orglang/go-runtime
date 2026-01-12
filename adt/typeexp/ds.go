@@ -9,7 +9,7 @@ import (
 )
 
 type Repo interface {
-	Insert(db.Source, ExpRec) error
+	InsertRec(db.Source, ExpRec) error
 	SelectRecByID(db.Source, identity.ADT) (ExpRec, error)
 	SelectRecsByIDs(db.Source, []identity.ADT) ([]ExpRec, error)
 	SelectEnv(db.Source, []identity.ADT) (map[identity.ADT]ExpRec, error)
@@ -18,13 +18,13 @@ type Repo interface {
 type expKindDS int
 
 const (
-	nonterm expKindDS = iota
-	oneKind
-	linkKind
-	tensorKind
-	lolliKind
-	plusKind
-	withKind
+	nonExp expKindDS = iota
+	oneExp
+	linkExp
+	tensorExp
+	lolliExp
+	plusExp
+	withExp
 )
 
 type ExpRefDS struct {

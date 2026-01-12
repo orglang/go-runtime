@@ -3,6 +3,7 @@ package procdec
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log/slog"
 
 	"orglang/orglang/lib/db"
@@ -143,9 +144,9 @@ func (s *service) RetreiveRefs() (refs []DecRef, err error) {
 	return refs, nil
 }
 
-func CollectEnv(recs []DecRec) []qualsym.ADT {
+func CollectEnv(recs iter.Seq[DecRec]) []qualsym.ADT {
 	typeQNs := []qualsym.ADT{}
-	for _, rec := range recs {
+	for rec := range recs {
 		typeQNs = append(typeQNs, rec.X.TypeQN)
 		for _, y := range rec.Ys {
 			typeQNs = append(typeQNs, y.TypeQN)

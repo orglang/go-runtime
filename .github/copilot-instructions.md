@@ -35,21 +35,21 @@ Repository structure reflects abstraction kinds.
 - `app`: Runnable program abstractions
   - `web`: Web application program
 - `adt`: Reusable data abstractions
-  - `typedef`: Type definition aggregate
-  - `typeexp`: Type expression value
-  - `procdec`: Process declaration aggregate
-  - `procdef`: Process definition entity
-  - `procexp`: Process expression value
-  - `procexec`: Process execution aggregate
+  - `identity`: Identification value
+  - `polarity`: Polarization value
   - `pooldec`: Pool declaration aggregate
   - `pooldef`: Pool definition entity
   - `poolexec`: Pool execution aggregate
-  - `syndec`: Synonym declaration value
-  - `termctx`: Term context value
-  - `identity`: Identification value
-  - `polarity`: Polarization value
+  - `procdec`: Process declaration aggregate
+  - `procdef`: Process definition entity
+  - `procexec`: Process execution aggregate
+  - `procexp`: Process expression value
   - `qualsym`: Qualified symbol value
   - `revnum`: Revision number value
+  - `syndec`: Synonym declaration value
+  - `termctx`: Term context value
+  - `typedef`: Type definition aggregate
+  - `typeexp`: Type expression value
 - `lib`: Reusable behavior abstractions
   - `db`: Database drivers
   - `kv`: Key-value store drivers

@@ -90,7 +90,7 @@ func (s *service) Run(spec ExecSpec) (ExecRef, error) {
 	}
 	liab := procexec.Liab{
 		PoolID: impl.ExecID,
-		ProcID: impl.ProcID,
+		ExecID: impl.ProcID,
 		PoolRN: impl.ExecRN,
 	}
 	err := s.operator.Explicit(ctx, func(ds db.Source) error {

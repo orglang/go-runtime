@@ -13,7 +13,7 @@ var Module = fx.Module("adt/procexec",
 	fx.Provide(
 		fx.Private,
 		newEchoHandler,
-		fx.Annotate(newPgxDAO, fx.As(new(execRepo))),
+		fx.Annotate(newPgxDAO, fx.As(new(Repo))),
 	),
 	fx.Invoke(
 		cfgEchoHandler,

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"reflect"
 
 	"github.com/jackc/pgx/v5"
 
@@ -19,7 +20,8 @@ type pgxDAO struct {
 }
 
 func newPgxDAO(l *slog.Logger) *pgxDAO {
-	return &pgxDAO{l}
+	name := slog.String("name", reflect.TypeFor[pgxDAO]().Name())
+	return &pgxDAO{l.With(name)}
 }
 
 // for compilation purposes
@@ -27,7 +29,7 @@ func newRepo() Repo {
 	return &pgxDAO{}
 }
 
-func (dao *pgxDAO) Insert(source db.Source, rec ExpRec) (err error) {
+func (dao *pgxDAO) InsertRec(source db.Source, rec ExpRec) (err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("termID", rec.Ident())
 	dto := DataFromTermRec(rec)

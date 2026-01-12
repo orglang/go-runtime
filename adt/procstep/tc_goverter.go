@@ -1,8 +1,4 @@
-package poolstep
-
-import (
-	"orglang/orglang/adt/procexec"
-)
+package procstep
 
 // goverter:variables
 // goverter:output:format assign-variable
@@ -17,7 +13,6 @@ var (
 // goverter:output:format assign-variable
 // goverter:extend orglang/orglang/adt/identity:Convert.*
 var (
-	DataToLiab   func(liabDS) (procexec.Liab, error)
-	DataFromLiab func(procexec.Liab) liabDS
-	DataToEPs    func([]epDS) ([]procexec.EP, error)
+	DataToSemRecs   func([]StepRecDS) ([]StepRec, error)
+	DataFromSemRecs func([]StepRec) ([]StepRecDS, error)
 )

@@ -11,6 +11,7 @@ import (
 
 	"orglang/orglang/adt/identity"
 	"orglang/orglang/adt/procexec"
+	"orglang/orglang/adt/procstep"
 	"orglang/orglang/adt/revnum"
 	"orglang/orglang/adt/termctx"
 )
@@ -90,12 +91,12 @@ func (dao *pgxDAO) SelectProc(source db.Source, procID identity.ADT) (procexec.C
 		return procexec.Cfg{}, err
 	}
 	defer stepRows.Close()
-	stepDtos, err := pgx.CollectRows(stepRows, pgx.RowToStructByName[procexec.SemRecDS])
+	stepDtos, err := pgx.CollectRows(stepRows, pgx.RowToStructByName[procstep.StepRecDS])
 	if err != nil {
 		dao.log.Error("collection failed", idAttr, slog.Any("t", reflect.TypeOf(stepDtos)))
 		return procexec.Cfg{}, err
 	}
-	steps, err := procexec.DataToSemRecs(stepDtos)
+	steps, err := procstep.DataToSemRecs(stepDtos)
 	if err != nil {
 		dao.log.Error("conversion failed", idAttr)
 		return procexec.Cfg{}, err
@@ -103,7 +104,7 @@ func (dao *pgxDAO) SelectProc(source db.Source, procID identity.ADT) (procexec.C
 	dao.log.Debug("selection succeed", idAttr)
 	return procexec.Cfg{
 		Chnls: termctx.IndexBy(procexec.ChnlPH, chnls),
-		Steps: termctx.IndexBy(procexec.ChnlID, steps),
+		Steps: termctx.IndexBy(procstep.ChnlID, steps),
 	}, nil
 }
 
@@ -119,9 +120,9 @@ func (dao *pgxDAO) UpdateProc(source db.Source, mod procexec.Mod) (err error) {
 	}
 	// bindings
 	bndReq := pgx.Batch{}
-	for _, dto := range dto.Bnds {
+	for _, dto := range dto.Binds {
 		args := pgx.NamedArgs{
-			"proc_id":  dto.ProcID,
+			"proc_id":  dto.ExecID,
 			"chnl_ph":  dto.ChnlPH,
 			"chnl_id":  dto.ChnlID,
 			"state_id": dto.StateID,
@@ -134,7 +135,7 @@ func (dao *pgxDAO) UpdateProc(source db.Source, mod procexec.Mod) (err error) {
 		defer func() {
 			err = errors.Join(err, bndRes.Close())
 		}()
-		for _, dto := range dto.Bnds {
+		for _, dto := range dto.Binds {
 			_, err = bndRes.Exec()
 			if err != nil {
 				dao.log.Error("execution failed", slog.Any("dto", dto))
@@ -151,7 +152,7 @@ func (dao *pgxDAO) UpdateProc(source db.Source, mod procexec.Mod) (err error) {
 			"proc_id": dto.PID,
 			"chnl_id": dto.VID,
 			"kind":    dto.K,
-			"spec":    dto.TR,
+			"spec":    dto.ProcER,
 		}
 		stepReq.Queue(insertStep, args)
 	}

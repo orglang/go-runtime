@@ -33,16 +33,16 @@ type ExpRecDS struct {
 type expKindDS int
 
 const (
-	nonexp = expKindDS(iota)
-	closeKind
-	waitKind
-	sendKind
-	recvKind
-	labKind
-	caseKind
-	linkKind
-	spawnKind
-	fwdKind
+	nonExp = expKindDS(iota)
+	closeExp
+	waitExp
+	sendExp
+	recvExp
+	labExp
+	caseExp
+	linkExp
+	spawnExp
+	fwdExp
 )
 
 type closeSpecDS struct {
