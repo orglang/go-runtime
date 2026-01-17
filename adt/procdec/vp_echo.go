@@ -6,12 +6,13 @@ import (
 	"reflect"
 
 	"github.com/labstack/echo/v4"
+	"github.com/orglang/go-sdk/adt/procdec"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/qualsym"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/qualsym"
 
-	"orglang/orglang/lib/lf"
-	"orglang/orglang/lib/te"
+	"orglang/go-runtime/lib/lf"
+	"orglang/go-runtime/lib/te"
 )
 
 // Adapter
@@ -79,7 +80,7 @@ func (p *echoPresenter) GetMany(c echo.Context) error {
 }
 
 func (p *echoPresenter) GetOne(c echo.Context) error {
-	var dto IdentME
+	var dto procdec.IdentME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		p.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))

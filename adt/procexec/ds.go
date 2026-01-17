@@ -1,10 +1,10 @@
 package procexec
 
 import (
-	"orglang/orglang/lib/db"
+	"orglang/go-runtime/lib/db"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/procstep"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/procstep"
 )
 
 type Repo interface {

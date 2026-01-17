@@ -1,7 +1,7 @@
 package syndec
 
 import (
-	"orglang/orglang/lib/db"
+	"orglang/go-runtime/lib/db"
 )
 
 type Repo interface {

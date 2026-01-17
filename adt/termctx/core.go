@@ -1,7 +1,7 @@
 package termctx
 
 import (
-	"orglang/orglang/adt/qualsym"
+	"orglang/go-runtime/adt/qualsym"
 )
 
 type ADT []BindClaim

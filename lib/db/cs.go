@@ -1,7 +1,7 @@
 package db
 
 import (
-	"orglang/orglang/lib/kv"
+	"orglang/go-runtime/lib/kv"
 )
 
 func newStorageCS(l kv.Loader) (storageCS, error) {

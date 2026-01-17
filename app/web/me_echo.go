@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/adt/typedef"
-	"orglang/orglang/lib/te"
+	"orglang/go-runtime/adt/typedef"
+	"orglang/go-runtime/lib/te"
 )
 
 // Adapter

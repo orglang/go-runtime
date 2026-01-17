@@ -7,9 +7,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/procstep"
-	"orglang/orglang/lib/lf"
+	"github.com/orglang/go-sdk/adt/procexec"
+	sdk "github.com/orglang/go-sdk/adt/procstep"
+
+	"orglang/go-runtime/lib/lf"
+
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/procstep"
 )
 
 // Server-side primary adapter
@@ -30,7 +34,7 @@ func cfgEchoHandler(e *echo.Echo, h *echoHandler) error {
 }
 
 func (h *echoHandler) GetSnap(c echo.Context) error {
-	var dto IdentME
+	var dto procexec.IdentME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", dto))
@@ -49,7 +53,7 @@ func (h *echoHandler) GetSnap(c echo.Context) error {
 }
 
 func (h *echoHandler) PostCall(c echo.Context) error {
-	var dto ExecSpecME
+	var dto procexec.ExecSpecME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", dto))
@@ -68,7 +72,7 @@ func (h *echoHandler) PostCall(c echo.Context) error {
 }
 
 func (h *echoHandler) PostOne(c echo.Context) error {
-	var dto procstep.StepSpecME
+	var dto sdk.StepSpecME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))

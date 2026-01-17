@@ -2,7 +2,7 @@ package eval
 
 import (
 	"errors"
-	a "orglang/orglang/proto/rast1/ast"
+	a "orglang/go-runtime/proto/rast1/ast"
 )
 
 type Value interface {

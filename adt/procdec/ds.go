@@ -1,10 +1,10 @@
 package procdec
 
 import (
-	"orglang/orglang/lib/db"
+	"orglang/go-runtime/lib/db"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/termctx"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/termctx"
 )
 
 type Repo interface {

@@ -3,12 +3,11 @@ package e2e
 import (
 	"github.com/go-resty/resty/v2"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/pooldec"
-	"orglang/orglang/adt/poolexec"
-	"orglang/orglang/adt/procdec"
-	"orglang/orglang/adt/procexec"
-	"orglang/orglang/adt/typedef"
+	"github.com/orglang/go-sdk/adt/pooldec"
+	"github.com/orglang/go-sdk/adt/poolexec"
+	"github.com/orglang/go-sdk/adt/procdec"
+	"github.com/orglang/go-sdk/adt/procexec"
+	"github.com/orglang/go-sdk/adt/typedef"
 )
 
 type PoolDecAPI interface {
@@ -20,9 +19,9 @@ func newPoolDecAPI(client *resty.Client) PoolDecAPI {
 }
 
 type PoolExecAPI interface {
-	Retrieve(identity.ADT) (poolexec.ExecSnap, error)
-	Create(poolexec.ExecSpec) (poolexec.ExecRef, error)
-	Poll(poolexec.PollSpec) (procexec.ExecRef, error)
+	Retrieve(string) (poolexec.ExecSnapME, error)
+	Create(poolexec.ExecSpecME) (poolexec.ExecRefME, error)
+	Poll(poolexec.PollSpecME) (procexec.ExecRefME, error)
 }
 
 func newPoolExecAPI(client *resty.Client) PoolExecAPI {
@@ -30,7 +29,7 @@ func newPoolExecAPI(client *resty.Client) PoolExecAPI {
 }
 
 type ProcDecAPI interface {
-	Create(procdec.DecSpec) (procdec.DecSnap, error)
+	Create(procdec.DecSpecME) (procdec.DecSnapME, error)
 }
 
 func newProcDecAPI(client *resty.Client) ProcDecAPI {
@@ -46,7 +45,7 @@ func newProcExecAPI(client *resty.Client) ProcExecAPI {
 }
 
 type TypeDefAPI interface {
-	Create(typedef.DefSpec) (typedef.DefSnap, error)
+	Create(typedef.DefSpecME) (typedef.DefSnapME, error)
 }
 
 func newTypeDefAPI(client *resty.Client) TypeDefAPI {

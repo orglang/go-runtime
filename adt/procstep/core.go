@@ -3,9 +3,9 @@ package procstep
 import (
 	"fmt"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/procexp"
-	"orglang/orglang/adt/revnum"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/procexp"
+	"orglang/go-runtime/adt/revnum"
 )
 
 type StepSpec struct {

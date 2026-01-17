@@ -1,7 +1,7 @@
 package pooldec
 
 import (
-	"orglang/orglang/lib/db"
+	"orglang/go-runtime/lib/db"
 )
 
 // Port

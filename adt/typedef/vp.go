@@ -1,6 +1,8 @@
 package typedef
 
-import "orglang/orglang/adt/typeexp"
+import (
+	"github.com/orglang/go-sdk/adt/typeexp"
+)
 
 type DefSpecVP struct {
 	TypeNS string `form:"ns" json:"ns"`

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"orglang/orglang/lib/db"
+	"orglang/go-runtime/lib/db"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/procexp"
-	"orglang/orglang/adt/qualsym"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/procexp"
+	"orglang/go-runtime/adt/qualsym"
 )
 
 type API interface {

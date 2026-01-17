@@ -3,7 +3,7 @@ package procstep
 import (
 	"fmt"
 
-	"orglang/orglang/adt/procexp"
+	"orglang/go-runtime/adt/procexp"
 )
 
 func dataFromStepRec(r StepRec) (StepRecDS, error) {

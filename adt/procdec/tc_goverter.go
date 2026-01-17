@@ -1,8 +1,10 @@
 package procdec
 
+import "github.com/orglang/go-sdk/adt/procdec"
+
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
 var (
 	ConvertSnapToRef func(DecSnap) DecRef
 	ConvertRecToRef  func(DecRec) DecRef
@@ -11,24 +13,24 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/qualsym:Convert.*
-// goverter:extend orglang/orglang/adt/termctx:Msg.*
-// goverter:extend orglang/orglang/adt/typedef:Msg.*
+// goverter:extend orglang/go-runtime/adt/qualsym:Convert.*
+// goverter:extend orglang/go-runtime/adt/termctx:Msg.*
+// goverter:extend orglang/go-runtime/adt/typedef:Msg.*
 var (
-	MsgToDecSpec    func(DecSpecME) (DecSpec, error)
-	MsgFromDecSpec  func(DecSpec) DecSpecME
-	MsgToDecRef     func(DecRefME) (DecRef, error)
-	MsgFromDecRef   func(DecRef) DecRefME
-	MsgToDecSnap    func(DecSnapME) (DecSnap, error)
-	MsgFromDecSnap  func(DecSnap) DecSnapME
-	MsgFromDecSnaps func([]DecSnap) []DecSnapME
+	MsgToDecSpec    func(procdec.DecSpecME) (DecSpec, error)
+	MsgFromDecSpec  func(DecSpec) procdec.DecSpecME
+	MsgToDecRef     func(procdec.DecRefME) (DecRef, error)
+	MsgFromDecRef   func(DecRef) procdec.DecRefME
+	MsgToDecSnap    func(procdec.DecSnapME) (DecSnap, error)
+	MsgFromDecSnap  func(DecSnap) procdec.DecSnapME
+	MsgFromDecSnaps func([]DecSnap) []procdec.DecSnapME
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/revnum:Convert.*
-// goverter:extend orglang/orglang/adt/typedef:Msg.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/revnum:Convert.*
+// goverter:extend orglang/go-runtime/adt/typedef:Msg.*
 // goverter:extend Msg.*
 var (
 	ViewFromDecRef  func(DecRef) DecRefVP
@@ -40,9 +42,9 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/termctx:Data.*
-// goverter:extend orglang/orglang/adt/typedef:Data.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/termctx:Data.*
+// goverter:extend orglang/go-runtime/adt/typedef:Data.*
 var (
 	DataToDecRef     func(decRefDS) (DecRef, error)
 	DataFromDecRef   func(DecRef) decRefDS

@@ -1,23 +1,25 @@
 package procexec
 
+import "github.com/orglang/go-sdk/adt/procexec"
+
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/procdef:Msg.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/procdef:Msg.*
 var (
-	MsgFromExecSpec func(ExecSpec) ExecSpecME
-	MsgToExecSpec   func(ExecSpecME) (ExecSpec, error)
-	MsgToExecRef    func(ExecRefME) (ExecRef, error)
-	MsgFromExecRef  func(ExecRef) ExecRefME
-	MsgToExecSnap   func(ExecSnapME) (ExecSnap, error)
-	MsgFromExecSnap func(ExecSnap) ExecSnapME
+	MsgFromExecSpec func(ExecSpec) procexec.ExecSpecME
+	MsgToExecSpec   func(procexec.ExecSpecME) (ExecSpec, error)
+	MsgToExecRef    func(procexec.ExecRefME) (ExecRef, error)
+	MsgFromExecRef  func(ExecRef) procexec.ExecRefME
+	MsgToExecSnap   func(procexec.ExecSnapME) (ExecSnap, error)
+	MsgFromExecSnap func(ExecSnap) procexec.ExecSnapME
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/revnum:Convert.*
-// goverter:extend orglang/orglang/adt/procdef:Data.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/revnum:Convert.*
+// goverter:extend orglang/go-runtime/adt/procdef:Data.*
 // goverter:extend data.*
 var (
 	DataFromMod  func(Mod) (modDS, error)

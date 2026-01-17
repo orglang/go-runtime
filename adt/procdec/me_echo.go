@@ -7,7 +7,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/adt/identity"
+	"github.com/orglang/go-sdk/adt/procdec"
+
+	"orglang/go-runtime/adt/identity"
 )
 
 // Server-side primary adapter
@@ -28,7 +30,7 @@ func cfgEchoHandler(e *echo.Echo, h *echoHandler) error {
 }
 
 func (h *echoHandler) PostOne(c echo.Context) error {
-	var dto DecSpecME
+	var dto procdec.DecSpecME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
@@ -52,7 +54,7 @@ func (h *echoHandler) PostOne(c echo.Context) error {
 }
 
 func (h *echoHandler) GetOne(c echo.Context) error {
-	var dto IdentME
+	var dto procdec.IdentME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))

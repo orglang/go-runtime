@@ -1,9 +1,13 @@
 package typedef
 
+import (
+	"github.com/orglang/go-sdk/adt/typedef"
+)
+
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/typedef:Convert.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/typedef:Convert.*
 var (
 	ConvertRecToRef  func(DefRec) DefRef
 	ConvertSnapToRef func(DefSnap) DefRef
@@ -11,28 +15,28 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/revnum:Convert.*
-// goverter:extend orglang/orglang/adt/typedef:Msg.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/revnum:Convert.*
+// goverter:extend orglang/go-runtime/adt/typedef:Msg.*
 // goverter:extend Msg.*
 var (
-	MsgFromDefSpec  func(DefSpec) DefSpecME
-	MsgToDefSpec    func(DefSpecME) (DefSpec, error)
-	MsgFromDefRef   func(DefRef) DefRefME
-	MsgToDefRef     func(DefRefME) (DefRef, error)
-	MsgFromDefRefs  func([]DefRef) []DefRefME
-	MsgToDefRefs    func([]DefRefME) ([]DefRef, error)
-	MsgFromDefSnap  func(DefSnap) DefSnapME
-	MsgToDefSnap    func(DefSnapME) (DefSnap, error)
-	MsgFromDefSnaps func([]DefSnap) []DefSnapME
-	MsgToDefSnaps   func([]DefSnapME) ([]DefSnap, error)
+	MsgFromDefSpec  func(DefSpec) typedef.DefSpecME
+	MsgToDefSpec    func(typedef.DefSpecME) (DefSpec, error)
+	MsgFromDefRef   func(DefRef) typedef.DefRefME
+	MsgToDefRef     func(typedef.DefRefME) (DefRef, error)
+	MsgFromDefRefs  func([]DefRef) []typedef.DefRefME
+	MsgToDefRefs    func([]typedef.DefRefME) ([]DefRef, error)
+	MsgFromDefSnap  func(DefSnap) typedef.DefSnapME
+	MsgToDefSnap    func(typedef.DefSnapME) (DefSnap, error)
+	MsgFromDefSnaps func([]DefSnap) []typedef.DefSnapME
+	MsgToDefSnaps   func([]typedef.DefSnapME) ([]DefSnap, error)
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/revnum:Convert.*
-// goverter:extend orglang/orglang/adt/typedef:Msg.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/revnum:Convert.*
+// goverter:extend orglang/go-runtime/adt/typedef:Msg.*
 var (
 	ViewFromDefRef  func(DefRef) DefRefVP
 	ViewToDefRef    func(DefRefVP) (DefRef, error)
@@ -43,9 +47,9 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/revnum:Convert.*
-// goverter:extend orglang/orglang/adt/typedef:Data.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/revnum:Convert.*
+// goverter:extend orglang/go-runtime/adt/typedef:Data.*
 // goverter:extend data.*
 // goverter:extend DataToTermRef
 // goverter:extend DataFromTermRef

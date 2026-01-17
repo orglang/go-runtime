@@ -8,11 +8,11 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"orglang/orglang/lib/db"
-	"orglang/orglang/lib/lf"
+	"orglang/go-runtime/lib/db"
+	"orglang/go-runtime/lib/lf"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/qualsym"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/qualsym"
 )
 
 type pgxDAO struct {

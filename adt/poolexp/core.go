@@ -1,7 +1,7 @@
 package poolexp
 
 import (
-	"orglang/orglang/adt/qualsym"
+	"orglang/go-runtime/adt/qualsym"
 )
 
 type ExpSpec interface {

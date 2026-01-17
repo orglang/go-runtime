@@ -3,8 +3,8 @@ package procexp
 import (
 	"fmt"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/qualsym"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/qualsym"
 )
 
 type ExpSpec interface {

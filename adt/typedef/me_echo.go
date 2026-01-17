@@ -7,9 +7,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/lib/lf"
+	"github.com/orglang/go-sdk/adt/typedef"
 
-	"orglang/orglang/adt/identity"
+	"orglang/go-runtime/lib/lf"
+
+	"orglang/go-runtime/adt/identity"
 )
 
 // Server-side primary adapter
@@ -31,7 +33,7 @@ func cfgHandlerEcho(e *echo.Echo, h *handlerEcho) error {
 }
 
 func (h *handlerEcho) PostOne(c echo.Context) error {
-	var dto DefSpecME
+	var dto typedef.DefSpecME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
@@ -58,7 +60,7 @@ func (h *handlerEcho) PostOne(c echo.Context) error {
 }
 
 func (h *handlerEcho) GetOne(c echo.Context) error {
-	var dto IdentME
+	var dto typedef.IdentME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))
@@ -82,7 +84,7 @@ func (h *handlerEcho) GetOne(c echo.Context) error {
 }
 
 func (h *handlerEcho) PatchOne(c echo.Context) error {
-	var dto DefSnapME
+	var dto typedef.DefSnapME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))

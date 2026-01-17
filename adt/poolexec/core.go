@@ -6,15 +6,15 @@ import (
 	"log/slog"
 	"reflect"
 
-	"orglang/orglang/lib/db"
+	"orglang/go-runtime/lib/db"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/procdec"
-	"orglang/orglang/adt/procexec"
-	"orglang/orglang/adt/qualsym"
-	"orglang/orglang/adt/revnum"
-	"orglang/orglang/adt/typedef"
-	"orglang/orglang/adt/typeexp"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/procdec"
+	"orglang/go-runtime/adt/procexec"
+	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/revnum"
+	"orglang/go-runtime/adt/typedef"
+	"orglang/go-runtime/adt/typeexp"
 )
 
 // Port

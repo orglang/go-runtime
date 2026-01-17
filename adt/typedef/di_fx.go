@@ -5,7 +5,7 @@ package typedef
 import (
 	"go.uber.org/fx"
 
-	"orglang/orglang/lib/te"
+	"orglang/go-runtime/lib/te"
 )
 
 var Module = fx.Module("adt/typedef",

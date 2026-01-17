@@ -1,19 +1,23 @@
 package typeexp
 
-// goverter:variables
-// goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/revnum:Convert.*
-// goverter:extend Msg.*
-var (
-	MsgFromExpRefs func([]ExpRef) []ExpRefME
-	MsgToExpRefs   func([]ExpRefME) ([]ExpRef, error)
+import (
+	"github.com/orglang/go-sdk/adt/typeexp"
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/revnum:Convert.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/revnum:Convert.*
+// goverter:extend Msg.*
+var (
+	MsgFromExpRefs func([]ExpRef) []typeexp.ExpRefME
+	MsgToExpRefs   func([]typeexp.ExpRefME) ([]ExpRef, error)
+)
+
+// goverter:variables
+// goverter:output:format assign-variable
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/revnum:Convert.*
 // goverter:extend data.*
 // goverter:extend DataToTermRef
 // goverter:extend DataFromTermRef

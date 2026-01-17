@@ -1,32 +1,34 @@
 package poolexec
 
 import (
-	"orglang/orglang/adt/procexec"
+	"orglang/go-runtime/adt/procexec"
+
+	"github.com/orglang/go-sdk/adt/poolexec"
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
 var (
 	ConvertRecToRef func(ExecRec) ExecRef
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
-// goverter:extend orglang/orglang/adt/procdef:Msg.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/procdef:Msg.*
 var (
-	MsgToExecSpec   func(ExecSpecME) (ExecSpec, error)
-	MsgFromExecSpec func(ExecSpec) ExecSpecME
-	MsgToExecRef    func(ExecRefME) (ExecRef, error)
-	MsgFromExecRef  func(ExecRef) ExecRefME
-	MsgToExecSnap   func(ExecSnapME) (ExecSnap, error)
-	MsgFromExecSnap func(ExecSnap) ExecSnapME
+	MsgToExecSpec   func(poolexec.ExecSpecME) (ExecSpec, error)
+	MsgFromExecSpec func(ExecSpec) poolexec.ExecSpecME
+	MsgToExecRef    func(poolexec.ExecRefME) (ExecRef, error)
+	MsgFromExecRef  func(ExecRef) poolexec.ExecRefME
+	MsgToExecSnap   func(poolexec.ExecSnapME) (ExecSnap, error)
+	MsgFromExecSnap func(ExecSnap) poolexec.ExecSnapME
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/orglang/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/identity:Convert.*
 var (
 	DataToExecRef    func(execRefDS) (ExecRef, error)
 	DataFromExecRef  func(ExecRef) execRefDS

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	a "orglang/orglang/proto/rast2/ast"
-	tc "orglang/orglang/proto/rast2/typecheck"
+	a "orglang/go-runtime/proto/rast2/ast"
+	tc "orglang/go-runtime/proto/rast2/typecheck"
 	"slices"
 )
 

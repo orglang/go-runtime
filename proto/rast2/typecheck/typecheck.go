@@ -3,7 +3,7 @@ package typecheck
 import (
 	"errors"
 	"fmt"
-	a "orglang/orglang/proto/rast2/ast"
+	a "orglang/go-runtime/proto/rast2/ast"
 )
 
 func Contractive(tp a.Stype) bool {

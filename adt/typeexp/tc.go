@@ -6,8 +6,10 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/qualsym"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/qualsym"
+
+	"github.com/orglang/go-sdk/adt/typeexp"
 )
 
 func ConvertSpecToRec(s ExpSpec) ExpRec {
@@ -84,58 +86,58 @@ func ConvertRecToSpec(r ExpRec) ExpSpec {
 	}
 }
 
-func MsgFromTermSpec(s ExpSpec) ExpSpecME {
+func MsgFromTermSpec(s ExpSpec) typeexp.ExpSpecME {
 	switch spec := s.(type) {
 	case OneSpec:
-		return ExpSpecME{K: OneKind}
+		return typeexp.ExpSpecME{K: typeexp.OneExp}
 	case LinkSpec:
-		return ExpSpecME{
-			K:    LinkKind,
-			Link: &LinkSpecME{TypeQN: qualsym.ConvertToString(spec.TypeQN)}}
+		return typeexp.ExpSpecME{
+			K:    typeexp.LinkExp,
+			Link: &typeexp.LinkSpecME{TypeQN: qualsym.ConvertToString(spec.TypeQN)}}
 	case TensorSpec:
-		return ExpSpecME{
-			K: TensorKind,
-			Tensor: &ProdSpecME{
+		return typeexp.ExpSpecME{
+			K: typeexp.TensorExp,
+			Tensor: &typeexp.ProdSpecME{
 				ValES:  MsgFromTermSpec(spec.Y),
 				ContES: MsgFromTermSpec(spec.Z),
 			},
 		}
 	case LolliSpec:
-		return ExpSpecME{
-			K: LolliKind,
-			Lolli: &ProdSpecME{
+		return typeexp.ExpSpecME{
+			K: typeexp.LolliExp,
+			Lolli: &typeexp.ProdSpecME{
 				ValES:  MsgFromTermSpec(spec.Y),
 				ContES: MsgFromTermSpec(spec.Z),
 			},
 		}
 	case WithSpec:
-		choices := make([]ChoiceSpecME, len(spec.Zs))
+		choices := make([]typeexp.ChoiceSpecME, len(spec.Zs))
 		for i, l := range maps.Keys(spec.Zs) {
-			choices[i] = ChoiceSpecME{Label: string(l), ContES: MsgFromTermSpec(spec.Zs[l])}
+			choices[i] = typeexp.ChoiceSpecME{Label: string(l), ContES: MsgFromTermSpec(spec.Zs[l])}
 		}
-		return ExpSpecME{K: WithKind, With: &SumSpecME{Choices: choices}}
+		return typeexp.ExpSpecME{K: typeexp.WithExp, With: &typeexp.SumSpecME{Choices: choices}}
 	case PlusSpec:
-		choices := make([]ChoiceSpecME, len(spec.Zs))
+		choices := make([]typeexp.ChoiceSpecME, len(spec.Zs))
 		for i, l := range maps.Keys(spec.Zs) {
-			choices[i] = ChoiceSpecME{Label: string(l), ContES: MsgFromTermSpec(spec.Zs[l])}
+			choices[i] = typeexp.ChoiceSpecME{Label: string(l), ContES: MsgFromTermSpec(spec.Zs[l])}
 		}
-		return ExpSpecME{K: PlusKind, Plus: &SumSpecME{Choices: choices}}
+		return typeexp.ExpSpecME{K: typeexp.PlusExp, Plus: &typeexp.SumSpecME{Choices: choices}}
 	default:
 		panic(ErrSpecTypeUnexpected(s))
 	}
 }
 
-func MsgToTermSpec(dto ExpSpecME) (ExpSpec, error) {
+func MsgToTermSpec(dto typeexp.ExpSpecME) (ExpSpec, error) {
 	switch dto.K {
-	case OneKind:
+	case typeexp.OneExp:
 		return OneSpec{}, nil
-	case LinkKind:
+	case typeexp.LinkExp:
 		roleQN, err := qualsym.ConvertFromString(dto.Link.TypeQN)
 		if err != nil {
 			return nil, err
 		}
 		return LinkSpec{TypeQN: roleQN}, nil
-	case TensorKind:
+	case typeexp.TensorExp:
 		v, err := MsgToTermSpec(dto.Tensor.ValES)
 		if err != nil {
 			return nil, err
@@ -145,7 +147,7 @@ func MsgToTermSpec(dto ExpSpecME) (ExpSpec, error) {
 			return nil, err
 		}
 		return TensorSpec{Y: v, Z: s}, nil
-	case LolliKind:
+	case typeexp.LolliExp:
 		v, err := MsgToTermSpec(dto.Lolli.ValES)
 		if err != nil {
 			return nil, err
@@ -155,7 +157,7 @@ func MsgToTermSpec(dto ExpSpecME) (ExpSpec, error) {
 			return nil, err
 		}
 		return LolliSpec{Y: v, Z: s}, nil
-	case PlusKind:
+	case typeexp.PlusExp:
 		choices := make(map[qualsym.ADT]ExpSpec, len(dto.Plus.Choices))
 		for _, ch := range dto.Plus.Choices {
 			choice, err := MsgToTermSpec(ch.ContES)
@@ -165,7 +167,7 @@ func MsgToTermSpec(dto ExpSpecME) (ExpSpec, error) {
 			choices[qualsym.ADT(ch.Label)] = choice
 		}
 		return PlusSpec{Zs: choices}, nil
-	case WithKind:
+	case typeexp.WithExp:
 		choices := make(map[qualsym.ADT]ExpSpec, len(dto.With.Choices))
 		for _, ch := range dto.With.Choices {
 			choice, err := MsgToTermSpec(ch.ContES)
@@ -176,55 +178,51 @@ func MsgToTermSpec(dto ExpSpecME) (ExpSpec, error) {
 		}
 		return WithSpec{Zs: choices}, nil
 	default:
-		panic(errKindUnexpected(dto.K))
+		panic(typeexp.ErrKindUnexpected(dto.K))
 	}
 }
 
-func MsgFromTermRef(r ExpRef) ExpRefME {
+func MsgFromTermRef(r ExpRef) typeexp.ExpRefME {
 	ident := r.Ident().String()
 	switch r.(type) {
 	case OneRef, OneRec:
-		return ExpRefME{K: OneKind, ExpID: ident}
+		return typeexp.ExpRefME{K: typeexp.OneExp, ExpID: ident}
 	case LinkRef, LinkRec:
-		return ExpRefME{K: LinkKind, ExpID: ident}
+		return typeexp.ExpRefME{K: typeexp.LinkExp, ExpID: ident}
 	case TensorRef, TensorRec:
-		return ExpRefME{K: TensorKind, ExpID: ident}
+		return typeexp.ExpRefME{K: typeexp.TensorExp, ExpID: ident}
 	case LolliRef, LolliRec:
-		return ExpRefME{K: LolliKind, ExpID: ident}
+		return typeexp.ExpRefME{K: typeexp.LolliExp, ExpID: ident}
 	case PlusRef, PlusRec:
-		return ExpRefME{K: PlusKind, ExpID: ident}
+		return typeexp.ExpRefME{K: typeexp.PlusExp, ExpID: ident}
 	case WithRef, WithRec:
-		return ExpRefME{K: WithKind, ExpID: ident}
+		return typeexp.ExpRefME{K: typeexp.WithExp, ExpID: ident}
 	default:
 		panic(ErrRefTypeUnexpected(r))
 	}
 }
 
-func MsgToTermRef(dto ExpRefME) (ExpRef, error) {
+func MsgToTermRef(dto typeexp.ExpRefME) (ExpRef, error) {
 	rid, err := identity.ConvertFromString(dto.ExpID)
 	if err != nil {
 		return nil, err
 	}
 	switch dto.K {
-	case OneKind:
+	case typeexp.OneExp:
 		return OneRef{rid}, nil
-	case LinkKind:
+	case typeexp.LinkExp:
 		return LinkRef{rid}, nil
-	case TensorKind:
+	case typeexp.TensorExp:
 		return TensorRef{rid}, nil
-	case LolliKind:
+	case typeexp.LolliExp:
 		return LolliRef{rid}, nil
-	case PlusKind:
+	case typeexp.PlusExp:
 		return PlusRef{rid}, nil
-	case WithKind:
+	case typeexp.WithExp:
 		return WithRef{rid}, nil
 	default:
-		panic(errKindUnexpected(dto.K))
+		panic(typeexp.ErrKindUnexpected(dto.K))
 	}
-}
-
-func errKindUnexpected(got termKindME) error {
-	return fmt.Errorf("kind unexpected: %v", got)
 }
 
 func DataFromTermRef(ref ExpRef) *ExpRefDS {

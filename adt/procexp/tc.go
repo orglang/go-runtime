@@ -3,11 +3,13 @@ package procexp
 import (
 	"fmt"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/qualsym"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/qualsym"
+
+	"github.com/orglang/go-sdk/adt/procexp"
 )
 
-func MsgFromExpSpecNilable(spec ExpSpec) *ExpSpecME {
+func MsgFromExpSpecNilable(spec ExpSpec) *procexp.ExpSpecME {
 	if spec == nil {
 		return nil
 	}
@@ -15,64 +17,64 @@ func MsgFromExpSpecNilable(spec ExpSpec) *ExpSpecME {
 	return &dto
 }
 
-func MsgFromExpSpec(s ExpSpec) ExpSpecME {
+func MsgFromExpSpec(s ExpSpec) procexp.ExpSpecME {
 	switch spec := s.(type) {
 	case CloseSpec:
-		return ExpSpecME{
-			K: Close,
-			Close: &CloseSpecME{
+		return procexp.ExpSpecME{
+			K: procexp.Close,
+			Close: &procexp.CloseSpecME{
 				CommPH: qualsym.ConvertToString(spec.CommChnlPH),
 			},
 		}
 	case WaitSpec:
-		return ExpSpecME{
-			K: Wait,
-			Wait: &WaitSpecME{
+		return procexp.ExpSpecME{
+			K: procexp.Wait,
+			Wait: &procexp.WaitSpecME{
 				CommPH: qualsym.ConvertToString(spec.CommChnlPH),
 				ContES: MsgFromExpSpec(spec.ContES),
 			},
 		}
 	case SendSpec:
-		return ExpSpecME{
-			K: Send,
-			Send: &SendSpecME{
+		return procexp.ExpSpecME{
+			K: procexp.Send,
+			Send: &procexp.SendSpecME{
 				CommPH: qualsym.ConvertToString(spec.CommChnlPH),
 				ValPH:  qualsym.ConvertToString(spec.ValChnlPH),
 			},
 		}
 	case RecvSpec:
-		return ExpSpecME{
-			K: Recv,
-			Recv: &RecvSpecME{
+		return procexp.ExpSpecME{
+			K: procexp.Recv,
+			Recv: &procexp.RecvSpecME{
 				CommPH: qualsym.ConvertToString(spec.CommChnlPH),
 				BindPH: qualsym.ConvertToString(spec.CommChnlPH),
 				ContES: MsgFromExpSpec(spec.ContES),
 			},
 		}
 	case LabSpec:
-		return ExpSpecME{
-			K: Lab,
-			Lab: &LabSpecME{
+		return procexp.ExpSpecME{
+			K: procexp.Lab,
+			Lab: &procexp.LabSpecME{
 				CommPH: qualsym.ConvertToString(spec.CommChnlPH),
 				Label:  string(spec.LabelQN),
 			},
 		}
 	case CaseSpec:
-		brs := []BranchSpecME{}
+		brs := []procexp.BranchSpecME{}
 		for l, t := range spec.ContESs {
-			brs = append(brs, BranchSpecME{Label: string(l), ContES: MsgFromExpSpec(t)})
+			brs = append(brs, procexp.BranchSpecME{Label: string(l), ContES: MsgFromExpSpec(t)})
 		}
-		return ExpSpecME{
-			K: Case,
-			Case: &CaseSpecME{
+		return procexp.ExpSpecME{
+			K: procexp.Case,
+			Case: &procexp.CaseSpecME{
 				CommPH:  qualsym.ConvertToString(spec.CommChnlPH),
 				ContBSs: brs,
 			},
 		}
 	case SpawnSpec:
-		return ExpSpecME{
-			K: Spawn,
-			Spawn: &SpawnSpecME{
+		return procexp.ExpSpecME{
+			K: procexp.Spawn,
+			Spawn: &procexp.SpawnSpecME{
 				CommPH:  qualsym.ConvertToString(spec.CommChnlPH),
 				ProcQN:  qualsym.ConvertToString(spec.ProcQN),
 				BindPHs: qualsym.ConvertToStrings(spec.BindChnlPHs),
@@ -80,9 +82,9 @@ func MsgFromExpSpec(s ExpSpec) ExpSpecME {
 			},
 		}
 	case FwdSpec:
-		return ExpSpecME{
-			K: Fwd,
-			Fwd: &FwdSpecME{
+		return procexp.ExpSpecME{
+			K: procexp.Fwd,
+			Fwd: &procexp.FwdSpecME{
 				X: qualsym.ConvertToString(spec.CommChnlPH),
 				Y: qualsym.ConvertToString(spec.ContChnlPH),
 			},
@@ -92,22 +94,22 @@ func MsgFromExpSpec(s ExpSpec) ExpSpecME {
 	}
 }
 
-func MsgToExpSpecNilable(dto *ExpSpecME) (ExpSpec, error) {
+func MsgToExpSpecNilable(dto *procexp.ExpSpecME) (ExpSpec, error) {
 	if dto == nil {
 		return nil, nil
 	}
 	return MsgToExpSpec(*dto)
 }
 
-func MsgToExpSpec(dto ExpSpecME) (ExpSpec, error) {
+func MsgToExpSpec(dto procexp.ExpSpecME) (ExpSpec, error) {
 	switch dto.K {
-	case Close:
+	case procexp.Close:
 		x, err := qualsym.ConvertFromString(dto.Close.CommPH)
 		if err != nil {
 			return nil, err
 		}
 		return CloseSpec{CommChnlPH: x}, nil
-	case Wait:
+	case procexp.Wait:
 		x, err := qualsym.ConvertFromString(dto.Wait.CommPH)
 		if err != nil {
 			return nil, err
@@ -117,7 +119,7 @@ func MsgToExpSpec(dto ExpSpecME) (ExpSpec, error) {
 			return nil, err
 		}
 		return WaitSpec{CommChnlPH: x, ContES: cont}, nil
-	case Send:
+	case procexp.Send:
 		x, err := qualsym.ConvertFromString(dto.Send.CommPH)
 		if err != nil {
 			return nil, err
@@ -127,7 +129,7 @@ func MsgToExpSpec(dto ExpSpecME) (ExpSpec, error) {
 			return nil, err
 		}
 		return SendSpec{CommChnlPH: x, ValChnlPH: y}, nil
-	case Recv:
+	case procexp.Recv:
 		x, err := qualsym.ConvertFromString(dto.Recv.CommPH)
 		if err != nil {
 			return nil, err
@@ -141,13 +143,13 @@ func MsgToExpSpec(dto ExpSpecME) (ExpSpec, error) {
 			return nil, err
 		}
 		return RecvSpec{CommChnlPH: x, BindChnlPH: y, ContES: cont}, nil
-	case Lab:
+	case procexp.Lab:
 		x, err := qualsym.ConvertFromString(dto.Lab.CommPH)
 		if err != nil {
 			return nil, err
 		}
 		return LabSpec{CommChnlPH: x, LabelQN: qualsym.ADT(dto.Lab.Label)}, nil
-	case Case:
+	case procexp.Case:
 		x, err := qualsym.ConvertFromString(dto.Case.CommPH)
 		if err != nil {
 			return nil, err
@@ -161,7 +163,7 @@ func MsgToExpSpec(dto ExpSpecME) (ExpSpec, error) {
 			conts[qualsym.ADT(b.Label)] = cont
 		}
 		return CaseSpec{CommChnlPH: x, ContESs: conts}, nil
-	case Spawn:
+	case procexp.Spawn:
 		commPH, err := qualsym.ConvertFromString(dto.Spawn.CommPH)
 		if err != nil {
 			return nil, err
@@ -179,7 +181,7 @@ func MsgToExpSpec(dto ExpSpecME) (ExpSpec, error) {
 			return nil, err
 		}
 		return SpawnSpec{CommChnlPH: commPH, ProcQN: procQN, BindChnlPHs: bindPHs, ContES: contES}, nil
-	case Call:
+	case procexp.Call:
 		commPH, err := qualsym.ConvertFromString(dto.Call.CommPH)
 		if err != nil {
 			return nil, err
@@ -193,7 +195,7 @@ func MsgToExpSpec(dto ExpSpecME) (ExpSpec, error) {
 			return nil, err
 		}
 		return CallSpec{CommChnlPH: commPH, ProcQN: procQN, ValChnlPHs: valPHs}, nil
-	case Fwd:
+	case procexp.Fwd:
 		x, err := qualsym.ConvertFromString(dto.Fwd.X)
 		if err != nil {
 			return nil, err
@@ -204,12 +206,8 @@ func MsgToExpSpec(dto ExpSpecME) (ExpSpec, error) {
 		}
 		return FwdSpec{CommChnlPH: x, ContChnlPH: y}, nil
 	default:
-		panic(ErrUnexpectedExpKind(dto.K))
+		panic(procexp.ErrUnexpectedExpKind(dto.K))
 	}
-}
-
-func ErrUnexpectedExpKind(k expKindME) error {
-	return fmt.Errorf("unexpected term kind: %v", k)
 }
 
 func DataFromExpRec(r ExpRec) (ExpRecDS, error) {

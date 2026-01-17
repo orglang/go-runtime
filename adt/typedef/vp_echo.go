@@ -7,12 +7,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"orglang/orglang/lib/lf"
-	"orglang/orglang/lib/te"
+	"github.com/orglang/go-sdk/adt/typedef"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/qualsym"
-	"orglang/orglang/adt/typeexp"
+	"orglang/go-runtime/lib/lf"
+	"orglang/go-runtime/lib/te"
+
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/typeexp"
 )
 
 // Adapter
@@ -80,7 +82,7 @@ func (p *echoPresenter) GetMany(c echo.Context) error {
 }
 
 func (p *echoPresenter) GetOne(c echo.Context) error {
-	var dto IdentME
+	var dto typedef.IdentME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		p.log.Error("binding failed", slog.Any("dto", reflect.TypeOf(dto)))

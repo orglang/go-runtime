@@ -3,10 +3,10 @@ package poolexec
 import (
 	"database/sql"
 
-	"orglang/orglang/lib/db"
+	"orglang/go-runtime/lib/db"
 
-	"orglang/orglang/adt/identity"
-	"orglang/orglang/adt/procexec"
+	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/procexec"
 )
 
 // Port

@@ -3,9 +3,9 @@ package typeexp
 import (
 	"database/sql"
 
-	"orglang/orglang/lib/db"
+	"orglang/go-runtime/lib/db"
 
-	"orglang/orglang/adt/identity"
+	"orglang/go-runtime/adt/identity"
 )
 
 type Repo interface {
