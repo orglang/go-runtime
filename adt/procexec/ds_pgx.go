@@ -174,13 +174,6 @@ func (dao *pgxDAO) UpdateProc(source db.Source, mod Mod) (err error) {
 }
 
 const (
-	insertLiab = `
-		insert into pool_liabs (
-			pool_id, proc_id, rev
-		) values (
-			@pool_id, @proc_id, @rev
-		)`
-
 	insertBnd = `
 		insert into pool_assets (
 			pool_id, chnl_key, state_id, ex_pool_id, rev

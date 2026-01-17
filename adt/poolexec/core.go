@@ -11,10 +11,10 @@ import (
 	"orglang/go-runtime/adt/identity"
 	"orglang/go-runtime/adt/procdec"
 	"orglang/go-runtime/adt/procexec"
-	"orglang/go-runtime/adt/qualsym"
 	"orglang/go-runtime/adt/revnum"
 	"orglang/go-runtime/adt/typedef"
 	"orglang/go-runtime/adt/typeexp"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 // Port
@@ -27,7 +27,7 @@ type API interface {
 }
 
 type ExecSpec struct {
-	PoolQN qualsym.ADT
+	PoolQN uniqsym.ADT
 	SupID  identity.ADT
 }
 

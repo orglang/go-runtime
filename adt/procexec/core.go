@@ -16,10 +16,11 @@ import (
 	"orglang/go-runtime/adt/procdef"
 	"orglang/go-runtime/adt/procexp"
 	"orglang/go-runtime/adt/procstep"
-	"orglang/go-runtime/adt/qualsym"
 	"orglang/go-runtime/adt/revnum"
+	"orglang/go-runtime/adt/symbol"
 	"orglang/go-runtime/adt/typedef"
 	"orglang/go-runtime/adt/typeexp"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 type API interface {
@@ -44,7 +45,7 @@ type ExecSnap struct {
 
 type MainCfg struct {
 	ExecID identity.ADT
-	Bnds   map[qualsym.ADT]EP2
+	Bnds   map[symbol.ADT]EP2
 	Acts   map[identity.ADT]procstep.StepRec
 	PoolID identity.ADT
 	ExecRN revnum.ADT
@@ -53,7 +54,7 @@ type MainCfg struct {
 // aka Configuration
 type Cfg struct {
 	ExecID identity.ADT
-	Chnls  map[qualsym.ADT]EP
+	Chnls  map[symbol.ADT]EP
 	Steps  map[identity.ADT]procstep.StepRec
 	PoolID identity.ADT
 	PoolRN revnum.ADT
@@ -62,13 +63,13 @@ type Cfg struct {
 
 type Env struct {
 	ProcDecs map[identity.ADT]procdec.DecRec
-	TypeDefs map[qualsym.ADT]typedef.DefRec
+	TypeDefs map[uniqsym.ADT]typedef.DefRec
 	TypeExps map[identity.ADT]typeexp.ExpRec
-	Locks    map[qualsym.ADT]Lock
+	Locks    map[uniqsym.ADT]Lock
 }
 
 type EP struct {
-	ChnlPH qualsym.ADT
+	ChnlPH symbol.ADT
 	ChnlID identity.ADT
 	ExpID  identity.ADT
 	// provider
@@ -76,7 +77,7 @@ type EP struct {
 }
 
 type EP2 struct {
-	ChnlPH qualsym.ADT
+	ChnlPH symbol.ADT
 	ChnlID identity.ADT
 	// provider
 	PoolID identity.ADT
@@ -87,7 +88,7 @@ type Lock struct {
 	PoolRN revnum.ADT
 }
 
-func ChnlPH(rec EP) qualsym.ADT { return rec.ChnlPH }
+func ChnlPH(rec EP) symbol.ADT { return rec.ChnlPH }
 
 // ответственность за процесс
 type Liab struct {
@@ -112,7 +113,7 @@ type MainMod struct {
 
 type Bnd struct {
 	ExecID identity.ADT
-	ChnlPH qualsym.ADT
+	ChnlPH symbol.ADT
 	ChnlID identity.ADT
 	ExpID  identity.ADT
 	PoolRN revnum.ADT
@@ -265,7 +266,7 @@ func (s *service) createWith(
 	}
 }
 
-func ErrMissingChnl(want qualsym.ADT) error {
+func ErrMissingChnl(want symbol.ADT) error {
 	return fmt.Errorf("channel missing in cfg: %v", want)
 }
 
@@ -301,7 +302,7 @@ func (s *service) Take(spec procstep.StepSpec) (err error) {
 			return err
 		}
 		typeQNs := procdec.CollectEnv(maps.Values(procDecs))
-		var typeDefs map[qualsym.ADT]typedef.DefRec
+		var typeDefs map[uniqsym.ADT]typedef.DefRec
 		err = s.operator.Implicit(ctx, func(ds db.Source) error {
 			typeDefs, err = s.typeDefs.SelectEnv(ds, typeQNs)
 			return err
@@ -1019,8 +1020,8 @@ func CollectCtx(chnls iter.Seq[EP]) []identity.ADT {
 }
 
 func convertToCtx(poolID identity.ADT, chnlEPs iter.Seq[EP], typeExps map[identity.ADT]typeexp.ExpRec) typedef.Context {
-	assets := make(map[qualsym.ADT]typeexp.ExpRec, 1)
-	liabs := make(map[qualsym.ADT]typeexp.ExpRec, 1)
+	assets := make(map[symbol.ADT]typeexp.ExpRec, 1)
+	liabs := make(map[symbol.ADT]typeexp.ExpRec, 1)
 	for ep := range chnlEPs {
 		if poolID == ep.PoolID {
 			liabs[ep.ChnlPH] = typeExps[ep.ExpID]
@@ -1451,7 +1452,7 @@ func errOptimisticUpdate(got revnum.ADT) error {
 	return fmt.Errorf("entity concurrent modification: got revision %v", got)
 }
 
-func errMissingPool(want qualsym.ADT) error {
+func errMissingPool(want uniqsym.ADT) error {
 	return fmt.Errorf("pool missing in env: %v", want)
 }
 
@@ -1459,6 +1460,6 @@ func errMissingSig(want identity.ADT) error {
 	return fmt.Errorf("sig missing in env: %v", want)
 }
 
-func errMissingRole(want qualsym.ADT) error {
+func errMissingRole(want uniqsym.ADT) error {
 	return fmt.Errorf("role missing in env: %v", want)
 }

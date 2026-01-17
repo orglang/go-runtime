@@ -9,14 +9,15 @@ import (
 	"orglang/go-runtime/lib/db"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
 	"orglang/go-runtime/adt/revnum"
+	"orglang/go-runtime/adt/symbol"
 	"orglang/go-runtime/adt/syndec"
 	"orglang/go-runtime/adt/typeexp"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 type API interface {
-	Incept(qualsym.ADT) (DefRef, error)
+	Incept(uniqsym.ADT) (DefRef, error)
 	Create(DefSpec) (DefSnap, error)
 	Modify(DefSnap) (DefSnap, error)
 	Retrieve(identity.ADT) (DefSnap, error)
@@ -25,7 +26,7 @@ type API interface {
 }
 
 type DefSpec struct {
-	TypeQN qualsym.ADT
+	TypeQN uniqsym.ADT
 	TypeES typeexp.ExpSpec
 }
 
@@ -45,14 +46,14 @@ type DefRec struct {
 type DefSnap struct {
 	DefID  identity.ADT
 	Title  string
-	TypeQN qualsym.ADT
+	TypeQN uniqsym.ADT
 	TypeES typeexp.ExpSpec
 	DefRN  revnum.ADT
 }
 
 type Context struct {
-	Assets map[qualsym.ADT]typeexp.ExpRec
-	Liabs  map[qualsym.ADT]typeexp.ExpRec
+	Assets map[symbol.ADT]typeexp.ExpRec
+	Liabs  map[symbol.ADT]typeexp.ExpRec
 }
 
 type service struct {
@@ -78,14 +79,14 @@ func newService(
 	return &service{typeDefs, typeExps, synDecs, operator, l}
 }
 
-func (s *service) Incept(typeQN qualsym.ADT) (_ DefRef, err error) {
+func (s *service) Incept(typeQN uniqsym.ADT) (_ DefRef, err error) {
 	ctx := context.Background()
 	qnAttr := slog.Any("typeQN", typeQN)
 	s.log.Debug("inception started", qnAttr)
-	newAlias := syndec.DecRec{DecQN: typeQN, DecID: identity.New(), DecRN: revnum.Initial()}
-	newType := DefRec{DefID: newAlias.DecID, DefRN: newAlias.DecRN, Title: newAlias.DecQN.SN()}
+	newSyn := syndec.DecRec{DecQN: typeQN, DecID: identity.New(), DecRN: revnum.Initial()}
+	newType := DefRec{DefID: newSyn.DecID, DefRN: newSyn.DecRN, Title: symbol.ConvertToString(newSyn.DecQN.Sym())}
 	s.operator.Explicit(ctx, func(ds db.Source) error {
-		err = s.synDecs.Insert(ds, newAlias)
+		err = s.synDecs.Insert(ds, newSyn)
 		if err != nil {
 			return err
 		}
@@ -112,7 +113,7 @@ func (s *service) Create(spec DefSpec) (_ DefSnap, err error) {
 	newType := DefRec{
 		DefID: newAlias.DecID,
 		DefRN: newAlias.DecRN,
-		Title: newAlias.DecQN.SN(),
+		Title: symbol.ConvertToString(newAlias.DecQN.Sym()),
 		ExpID: newTerm.Ident(),
 	}
 	s.operator.Explicit(ctx, func(ds db.Source) error {
@@ -248,7 +249,7 @@ func CollectEnv(recs iter.Seq[DefRec]) []identity.ADT {
 	return termIDs
 }
 
-func ErrSymMissingInEnv(want qualsym.ADT) error {
+func ErrSymMissingInEnv(want uniqsym.ADT) error {
 	return fmt.Errorf("root missing in env: %v", want)
 }
 
@@ -272,6 +273,6 @@ func ErrMissingInCfg(want identity.ADT) error {
 	return fmt.Errorf("root missing in cfg: %v", want)
 }
 
-func ErrMissingInCtx(want qualsym.ADT) error {
+func ErrMissingInCtx(want symbol.ADT) error {
 	return fmt.Errorf("root missing in ctx: %v", want)
 }

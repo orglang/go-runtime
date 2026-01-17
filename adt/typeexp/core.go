@@ -5,8 +5,8 @@ import (
 
 	"orglang/go-runtime/adt/identity"
 	"orglang/go-runtime/adt/polarity"
-	"orglang/go-runtime/adt/qualsym"
 	"orglang/go-runtime/adt/revnum"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 type ExpSpec interface {
@@ -19,7 +19,7 @@ func (OneSpec) spec() {}
 
 // aka TpName
 type LinkSpec struct {
-	TypeQN qualsym.ADT
+	TypeQN uniqsym.ADT
 }
 
 func (LinkSpec) spec() {}
@@ -40,14 +40,14 @@ func (LolliSpec) spec() {}
 
 // aka Internal Choice
 type PlusSpec struct {
-	Zs map[qualsym.ADT]ExpSpec // conts
+	Zs map[uniqsym.ADT]ExpSpec // conts
 }
 
 func (PlusSpec) spec() {}
 
 // aka External Choice
 type WithSpec struct {
-	Zs map[qualsym.ADT]ExpSpec // conts
+	Zs map[uniqsym.ADT]ExpSpec // conts
 }
 
 func (WithSpec) spec() {}
@@ -65,7 +65,7 @@ type DownSpec struct {
 func (DownSpec) spec() {}
 
 type XactSpec struct {
-	Zs map[qualsym.ADT]ExpSpec // conts
+	Zs map[uniqsym.ADT]ExpSpec // conts
 }
 
 func (XactSpec) spec() {}
@@ -133,7 +133,7 @@ type ProdRec interface {
 }
 
 type SumRec interface {
-	Next(qualsym.ADT) identity.ADT
+	Next(uniqsym.ADT) identity.ADT
 }
 
 type OneRec struct {
@@ -149,7 +149,7 @@ func (OneRec) Pol() polarity.ADT { return polarity.Pos }
 // aka TpName
 type LinkRec struct {
 	ExpID  identity.ADT
-	TypeQN qualsym.ADT
+	TypeQN uniqsym.ADT
 }
 
 func (LinkRec) spec() {}
@@ -161,28 +161,28 @@ func (LinkRec) Pol() polarity.ADT { return polarity.Zero }
 // aka Internal Choice
 type PlusRec struct {
 	ExpID identity.ADT
-	Zs    map[qualsym.ADT]ExpRec
+	Zs    map[uniqsym.ADT]ExpRec
 }
 
 func (PlusRec) spec() {}
 
 func (r PlusRec) Ident() identity.ADT { return r.ExpID }
 
-func (r PlusRec) Next(l qualsym.ADT) identity.ADT { return r.Zs[l].Ident() }
+func (r PlusRec) Next(l uniqsym.ADT) identity.ADT { return r.Zs[l].Ident() }
 
 func (PlusRec) Pol() polarity.ADT { return polarity.Pos }
 
 // aka External Choice
 type WithRec struct {
 	ExpID identity.ADT
-	Zs    map[qualsym.ADT]ExpRec
+	Zs    map[uniqsym.ADT]ExpRec
 }
 
 func (WithRec) spec() {}
 
 func (r WithRec) Ident() identity.ADT { return r.ExpID }
 
-func (r WithRec) Next(l qualsym.ADT) identity.ADT { return r.Zs[l].Ident() }
+func (r WithRec) Next(l uniqsym.ADT) identity.ADT { return r.Zs[l].Ident() }
 
 func (WithRec) Pol() polarity.ADT { return polarity.Neg }
 
@@ -237,11 +237,11 @@ func (r DownRec) Ident() identity.ADT { return r.ExpID }
 func (DownRec) Pol() polarity.ADT { return polarity.Zero }
 
 type Context struct {
-	Assets map[qualsym.ADT]ExpRec
-	Liabs  map[qualsym.ADT]ExpRec
+	Assets map[uniqsym.ADT]ExpRec
+	Liabs  map[uniqsym.ADT]ExpRec
 }
 
-func ErrSymMissingInEnv(want qualsym.ADT) error {
+func ErrSymMissingInEnv(want uniqsym.ADT) error {
 	return fmt.Errorf("root missing in env: %v", want)
 }
 
@@ -424,7 +424,7 @@ func ErrMissingInCfg(want identity.ADT) error {
 	return fmt.Errorf("root missing in cfg: %v", want)
 }
 
-func ErrMissingInCtx(want qualsym.ADT) error {
+func ErrMissingInCtx(want uniqsym.ADT) error {
 	return fmt.Errorf("root missing in ctx: %v", want)
 }
 

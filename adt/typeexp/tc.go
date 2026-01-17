@@ -7,7 +7,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/uniqsym"
 
 	"github.com/orglang/go-sdk/adt/typeexp"
 )
@@ -34,13 +34,13 @@ func ConvertSpecToRec(s ExpSpec) ExpRec {
 			Z:     ConvertSpecToRec(spec.Z),
 		}
 	case WithSpec:
-		choices := make(map[qualsym.ADT]ExpRec, len(spec.Zs))
+		choices := make(map[uniqsym.ADT]ExpRec, len(spec.Zs))
 		for lab, st := range spec.Zs {
 			choices[lab] = ConvertSpecToRec(st)
 		}
 		return WithRec{ExpID: identity.New(), Zs: choices}
 	case PlusSpec:
-		choices := make(map[qualsym.ADT]ExpRec, len(spec.Zs))
+		choices := make(map[uniqsym.ADT]ExpRec, len(spec.Zs))
 		for lab, rec := range spec.Zs {
 			choices[lab] = ConvertSpecToRec(rec)
 		}
@@ -70,13 +70,13 @@ func ConvertRecToSpec(r ExpRec) ExpSpec {
 			Z: ConvertRecToSpec(rec.Z),
 		}
 	case WithRec:
-		choices := make(map[qualsym.ADT]ExpSpec, len(rec.Zs))
+		choices := make(map[uniqsym.ADT]ExpSpec, len(rec.Zs))
 		for lab, rec := range rec.Zs {
 			choices[lab] = ConvertRecToSpec(rec)
 		}
 		return WithSpec{Zs: choices}
 	case PlusRec:
-		choices := make(map[qualsym.ADT]ExpSpec, len(rec.Zs))
+		choices := make(map[uniqsym.ADT]ExpSpec, len(rec.Zs))
 		for lab, st := range rec.Zs {
 			choices[lab] = ConvertRecToSpec(st)
 		}
@@ -86,40 +86,46 @@ func ConvertRecToSpec(r ExpRec) ExpSpec {
 	}
 }
 
-func MsgFromTermSpec(s ExpSpec) typeexp.ExpSpecME {
+func MsgFromExpSpec(s ExpSpec) typeexp.ExpSpecME {
 	switch spec := s.(type) {
 	case OneSpec:
 		return typeexp.ExpSpecME{K: typeexp.OneExp}
 	case LinkSpec:
 		return typeexp.ExpSpecME{
 			K:    typeexp.LinkExp,
-			Link: &typeexp.LinkSpecME{TypeQN: qualsym.ConvertToString(spec.TypeQN)}}
+			Link: &typeexp.LinkSpecME{TypeQN: uniqsym.ConvertToString(spec.TypeQN)}}
 	case TensorSpec:
 		return typeexp.ExpSpecME{
 			K: typeexp.TensorExp,
 			Tensor: &typeexp.ProdSpecME{
-				ValES:  MsgFromTermSpec(spec.Y),
-				ContES: MsgFromTermSpec(spec.Z),
+				ValES:  MsgFromExpSpec(spec.Y),
+				ContES: MsgFromExpSpec(spec.Z),
 			},
 		}
 	case LolliSpec:
 		return typeexp.ExpSpecME{
 			K: typeexp.LolliExp,
 			Lolli: &typeexp.ProdSpecME{
-				ValES:  MsgFromTermSpec(spec.Y),
-				ContES: MsgFromTermSpec(spec.Z),
+				ValES:  MsgFromExpSpec(spec.Y),
+				ContES: MsgFromExpSpec(spec.Z),
 			},
 		}
 	case WithSpec:
 		choices := make([]typeexp.ChoiceSpecME, len(spec.Zs))
 		for i, l := range maps.Keys(spec.Zs) {
-			choices[i] = typeexp.ChoiceSpecME{Label: string(l), ContES: MsgFromTermSpec(spec.Zs[l])}
+			choices[i] = typeexp.ChoiceSpecME{
+				Label:  uniqsym.ConvertToString(l),
+				ContES: MsgFromExpSpec(spec.Zs[l]),
+			}
 		}
 		return typeexp.ExpSpecME{K: typeexp.WithExp, With: &typeexp.SumSpecME{Choices: choices}}
 	case PlusSpec:
 		choices := make([]typeexp.ChoiceSpecME, len(spec.Zs))
 		for i, l := range maps.Keys(spec.Zs) {
-			choices[i] = typeexp.ChoiceSpecME{Label: string(l), ContES: MsgFromTermSpec(spec.Zs[l])}
+			choices[i] = typeexp.ChoiceSpecME{
+				Label:  uniqsym.ConvertToString(l),
+				ContES: MsgFromExpSpec(spec.Zs[l]),
+			}
 		}
 		return typeexp.ExpSpecME{K: typeexp.PlusExp, Plus: &typeexp.SumSpecME{Choices: choices}}
 	default:
@@ -127,54 +133,62 @@ func MsgFromTermSpec(s ExpSpec) typeexp.ExpSpecME {
 	}
 }
 
-func MsgToTermSpec(dto typeexp.ExpSpecME) (ExpSpec, error) {
+func MsgToExpSpec(dto typeexp.ExpSpecME) (ExpSpec, error) {
 	switch dto.K {
 	case typeexp.OneExp:
 		return OneSpec{}, nil
 	case typeexp.LinkExp:
-		roleQN, err := qualsym.ConvertFromString(dto.Link.TypeQN)
+		typeQN, err := uniqsym.ConvertFromString(dto.Link.TypeQN)
 		if err != nil {
 			return nil, err
 		}
-		return LinkSpec{TypeQN: roleQN}, nil
+		return LinkSpec{TypeQN: typeQN}, nil
 	case typeexp.TensorExp:
-		v, err := MsgToTermSpec(dto.Tensor.ValES)
+		valES, err := MsgToExpSpec(dto.Tensor.ValES)
 		if err != nil {
 			return nil, err
 		}
-		s, err := MsgToTermSpec(dto.Tensor.ContES)
+		contES, err := MsgToExpSpec(dto.Tensor.ContES)
 		if err != nil {
 			return nil, err
 		}
-		return TensorSpec{Y: v, Z: s}, nil
+		return TensorSpec{Y: valES, Z: contES}, nil
 	case typeexp.LolliExp:
-		v, err := MsgToTermSpec(dto.Lolli.ValES)
+		valES, err := MsgToExpSpec(dto.Lolli.ValES)
 		if err != nil {
 			return nil, err
 		}
-		s, err := MsgToTermSpec(dto.Lolli.ContES)
+		contES, err := MsgToExpSpec(dto.Lolli.ContES)
 		if err != nil {
 			return nil, err
 		}
-		return LolliSpec{Y: v, Z: s}, nil
+		return LolliSpec{Y: valES, Z: contES}, nil
 	case typeexp.PlusExp:
-		choices := make(map[qualsym.ADT]ExpSpec, len(dto.Plus.Choices))
+		choices := make(map[uniqsym.ADT]ExpSpec, len(dto.Plus.Choices))
 		for _, ch := range dto.Plus.Choices {
-			choice, err := MsgToTermSpec(ch.ContES)
+			choice, err := MsgToExpSpec(ch.ContES)
 			if err != nil {
 				return nil, err
 			}
-			choices[qualsym.ADT(ch.Label)] = choice
+			label, err := uniqsym.ConvertFromString(ch.Label)
+			if err != nil {
+				return nil, err
+			}
+			choices[label] = choice
 		}
 		return PlusSpec{Zs: choices}, nil
 	case typeexp.WithExp:
-		choices := make(map[qualsym.ADT]ExpSpec, len(dto.With.Choices))
+		choices := make(map[uniqsym.ADT]ExpSpec, len(dto.With.Choices))
 		for _, ch := range dto.With.Choices {
-			choice, err := MsgToTermSpec(ch.ContES)
+			choice, err := MsgToExpSpec(ch.ContES)
 			if err != nil {
 				return nil, err
 			}
-			choices[qualsym.ADT(ch.Label)] = choice
+			label, err := uniqsym.ConvertFromString(ch.Label)
+			if err != nil {
+				return nil, err
+			}
+			choices[label] = choice
 		}
 		return WithSpec{Zs: choices}, nil
 	default:
@@ -182,7 +196,7 @@ func MsgToTermSpec(dto typeexp.ExpSpecME) (ExpSpec, error) {
 	}
 }
 
-func MsgFromTermRef(r ExpRef) typeexp.ExpRefME {
+func MsgFromExpRef(r ExpRef) typeexp.ExpRefME {
 	ident := r.Ident().String()
 	switch r.(type) {
 	case OneRef, OneRec:
@@ -202,73 +216,73 @@ func MsgFromTermRef(r ExpRef) typeexp.ExpRefME {
 	}
 }
 
-func MsgToTermRef(dto typeexp.ExpRefME) (ExpRef, error) {
-	rid, err := identity.ConvertFromString(dto.ExpID)
+func MsgToExpRef(dto typeexp.ExpRefME) (ExpRef, error) {
+	expID, err := identity.ConvertFromString(dto.ExpID)
 	if err != nil {
 		return nil, err
 	}
 	switch dto.K {
 	case typeexp.OneExp:
-		return OneRef{rid}, nil
+		return OneRef{expID}, nil
 	case typeexp.LinkExp:
-		return LinkRef{rid}, nil
+		return LinkRef{expID}, nil
 	case typeexp.TensorExp:
-		return TensorRef{rid}, nil
+		return TensorRef{expID}, nil
 	case typeexp.LolliExp:
-		return LolliRef{rid}, nil
+		return LolliRef{expID}, nil
 	case typeexp.PlusExp:
-		return PlusRef{rid}, nil
+		return PlusRef{expID}, nil
 	case typeexp.WithExp:
-		return WithRef{rid}, nil
+		return WithRef{expID}, nil
 	default:
 		panic(typeexp.ErrKindUnexpected(dto.K))
 	}
 }
 
-func DataFromTermRef(ref ExpRef) *ExpRefDS {
+func DataFromExpRef(ref ExpRef) *ExpRefDS {
 	if ref == nil {
 		return nil
 	}
-	rid := ref.Ident().String()
+	expID := ref.Ident().String()
 	switch ref.(type) {
 	case OneRef, OneRec:
-		return &ExpRefDS{K: oneExp, ExpID: rid}
+		return &ExpRefDS{K: oneExp, ExpID: expID}
 	case LinkRef, LinkRec:
-		return &ExpRefDS{K: linkExp, ExpID: rid}
+		return &ExpRefDS{K: linkExp, ExpID: expID}
 	case TensorRef, TensorRec:
-		return &ExpRefDS{K: tensorExp, ExpID: rid}
+		return &ExpRefDS{K: tensorExp, ExpID: expID}
 	case LolliRef, LolliRec:
-		return &ExpRefDS{K: lolliExp, ExpID: rid}
+		return &ExpRefDS{K: lolliExp, ExpID: expID}
 	case PlusRef, PlusRec:
-		return &ExpRefDS{K: plusExp, ExpID: rid}
+		return &ExpRefDS{K: plusExp, ExpID: expID}
 	case WithRef, WithRec:
-		return &ExpRefDS{K: withExp, ExpID: rid}
+		return &ExpRefDS{K: withExp, ExpID: expID}
 	default:
 		panic(ErrRefTypeUnexpected(ref))
 	}
 }
 
-func DataToTermRef(dto *ExpRefDS) (ExpRef, error) {
+func DataToExpRef(dto *ExpRefDS) (ExpRef, error) {
 	if dto == nil {
 		return nil, nil
 	}
-	rid, err := identity.ConvertFromString(dto.ExpID)
+	expID, err := identity.ConvertFromString(dto.ExpID)
 	if err != nil {
 		return nil, err
 	}
 	switch dto.K {
 	case oneExp:
-		return OneRef{rid}, nil
+		return OneRef{expID}, nil
 	case linkExp:
-		return LinkRef{rid}, nil
+		return LinkRef{expID}, nil
 	case tensorExp:
-		return TensorRef{rid}, nil
+		return TensorRef{expID}, nil
 	case lolliExp:
-		return LolliRef{rid}, nil
+		return LolliRef{expID}, nil
 	case plusExp:
-		return PlusRef{rid}, nil
+		return PlusRef{expID}, nil
 	case withExp:
-		return WithRef{rid}, nil
+		return WithRef{expID}, nil
 	default:
 		panic(errUnexpectedKind(dto.K))
 	}
@@ -279,22 +293,22 @@ func DataToTermRec(dto *expRecDS) (ExpRec, error) {
 	for _, dto := range dto.States {
 		states[dto.ExpID] = dto
 	}
-	return statesToTermRec(states, states[dto.ExpID])
+	return statesToExpRec(states, states[dto.ExpID])
 }
 
-func DataFromTermRec(root ExpRec) *expRecDS {
-	if root == nil {
+func DataFromExpRec(rec ExpRec) *expRecDS {
+	if rec == nil {
 		return nil
 	}
 	dto := &expRecDS{
-		ExpID:  root.Ident().String(),
+		ExpID:  rec.Ident().String(),
 		States: nil,
 	}
-	statesFromTermRec("", root, dto)
+	statesFromTermRec("", rec, dto)
 	return dto
 }
 
-func statesToTermRec(states map[string]stateDS, st stateDS) (ExpRec, error) {
+func statesToExpRec(states map[string]stateDS, st stateDS) (ExpRec, error) {
 	stID, err := identity.ConvertFromString(st.ExpID)
 	if err != nil {
 		return nil, err
@@ -303,49 +317,57 @@ func statesToTermRec(states map[string]stateDS, st stateDS) (ExpRec, error) {
 	case oneExp:
 		return OneRec{ExpID: stID}, nil
 	case linkExp:
-		roleQN, err := qualsym.ConvertFromString(st.Spec.Link)
+		roleQN, err := uniqsym.ConvertFromString(st.Spec.Link)
 		if err != nil {
 			return nil, err
 		}
 		return LinkRec{ExpID: stID, TypeQN: roleQN}, nil
 	case tensorExp:
-		b, err := statesToTermRec(states, states[st.Spec.Tensor.ValES])
+		b, err := statesToExpRec(states, states[st.Spec.Tensor.ValES])
 		if err != nil {
 			return nil, err
 		}
-		c, err := statesToTermRec(states, states[st.Spec.Tensor.ContES])
+		c, err := statesToExpRec(states, states[st.Spec.Tensor.ContES])
 		if err != nil {
 			return nil, err
 		}
 		return TensorRec{ExpID: stID, Y: b, Z: c}, nil
 	case lolliExp:
-		y, err := statesToTermRec(states, states[st.Spec.Lolli.ValES])
+		y, err := statesToExpRec(states, states[st.Spec.Lolli.ValES])
 		if err != nil {
 			return nil, err
 		}
-		z, err := statesToTermRec(states, states[st.Spec.Lolli.ContES])
+		z, err := statesToExpRec(states, states[st.Spec.Lolli.ContES])
 		if err != nil {
 			return nil, err
 		}
 		return LolliRec{ExpID: stID, Y: y, Z: z}, nil
 	case plusExp:
-		choices := make(map[qualsym.ADT]ExpRec, len(st.Spec.Plus))
+		choices := make(map[uniqsym.ADT]ExpRec, len(st.Spec.Plus))
 		for _, ch := range st.Spec.Plus {
-			choice, err := statesToTermRec(states, states[ch.ContES])
+			choice, err := statesToExpRec(states, states[ch.ContES])
 			if err != nil {
 				return nil, err
 			}
-			choices[qualsym.ADT(ch.Lab)] = choice
+			label, err := uniqsym.ConvertFromString(ch.Lab)
+			if err != nil {
+				return nil, err
+			}
+			choices[label] = choice
 		}
 		return PlusRec{ExpID: stID, Zs: choices}, nil
 	case withExp:
-		choices := make(map[qualsym.ADT]ExpRec, len(st.Spec.With))
+		choices := make(map[uniqsym.ADT]ExpRec, len(st.Spec.With))
 		for _, ch := range st.Spec.With {
-			choice, err := statesToTermRec(states, states[ch.ContES])
+			choice, err := statesToExpRec(states, states[ch.ContES])
 			if err != nil {
 				return nil, err
 			}
-			choices[qualsym.ADT(ch.Lab)] = choice
+			label, err := uniqsym.ConvertFromString(ch.Lab)
+			if err != nil {
+				return nil, err
+			}
+			choices[label] = choice
 		}
 		return WithRec{ExpID: stID, Zs: choices}, nil
 	default:
@@ -370,7 +392,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 			K:      linkExp,
 			FromID: fromID,
 			Spec: expSpecDS{
-				Link: qualsym.ConvertToString(root.TypeQN),
+				Link: uniqsym.ConvertToString(root.TypeQN),
 			},
 		}
 		dto.States = append(dto.States, st)
@@ -420,7 +442,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			choices = append(choices, sumDS{string(label), cont})
+			choices = append(choices, sumDS{uniqsym.ConvertToString(label), cont})
 		}
 		st := stateDS{
 			ExpID:  stID,
@@ -437,7 +459,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			choices = append(choices, sumDS{string(label), cont})
+			choices = append(choices, sumDS{uniqsym.ConvertToString(label), cont})
 		}
 		st := stateDS{
 			ExpID:  stID,

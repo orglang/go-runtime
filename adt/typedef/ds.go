@@ -4,7 +4,7 @@ import (
 	"orglang/go-runtime/lib/db"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 type Repo interface {
@@ -13,9 +13,9 @@ type Repo interface {
 	SelectRefs(db.Source) ([]DefRef, error)
 	SelectRecByID(db.Source, identity.ADT) (DefRec, error)
 	SelectRecsByIDs(db.Source, []identity.ADT) ([]DefRec, error)
-	SelectRecByQN(db.Source, qualsym.ADT) (DefRec, error)
-	SelectRecsByQNs(db.Source, []qualsym.ADT) ([]DefRec, error)
-	SelectEnv(db.Source, []qualsym.ADT) (map[qualsym.ADT]DefRec, error)
+	SelectRecByQN(db.Source, uniqsym.ADT) (DefRec, error)
+	SelectRecsByQNs(db.Source, []uniqsym.ADT) ([]DefRec, error)
+	SelectEnv(db.Source, []uniqsym.ADT) (map[uniqsym.ADT]DefRec, error)
 }
 
 type defRefDS struct {

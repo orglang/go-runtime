@@ -28,8 +28,8 @@ func newEchoHandler(a API, l *slog.Logger) *echoHandler {
 
 func cfgEchoHandler(e *echo.Echo, h *echoHandler) error {
 	e.GET("/api/v1/procs/:id", h.GetSnap)
-	e.POST("/api/v1/procs/:id/execs", h.PostCall)
-	e.POST("/api/v1/pools/:id/steps", h.PostOne)
+	e.POST("/api/v1/procs/:id/execs", h.PostExec)
+	e.POST("/api/v1/pools/:id/steps", h.PostStep)
 	return nil
 }
 
@@ -52,7 +52,7 @@ func (h *echoHandler) GetSnap(c echo.Context) error {
 	return c.JSON(http.StatusOK, MsgFromExecSnap(snap))
 }
 
-func (h *echoHandler) PostCall(c echo.Context) error {
+func (h *echoHandler) PostExec(c echo.Context) error {
 	var dto procexec.ExecSpecME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
@@ -71,7 +71,7 @@ func (h *echoHandler) PostCall(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *echoHandler) PostOne(c echo.Context) error {
+func (h *echoHandler) PostStep(c echo.Context) error {
 	var dto sdk.StepSpecME
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {

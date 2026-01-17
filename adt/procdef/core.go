@@ -8,7 +8,8 @@ import (
 
 	"orglang/go-runtime/adt/identity"
 	"orglang/go-runtime/adt/procexp"
-	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/symbol"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 type API interface {
@@ -17,7 +18,7 @@ type API interface {
 }
 
 type DefSpec struct {
-	ProcQN qualsym.ADT // or dec.ProcID
+	ProcQN uniqsym.ADT // or dec.ProcID
 	ProcES procexp.ExpSpec
 }
 
@@ -64,7 +65,7 @@ func ErrDoesNotExist(want identity.ADT) error {
 	return fmt.Errorf("rec doesn't exist: %v", want)
 }
 
-func ErrMissingInCfg(want qualsym.ADT) error {
+func ErrMissingInCfg(want symbol.ADT) error {
 	return fmt.Errorf("channel missing in cfg: %v", want)
 }
 
@@ -72,6 +73,6 @@ func ErrMissingInCfg2(want identity.ADT) error {
 	return fmt.Errorf("channel missing in cfg: %v", want)
 }
 
-func ErrMissingInCtx(want qualsym.ADT) error {
+func ErrMissingInCtx(want symbol.ADT) error {
 	return fmt.Errorf("channel missing in ctx: %v", want)
 }

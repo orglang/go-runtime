@@ -12,7 +12,7 @@ import (
 	"orglang/go-runtime/lib/lf"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 type pgxDAO struct {
@@ -159,10 +159,10 @@ func (dao *pgxDAO) SelectRecByID(source db.Source, defID identity.ADT) (DefRec, 
 	return DataToDefRec(dto)
 }
 
-func (dao *pgxDAO) SelectRecByQN(source db.Source, typeQN qualsym.ADT) (DefRec, error) {
+func (dao *pgxDAO) SelectRecByQN(source db.Source, typeQN uniqsym.ADT) (DefRec, error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	fqnAttr := slog.Any("typeQN", typeQN)
-	rows, err := ds.Conn.Query(ds.Ctx, selectByFQN, qualsym.ConvertToString(typeQN))
+	rows, err := ds.Conn.Query(ds.Ctx, selectByFQN, uniqsym.ConvertToString(typeQN))
 	if err != nil {
 		dao.log.Error("query execution failed", fqnAttr, slog.String("q", selectByFQN))
 		return DefRec{}, err
@@ -218,26 +218,26 @@ func (dao *pgxDAO) SelectRecsByIDs(source db.Source, defIDs []identity.ADT) (_ [
 	return DataToDefRecs(dtos)
 }
 
-func (dao *pgxDAO) SelectEnv(source db.Source, typeQNs []qualsym.ADT) (map[qualsym.ADT]DefRec, error) {
+func (dao *pgxDAO) SelectEnv(source db.Source, typeQNs []uniqsym.ADT) (map[uniqsym.ADT]DefRec, error) {
 	recs, err := dao.SelectRecsByQNs(source, typeQNs)
 	if err != nil {
 		return nil, err
 	}
-	env := make(map[qualsym.ADT]DefRec, len(recs))
+	env := make(map[uniqsym.ADT]DefRec, len(recs))
 	for i, root := range recs {
 		env[typeQNs[i]] = root
 	}
 	return env, nil
 }
 
-func (dao *pgxDAO) SelectRecsByQNs(source db.Source, typeQNs []qualsym.ADT) (_ []DefRec, err error) {
+func (dao *pgxDAO) SelectRecsByQNs(source db.Source, typeQNs []uniqsym.ADT) (_ []DefRec, err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	if len(typeQNs) == 0 {
 		return []DefRec{}, nil
 	}
 	batch := pgx.Batch{}
 	for _, defQN := range typeQNs {
-		batch.Queue(selectByFQN, qualsym.ConvertToString(defQN))
+		batch.Queue(selectByFQN, uniqsym.ConvertToString(defQN))
 	}
 	br := ds.Conn.SendBatch(ds.Ctx, &batch)
 	defer func() {

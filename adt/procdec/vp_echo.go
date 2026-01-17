@@ -9,7 +9,8 @@ import (
 	"github.com/orglang/go-sdk/adt/procdec"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/symbol"
+	"orglang/go-runtime/adt/uniqsym"
 
 	"orglang/go-runtime/lib/lf"
 	"orglang/go-runtime/lib/te"
@@ -48,12 +49,12 @@ func (p *echoPresenter) PostOne(c echo.Context) error {
 		p.log.Error("validation failed", slog.Any("dto", dto))
 		return validationErr
 	}
-	ns, conversionErr := qualsym.ConvertFromString(dto.ProcNS)
+	ns, conversionErr := uniqsym.ConvertFromString(dto.ProcNS)
 	if conversionErr != nil {
 		p.log.Error("conversion failed", slog.Any("dto", dto))
 		return conversionErr
 	}
-	ref, inceptionErr := p.api.Incept(ns.New(dto.ProcSN))
+	ref, inceptionErr := p.api.Incept(ns.New(symbol.New(dto.ProcSN)))
 	if inceptionErr != nil {
 		return inceptionErr
 	}

@@ -6,8 +6,8 @@ import (
 	"orglang/go-runtime/lib/db"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
 	"orglang/go-runtime/adt/termctx"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 // Port
@@ -21,7 +21,7 @@ func newAPI() API {
 }
 
 type DecSpec struct {
-	PoolQN qualsym.ADT
+	PoolQN uniqsym.ADT
 	// Endpoints where pool acts as a provider for insiders
 	InsiderProvisionBCs []termctx.BindClaim
 	// Endpoints where pool acts as a client for insiders

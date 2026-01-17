@@ -9,21 +9,22 @@ import (
 	"orglang/go-runtime/lib/db"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
 	"orglang/go-runtime/adt/revnum"
+	"orglang/go-runtime/adt/symbol"
 	"orglang/go-runtime/adt/syndec"
 	"orglang/go-runtime/adt/termctx"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 type API interface {
-	Incept(qualsym.ADT) (DecRef, error)
+	Incept(uniqsym.ADT) (DecRef, error)
 	Create(DecSpec) (DecSnap, error)
 	RetrieveSnap(identity.ADT) (DecSnap, error)
 	RetreiveRefs() ([]DecRef, error)
 }
 
 type DecSpec struct {
-	ProcQN qualsym.ADT
+	ProcQN uniqsym.ADT
 	// endpoint where process acts as a provider
 	ProvisionEP termctx.BindClaim
 	// endpoints where process acts as a client
@@ -68,12 +69,12 @@ func newService(procs Repo, aliases syndec.Repo, operator db.Operator, l *slog.L
 	return &service{procs, aliases, operator, l}
 }
 
-func (s *service) Incept(procQN qualsym.ADT) (_ DecRef, err error) {
+func (s *service) Incept(procQN uniqsym.ADT) (_ DecRef, err error) {
 	ctx := context.Background()
 	qnAttr := slog.Any("procQN", procQN)
 	s.log.Debug("inception started", qnAttr)
 	newSyn := syndec.DecRec{DecQN: procQN, DecID: identity.New(), DecRN: revnum.Initial()}
-	newRec := DecRec{DecID: newSyn.DecID, DecRN: newSyn.DecRN, Title: newSyn.DecQN.SN()}
+	newRec := DecRec{DecID: newSyn.DecID, DecRN: newSyn.DecRN, Title: symbol.ConvertToString(newSyn.DecQN.Sym())}
 	s.operator.Explicit(ctx, func(ds db.Source) error {
 		err = s.synDecs.Insert(ds, newSyn)
 		if err != nil {
@@ -144,8 +145,8 @@ func (s *service) RetreiveRefs() (refs []DecRef, err error) {
 	return refs, nil
 }
 
-func CollectEnv(recs iter.Seq[DecRec]) []qualsym.ADT {
-	typeQNs := []qualsym.ADT{}
+func CollectEnv(recs iter.Seq[DecRec]) []uniqsym.ADT {
+	typeQNs := []uniqsym.ADT{}
 	for rec := range recs {
 		typeQNs = append(typeQNs, rec.X.TypeQN)
 		for _, y := range rec.Ys {

@@ -4,13 +4,13 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
 	"github.com/orglang/go-sdk/adt/identity"
-	"github.com/orglang/go-sdk/adt/qualsym"
+	"github.com/orglang/go-sdk/adt/uniqsym"
 )
 
 func (dto DecSpecVP) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.ProcNS, qualsym.Required...),
-		validation.Field(&dto.ProcSN, qualsym.Required...),
+		validation.Field(&dto.ProcNS, uniqsym.Required...),
+		validation.Field(&dto.ProcSN, uniqsym.Required...),
 	)
 }
 

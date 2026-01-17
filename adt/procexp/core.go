@@ -4,127 +4,128 @@ import (
 	"fmt"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/symbol"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 type ExpSpec interface {
-	Via() qualsym.ADT
+	Via() symbol.ADT
 }
 
 type CloseSpec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 }
 
-func (s CloseSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s CloseSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type WaitSpec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContES     ExpSpec
 }
 
-func (s WaitSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s WaitSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type SendSpec struct {
-	CommChnlPH qualsym.ADT
-	ValChnlPH  qualsym.ADT
+	CommChnlPH symbol.ADT
+	ValChnlPH  symbol.ADT
 }
 
-func (s SendSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s SendSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type RecvSpec struct {
-	CommChnlPH qualsym.ADT
-	BindChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
+	BindChnlPH symbol.ADT
 	ContES     ExpSpec
 }
 
-func (s RecvSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s RecvSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type LabSpec struct {
-	CommChnlPH qualsym.ADT
-	LabelQN    qualsym.ADT
+	CommChnlPH symbol.ADT
+	LabelQN    uniqsym.ADT
 	ContES     ExpSpec
 }
 
-func (s LabSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s LabSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type CaseSpec struct {
-	CommChnlPH qualsym.ADT
-	ContESs    map[qualsym.ADT]ExpSpec
+	CommChnlPH symbol.ADT
+	ContESs    map[uniqsym.ADT]ExpSpec
 }
 
-func (s CaseSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s CaseSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 // aka ExpName
 type LinkSpec struct {
-	ProcQN qualsym.ADT
+	ProcQN uniqsym.ADT
 	X      identity.ADT
 	Ys     []identity.ADT
 }
 
-func (s LinkSpec) Via() qualsym.ADT { return "" }
+func (s LinkSpec) Via() symbol.ADT { return "" }
 
 type FwdSpec struct {
-	CommChnlPH qualsym.ADT // old via (from)
-	ContChnlPH qualsym.ADT // new via (to)
+	CommChnlPH symbol.ADT // old via (from)
+	ContChnlPH symbol.ADT // new via (to)
 }
 
-func (s FwdSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s FwdSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type CallSpec struct {
-	CommChnlPH qualsym.ADT
-	BindChnlPH qualsym.ADT
-	ProcQN     qualsym.ADT
-	ValChnlPHs []qualsym.ADT // channel bulk
+	CommChnlPH symbol.ADT
+	BindChnlPH symbol.ADT
+	ProcQN     uniqsym.ADT
+	ValChnlPHs []symbol.ADT // channel bulk
 	ContES     ExpSpec
 }
 
-func (s CallSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s CallSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 // аналог RecvSpec, но значения принимаются балком
 type SpawnSpecOld struct {
-	X      qualsym.ADT
+	X      symbol.ADT
 	SigID  identity.ADT
-	Ys     []qualsym.ADT
-	PoolQN qualsym.ADT
+	Ys     []symbol.ADT
+	PoolQN uniqsym.ADT
 	ContES ExpSpec
 }
 
-func (s SpawnSpecOld) Via() qualsym.ADT { return s.X }
+func (s SpawnSpecOld) Via() symbol.ADT { return s.X }
 
 type SpawnSpec struct {
-	CommChnlPH  qualsym.ADT
-	ProcQN      qualsym.ADT
-	BindChnlPHs []qualsym.ADT
+	CommChnlPH  symbol.ADT
+	ProcQN      uniqsym.ADT
+	BindChnlPHs []symbol.ADT
 	ContES      ExpSpec
 }
 
-func (s SpawnSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s SpawnSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type AcqureSpec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContES     ExpSpec
 }
 
-func (s AcqureSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s AcqureSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type AcceptSpec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContES     ExpSpec
 }
 
-func (s AcceptSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s AcceptSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type DetachSpec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 }
 
-func (s DetachSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s DetachSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type ReleaseSpec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 }
 
-func (s ReleaseSpec) Via() qualsym.ADT { return s.CommChnlPH }
+func (s ReleaseSpec) Via() symbol.ADT { return s.CommChnlPH }
 
 type ExpRec interface {
 	ExpSpec
@@ -132,70 +133,70 @@ type ExpRec interface {
 }
 
 type CloseRec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 }
 
-func (r CloseRec) Via() qualsym.ADT { return r.CommChnlPH }
+func (r CloseRec) Via() symbol.ADT { return r.CommChnlPH }
 
 func (CloseRec) impl() {}
 
 type WaitRec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContES     ExpSpec
 }
 
-func (r WaitRec) Via() qualsym.ADT { return r.CommChnlPH }
+func (r WaitRec) Via() symbol.ADT { return r.CommChnlPH }
 
 func (WaitRec) impl() {}
 
 type SendRec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContChnlID identity.ADT
 	ValChnlID  identity.ADT
 	ValExpID   identity.ADT
 }
 
-func (r SendRec) Via() qualsym.ADT { return r.CommChnlPH }
+func (r SendRec) Via() symbol.ADT { return r.CommChnlPH }
 
 func (SendRec) impl() {}
 
 type RecvRec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContChnlID identity.ADT
-	ValChnlPH  qualsym.ADT
+	ValChnlPH  symbol.ADT
 	ContES     ExpSpec
 }
 
-func (r RecvRec) Via() qualsym.ADT { return r.CommChnlPH }
+func (r RecvRec) Via() symbol.ADT { return r.CommChnlPH }
 
 func (RecvRec) impl() {}
 
 type LabRec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContChnlID identity.ADT
-	LabelQN    qualsym.ADT
+	LabelQN    uniqsym.ADT
 }
 
-func (r LabRec) Via() qualsym.ADT { return r.CommChnlPH }
+func (r LabRec) Via() symbol.ADT { return r.CommChnlPH }
 
 func (LabRec) impl() {}
 
 type CaseRec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContChnlID identity.ADT
-	ContESs    map[qualsym.ADT]ExpSpec
+	ContESs    map[uniqsym.ADT]ExpSpec
 }
 
-func (r CaseRec) Via() qualsym.ADT { return r.CommChnlPH }
+func (r CaseRec) Via() symbol.ADT { return r.CommChnlPH }
 
 func (CaseRec) impl() {}
 
 type FwdRec struct {
-	CommChnlPH qualsym.ADT
+	CommChnlPH symbol.ADT
 	ContChnlID identity.ADT
 }
 
-func (r FwdRec) Via() qualsym.ADT { return r.CommChnlPH }
+func (r FwdRec) Via() symbol.ADT { return r.CommChnlPH }
 
 func (FwdRec) impl() {}
 

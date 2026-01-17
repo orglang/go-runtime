@@ -32,7 +32,7 @@ func newRepo() Repo {
 func (dao *pgxDAO) InsertRec(source db.Source, rec ExpRec) (err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("termID", rec.Ident())
-	dto := DataFromTermRec(rec)
+	dto := DataFromExpRec(rec)
 	query := `
 		INSERT INTO type_term_states (
 			exp_id, kind, from_id, spec
@@ -99,7 +99,7 @@ func (dao *pgxDAO) SelectRecByID(source db.Source, termID identity.ADT) (ExpRec,
 	for _, dto := range dtos {
 		type_term_states[dto.ExpID] = dto
 	}
-	return statesToTermRec(type_term_states, type_term_states[termID.String()])
+	return statesToExpRec(type_term_states, type_term_states[termID.String()])
 }
 
 func (dao *pgxDAO) SelectEnv(source db.Source, termIDs []identity.ADT) (map[identity.ADT]ExpRec, error) {

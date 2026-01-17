@@ -13,8 +13,9 @@ import (
 	"orglang/go-runtime/lib/te"
 
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/symbol"
 	"orglang/go-runtime/adt/typeexp"
+	"orglang/go-runtime/adt/uniqsym"
 )
 
 // Adapter
@@ -50,12 +51,12 @@ func (p *echoPresenter) PostOne(c echo.Context) error {
 		p.log.Error("validation failed", slog.Any("dto", dto))
 		return validationErr
 	}
-	ns, conversionErr := qualsym.ConvertFromString(dto.TypeNS)
+	ns, conversionErr := uniqsym.ConvertFromString(dto.TypeNS)
 	if conversionErr != nil {
 		p.log.Error("conversion failed", slog.Any("dto", dto))
 		return conversionErr
 	}
-	snap, creationErr := p.api.Create(DefSpec{TypeQN: ns.New(dto.TypeSN), TypeES: typeexp.OneSpec{}})
+	snap, creationErr := p.api.Create(DefSpec{TypeQN: ns.New(symbol.New(dto.TypeSN)), TypeES: typeexp.OneSpec{}})
 	if creationErr != nil {
 		return creationErr
 	}

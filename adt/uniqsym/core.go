@@ -4,25 +4,42 @@ import (
 	"orglang/go-runtime/adt/symbol"
 )
 
-var Nil ADT
-
 type ADT struct {
-	name  symbol.ADT
-	space *ADT
+	sym symbol.ADT
+	ns  *ADT
 }
 
 func New(name symbol.ADT) ADT {
-	return ADT{name, &Nil}
+	return ADT{name, nil}
 }
 
 func (space ADT) New(name symbol.ADT) ADT {
 	return ADT{name, &space}
 }
 
-func (s ADT) Name() symbol.ADT {
-	return s.name
+// symbol
+func (adt ADT) Sym() symbol.ADT {
+	return adt.sym
 }
 
-func (s ADT) Space() ADT {
-	return *s.space
+// namespace
+func (adt ADT) NS() ADT {
+	if adt.ns == nil {
+		return empty
+	}
+	return *adt.ns
 }
+
+func (a ADT) Equal(b ADT) bool {
+	if a.sym == b.sym && a.ns == b.ns {
+		return true
+	}
+	if a.ns == nil || b.ns == nil {
+		return false
+	}
+	return a.ns.Equal(*b.ns)
+}
+
+var (
+	empty ADT
+)

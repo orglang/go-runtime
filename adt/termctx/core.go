@@ -1,16 +1,15 @@
 package termctx
 
 import (
-	"orglang/go-runtime/adt/qualsym"
+	"orglang/go-runtime/adt/symbol"
+	"orglang/go-runtime/adt/uniqsym"
 )
-
-type ADT []BindClaim
 
 type BindClaim struct {
 	// binding placeholder (aka variable name)
-	BindPH qualsym.ADT
+	BindPH symbol.ADT
 	// type qualified name (aka variable type)
-	TypeQN qualsym.ADT
+	TypeQN uniqsym.ADT
 }
 
 type BindOffer struct {
