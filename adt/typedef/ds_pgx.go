@@ -31,7 +31,7 @@ func newRepo() Repo {
 
 func (dao *pgxDAO) Insert(source db.Source, rec DefRec) error {
 	ds := db.MustConform[db.SourcePgx](source)
-	refAttr := slog.Any("defRef", rec.ref)
+	refAttr := slog.Any("defRef", rec.DefRef)
 	dao.log.Log(ds.Ctx, lf.LevelTrace, "entity insertion started", refAttr)
 	dto, err := DataFromDefRec(rec)
 	if err != nil {
@@ -77,7 +77,7 @@ func (dao *pgxDAO) Insert(source db.Source, rec DefRec) error {
 
 func (dao *pgxDAO) Update(source db.Source, rec DefRec) error {
 	ds := db.MustConform[db.SourcePgx](source)
-	refAttr := slog.Any("defRef", rec.ref)
+	refAttr := slog.Any("defRef", rec.DefRef)
 	dao.log.Log(ds.Ctx, lf.LevelTrace, "entity update started", refAttr)
 	dto, err := DataFromDefRec(rec)
 	if err != nil {
@@ -109,7 +109,7 @@ func (dao *pgxDAO) Update(source db.Source, rec DefRec) error {
 	}
 	if ct.RowsAffected() == 0 {
 		dao.log.Error("entity update failed", refAttr)
-		return errOptimisticUpdate(rec.ref.RN - 1)
+		return errOptimisticUpdate(rec.DefRef.RN - 1)
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertSnap, args)
 	if err != nil {

@@ -30,9 +30,9 @@ func newRepo() Repo {
 	return &pgxDAO{}
 }
 
-func (dao *pgxDAO) Insert(source db.Source, rec DecRec) error {
+func (dao *pgxDAO) InsertRec(source db.Source, rec DecRec) error {
 	ds := db.MustConform[db.SourcePgx](source)
-	refAttr := slog.Any("decRef", rec.ref)
+	refAttr := slog.Any("decRef", rec.DecRef)
 	dto, err := DataFromDecRec(rec)
 	if err != nil {
 		dao.log.Error("model conversion failed", refAttr)
@@ -105,7 +105,7 @@ func (dao *pgxDAO) Insert(source db.Source, rec DecRec) error {
 	return nil
 }
 
-func (dao *pgxDAO) SelectSnapByRef(source db.Source, ref DecRef) (DecSnap, error) {
+func (dao *pgxDAO) SelectSnap(source db.Source, ref DecRef) (DecSnap, error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	idAttr := slog.Any("id", ref)
 	rows, err := ds.Conn.Query(ds.Ctx, selectById, ref.ID.String())
@@ -124,18 +124,18 @@ func (dao *pgxDAO) SelectSnapByRef(source db.Source, ref DecRef) (DecSnap, error
 }
 
 func (dao *pgxDAO) SelectEnv(source db.Source, ids []identity.ADT) (map[identity.ADT]DecRec, error) {
-	decs, err := dao.SelectByIDs(source, ids)
+	decs, err := dao.SelectRecs(source, ids)
 	if err != nil {
 		return nil, err
 	}
 	env := make(map[identity.ADT]DecRec, len(decs))
 	for _, dec := range decs {
-		env[dec.ref.ID] = dec
+		env[dec.DecRef.ID] = dec
 	}
 	return env, nil
 }
 
-func (dao *pgxDAO) SelectByIDs(source db.Source, ids []identity.ADT) (_ []DecRec, err error) {
+func (dao *pgxDAO) SelectRecs(source db.Source, ids []identity.ADT) (_ []DecRec, err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	if len(ids) == 0 {
 		return []DecRec{}, nil

@@ -40,5 +40,4 @@ var (
 	DataFromLiab     func(procexec.Liab) liabDS
 	DataToExecSnap   func(execSnapDS) (ExecSnap, error)
 	DataFromExecSnap func(ExecSnap) execSnapDS
-	DataToEPs        func([]epDS) ([]procexec.EP, error)
 )

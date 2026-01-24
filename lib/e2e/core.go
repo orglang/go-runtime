@@ -5,8 +5,10 @@ import (
 
 	"github.com/orglang/go-sdk/adt/pooldec"
 	"github.com/orglang/go-sdk/adt/poolexec"
+	"github.com/orglang/go-sdk/adt/poolstep"
 	"github.com/orglang/go-sdk/adt/procdec"
 	"github.com/orglang/go-sdk/adt/procexec"
+	"github.com/orglang/go-sdk/adt/procstep"
 	"github.com/orglang/go-sdk/adt/typedef"
 )
 
@@ -19,8 +21,9 @@ func newPoolDecAPI(client *resty.Client) PoolDecAPI {
 }
 
 type PoolExecAPI interface {
-	Retrieve(string) (poolexec.ExecSnap, error)
+	Retrieve(poolexec.ExecRef) (poolexec.ExecSnap, error)
 	Create(poolexec.ExecSpec) (poolexec.ExecRef, error)
+	Take(poolstep.StepSpec) error
 	Poll(poolexec.PollSpec) (procexec.ExecRef, error)
 }
 
@@ -37,7 +40,7 @@ func newProcDecAPI(client *resty.Client) ProcDecAPI {
 }
 
 type ProcExecAPI interface {
-	Run(procexec.ExecSpec) error
+	Take(procstep.StepSpec) error
 }
 
 func newProcExecAPI(client *resty.Client) ProcExecAPI {

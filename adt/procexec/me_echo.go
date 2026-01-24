@@ -9,12 +9,11 @@ import (
 
 	"github.com/orglang/go-sdk/adt/procexec"
 	sdk "github.com/orglang/go-sdk/adt/procstep"
-	"github.com/orglang/go-sdk/adt/uniqref"
 
 	"orglang/go-runtime/lib/lf"
 
-	"orglang/go-runtime/adt/identity"
 	"orglang/go-runtime/adt/procstep"
+	"orglang/go-runtime/adt/uniqref"
 )
 
 // Server-side primary adapter
@@ -29,47 +28,27 @@ func newEchoController(a API, l *slog.Logger) *echoController {
 
 func cfgEchoController(e *echo.Echo, h *echoController) error {
 	e.GET("/api/v1/procs/:id", h.GetSnap)
-	e.POST("/api/v1/procs/:id/execs", h.PostExec)
-	e.POST("/api/v1/pools/:id/steps", h.PostStep)
+	e.POST("/api/v1/procs/:id/steps", h.PostStep)
 	return nil
 }
 
 func (h *echoController) GetSnap(c echo.Context) error {
-	var dto uniqref.Msg
+	var dto procexec.ExecRef
 	bindingErr := c.Bind(&dto)
 	if bindingErr != nil {
 		h.log.Error("binding failed", slog.Any("dto", dto))
 		return bindingErr
 	}
-	id, conversionErr := identity.ConvertFromString(dto.ID)
+	ref, conversionErr := uniqref.MsgToADT(dto)
 	if conversionErr != nil {
 		h.log.Error("conversion failed", slog.Any("dto", dto))
 		return conversionErr
 	}
-	snap, retrievalErr := h.api.Retrieve(id)
+	snap, retrievalErr := h.api.RetrieveSnap(ref)
 	if retrievalErr != nil {
 		return retrievalErr
 	}
 	return c.JSON(http.StatusOK, MsgFromExecSnap(snap))
-}
-
-func (h *echoController) PostExec(c echo.Context) error {
-	var dto procexec.ExecSpec
-	bindingErr := c.Bind(&dto)
-	if bindingErr != nil {
-		h.log.Error("binding failed", slog.Any("dto", dto))
-		return bindingErr
-	}
-	spec, conversionErr := MsgToExecSpec(dto)
-	if conversionErr != nil {
-		h.log.Error("conversion failed", slog.Any("dto", dto))
-		return conversionErr
-	}
-	runningErr := h.api.Run(spec)
-	if runningErr != nil {
-		return runningErr
-	}
-	return c.NoContent(http.StatusOK)
 }
 
 func (h *echoController) PostStep(c echo.Context) error {

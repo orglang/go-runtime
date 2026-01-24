@@ -9,10 +9,10 @@ import (
 )
 
 type Repo interface {
-	Insert(db.Source, DecRec) error
+	InsertRec(db.Source, DecRec) error
 	SelectRefs(db.Source) ([]DecRef, error)
-	SelectSnapByRef(db.Source, DecRef) (DecSnap, error)
-	SelectByIDs(db.Source, []identity.ADT) ([]DecRec, error)
+	SelectSnap(db.Source, DecRef) (DecSnap, error)
+	SelectRecs(db.Source, []identity.ADT) ([]DecRec, error)
 	SelectEnv(db.Source, []identity.ADT) (map[identity.ADT]DecRec, error)
 }
 

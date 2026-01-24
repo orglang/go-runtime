@@ -35,13 +35,13 @@ type DefSpec struct {
 
 // aka TpDef
 type DefRec struct {
-	ref   DefRef
-	Title string
-	ExpID identity.ADT
+	DefRef DefRef
+	Title  string
+	ExpID  identity.ADT
 }
 
 type DefSnap struct {
-	ref    DefRef
+	DefRef DefRef
 	Title  string
 	TypeQN uniqsym.ADT
 	TypeES typeexp.ExpSpec
@@ -80,7 +80,7 @@ func (s *service) Incept(typeQN uniqsym.ADT) (_ DefRef, err error) {
 	qnAttr := slog.Any("typeQN", typeQN)
 	s.log.Debug("inception started", qnAttr)
 	newSyn := syndec.DecRec{DecQN: typeQN, DecID: identity.New(), DecRN: revnum.New()}
-	newType := DefRec{ref: DefRef{ID: newSyn.DecID, RN: newSyn.DecRN}, Title: symbol.ConvertToString(newSyn.DecQN.Sym())}
+	newType := DefRec{DefRef: DefRef{ID: newSyn.DecID, RN: newSyn.DecRN}, Title: symbol.ConvertToString(newSyn.DecQN.Sym())}
 	s.operator.Explicit(ctx, func(ds db.Source) error {
 		err = s.synDecs.Insert(ds, newSyn)
 		if err != nil {
@@ -96,7 +96,7 @@ func (s *service) Incept(typeQN uniqsym.ADT) (_ DefRef, err error) {
 		s.log.Error("inception failed", qnAttr)
 		return DefRef{}, err
 	}
-	s.log.Debug("inception succeed", qnAttr, slog.Any("defRef", newType.ref))
+	s.log.Debug("inception succeed", qnAttr, slog.Any("defRef", newType.DefRef))
 	return ConvertRecToRef(newType), nil
 }
 
@@ -107,9 +107,9 @@ func (s *service) Create(spec DefSpec) (_ DefSnap, err error) {
 	newSyn := syndec.DecRec{DecQN: spec.TypeQN, DecID: identity.New(), DecRN: revnum.New()}
 	newExp := typeexp.ConvertSpecToRec(spec.TypeES)
 	newType := DefRec{
-		ref:   DefRef{ID: newSyn.DecID, RN: newSyn.DecRN},
-		Title: symbol.ConvertToString(newSyn.DecQN.Sym()),
-		ExpID: newExp.Ident(),
+		DefRef: DefRef{ID: newSyn.DecID, RN: newSyn.DecRN},
+		Title:  symbol.ConvertToString(newSyn.DecQN.Sym()),
+		ExpID:  newExp.Ident(),
 	}
 	s.operator.Explicit(ctx, func(ds db.Source) error {
 		err = s.synDecs.Insert(ds, newSyn)
@@ -130,9 +130,9 @@ func (s *service) Create(spec DefSpec) (_ DefSnap, err error) {
 		s.log.Error("creation failed", qnAttr)
 		return DefSnap{}, err
 	}
-	s.log.Debug("creation succeed", qnAttr, slog.Any("defRef", newType.ref))
+	s.log.Debug("creation succeed", qnAttr, slog.Any("defRef", newType.DefRef))
 	return DefSnap{
-		ref:    newType.ref,
+		DefRef: newType.DefRef,
 		Title:  newType.Title,
 		TypeQN: newSyn.DecQN,
 		TypeES: typeexp.ConvertRecToSpec(newExp),
@@ -141,22 +141,22 @@ func (s *service) Create(spec DefSpec) (_ DefSnap, err error) {
 
 func (s *service) Modify(snap DefSnap) (_ DefSnap, err error) {
 	ctx := context.Background()
-	refAttr := slog.Any("defRef", snap.ref)
+	refAttr := slog.Any("defRef", snap.DefRef)
 	s.log.Debug("modification started", refAttr)
 	var rec DefRec
 	s.operator.Implicit(ctx, func(ds db.Source) error {
-		rec, err = s.typeDefs.SelectRecByRef(ds, snap.ref)
+		rec, err = s.typeDefs.SelectRecByRef(ds, snap.DefRef)
 		return err
 	})
 	if err != nil {
 		s.log.Error("modification failed", refAttr)
 		return DefSnap{}, err
 	}
-	if snap.ref.RN != rec.ref.RN {
+	if snap.DefRef.RN != rec.DefRef.RN {
 		s.log.Error("modification failed", refAttr)
-		return DefSnap{}, errConcurrentModification(snap.ref.RN, rec.ref.RN)
+		return DefSnap{}, errConcurrentModification(snap.DefRef.RN, rec.DefRef.RN)
 	} else {
-		snap.ref.RN = revnum.Next(snap.ref.RN)
+		snap.DefRef.RN = revnum.Next(snap.DefRef.RN)
 	}
 	curSnap, err := s.retrieveSnap(rec)
 	if err != nil {
@@ -171,9 +171,9 @@ func (s *service) Modify(snap DefSnap) (_ DefSnap, err error) {
 				return err
 			}
 			rec.ExpID = newTerm.Ident()
-			rec.ref.RN = snap.ref.RN
+			rec.DefRef.RN = snap.DefRef.RN
 		}
-		if rec.ref.RN == snap.ref.RN {
+		if rec.DefRef.RN == snap.DefRef.RN {
 			err = s.typeDefs.Update(ds, rec)
 			if err != nil {
 				return err
@@ -211,11 +211,11 @@ func (s *service) retrieveSnap(rec DefRec) (_ DefSnap, err error) {
 		return err
 	})
 	if err != nil {
-		s.log.Error("retrieval failed", slog.Any("defRef", rec.ref))
+		s.log.Error("retrieval failed", slog.Any("defRef", rec.DefRef))
 		return DefSnap{}, err
 	}
 	return DefSnap{
-		ref:    rec.ref,
+		DefRef: rec.DefRef,
 		Title:  rec.Title,
 		TypeES: typeexp.ConvertRecToSpec(termRec),
 	}, nil

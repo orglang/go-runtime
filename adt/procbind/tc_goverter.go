@@ -18,5 +18,8 @@ var (
 var (
 	DataToBindSpec   func(BindSpecDS) (BindSpec, error)
 	DataFromBindSpec func(BindSpec) BindSpecDS
+	DataToBindRec    func(BindRecDS) (BindRec, error)
 	DataFromBindRec  func(BindRec) BindRecDS
+	DataToBindRecs   func([]BindRecDS) ([]BindRec, error)
+	DataFromBindRecs func([]BindRec) []BindRecDS
 )

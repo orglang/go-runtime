@@ -8,20 +8,21 @@ import (
 	"orglang/go-runtime/lib/db"
 
 	"orglang/go-runtime/adt/identity"
+	"orglang/go-runtime/adt/poolstep"
 	"orglang/go-runtime/adt/procdec"
 	"orglang/go-runtime/adt/procexec"
-	"orglang/go-runtime/adt/revnum"
 	"orglang/go-runtime/adt/typedef"
 	"orglang/go-runtime/adt/typeexp"
+	"orglang/go-runtime/adt/uniqref"
 	"orglang/go-runtime/adt/uniqsym"
 )
 
 // Port
 type API interface {
 	Run(ExecSpec) (ExecRef, error) // aka Create
-	RetrieveSnap(identity.ADT) (ExecSnap, error)
+	RetrieveSnap(ExecRef) (ExecSnap, error)
 	RetreiveRefs() ([]ExecRef, error)
-	Spawn(procexec.ExecSpec) (procexec.ExecRef, error)
+	Take(poolstep.StepSpec) error
 	Poll(PollSpec) (procexec.ExecRef, error)
 }
 
@@ -30,20 +31,16 @@ type ExecSpec struct {
 	SupID  identity.ADT
 }
 
-type ExecRef struct {
-	ExecID identity.ADT
-	ProcID identity.ADT // main
-}
+type ExecRef = uniqref.ADT
 
 type ExecRec struct {
-	ExecID identity.ADT
-	ProcID identity.ADT // main
-	SupID  identity.ADT
-	ExecRN revnum.ADT
+	ExecRef ExecRef
+	ProcID  identity.ADT // main
+	SupID   identity.ADT
 }
 
 type ExecSnap struct {
-	ExecID   identity.ADT
+	ExecRef  ExecRef
 	Title    string
 	SubExecs []ExecRef
 }
@@ -82,18 +79,17 @@ func (s *service) Run(spec ExecSpec) (ExecRef, error) {
 	ctx := context.Background()
 	s.log.Debug("creation started", slog.Any("spec", spec))
 	execRec := ExecRec{
-		ExecID: identity.New(),
-		ProcID: identity.New(),
-		SupID:  spec.SupID,
-		ExecRN: revnum.New(),
+		ExecRef: uniqref.New(),
+		ProcID:  identity.New(),
+		SupID:   spec.SupID,
 	}
 	liab := procexec.Liab{
-		PoolID:  execRec.ExecID,
-		PoolRN:  execRec.ExecRN,
+		PoolID:  execRec.ExecRef.ID,
+		PoolRN:  execRec.ExecRef.RN,
 		ExecRef: procexec.ExecRef{ID: execRec.ProcID},
 	}
 	err := s.operator.Explicit(ctx, func(ds db.Source) error {
-		err := s.poolExecs.Insert(ds, execRec)
+		err := s.poolExecs.InsertRec(ds, execRec)
 		if err != nil {
 			s.log.Error("creation failed")
 			return err
@@ -109,7 +105,7 @@ func (s *service) Run(spec ExecSpec) (ExecRef, error) {
 		s.log.Error("creation failed")
 		return ExecRef{}, err
 	}
-	s.log.Debug("creation succeed", slog.Any("poolID", execRec.ExecID))
+	s.log.Debug("creation succeed", slog.Any("execRef", execRec.ExecRef))
 	return ConvertRecToRef(execRec), nil
 }
 
@@ -117,20 +113,20 @@ func (s *service) Poll(spec PollSpec) (procexec.ExecRef, error) {
 	return procexec.ExecRef{}, nil
 }
 
-func (s *service) Spawn(spec procexec.ExecSpec) (_ procexec.ExecRef, err error) {
-	procAttr := slog.Any("procID", spec.ExecID)
-	s.log.Debug("spawning started", procAttr)
-	return procexec.ExecRef{}, nil
+func (s *service) Take(spec poolstep.StepSpec) (err error) {
+	qnAttr := slog.Any("procQN", spec.ProcQN)
+	s.log.Debug("spawning started", qnAttr)
+	return nil
 }
 
-func (s *service) RetrieveSnap(execID identity.ADT) (snap ExecSnap, err error) {
+func (s *service) RetrieveSnap(ref ExecRef) (snap ExecSnap, err error) {
 	ctx := context.Background()
 	err = s.operator.Implicit(ctx, func(ds db.Source) error {
-		snap, err = s.poolExecs.SelectSubs(ds, execID)
+		snap, err = s.poolExecs.SelectSubs(ds, ref)
 		return err
 	})
 	if err != nil {
-		s.log.Error("retrieval failed", slog.Any("execID", execID))
+		s.log.Error("retrieval failed", slog.Any("execID", ref))
 		return ExecSnap{}, err
 	}
 	return snap, nil

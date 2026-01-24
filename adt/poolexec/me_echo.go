@@ -10,8 +10,6 @@ import (
 	"github.com/orglang/go-sdk/adt/poolexec"
 
 	"orglang/go-runtime/lib/te"
-
-	"orglang/go-runtime/adt/identity"
 )
 
 // Server-side primary adapter
@@ -63,11 +61,11 @@ func (h *echoController) GetOne(c echo.Context) error {
 	if bindingErr != nil {
 		return bindingErr
 	}
-	id, conversionErr := identity.ConvertFromString(dto.ID)
+	ref, conversionErr := MsgToExecRef(dto)
 	if conversionErr != nil {
 		return conversionErr
 	}
-	snap, retrievalErr := h.api.RetrieveSnap(id)
+	snap, retrievalErr := h.api.RetrieveSnap(ref)
 	if retrievalErr != nil {
 		return retrievalErr
 	}

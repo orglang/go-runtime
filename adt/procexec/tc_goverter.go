@@ -7,8 +7,6 @@ import "github.com/orglang/go-sdk/adt/procexec"
 // goverter:extend orglang/go-runtime/adt/identity:Convert.*
 // goverter:extend orglang/go-runtime/adt/procdef:Msg.*
 var (
-	MsgFromExecSpec func(ExecSpec) procexec.ExecSpec
-	MsgToExecSpec   func(procexec.ExecSpec) (ExecSpec, error)
 	MsgToExecRef    func(procexec.ExecRef) (ExecRef, error)
 	MsgFromExecRef  func(ExecRef) procexec.ExecRef
 	MsgToExecSnap   func(procexec.ExecSnap) (ExecSnap, error)
@@ -25,5 +23,4 @@ var (
 	DataFromMod  func(ExecMod) (execModDS, error)
 	DataToLiab   func(liabDS) (Liab, error)
 	DataFromLiab func(Liab) liabDS
-	DataToEPs    func([]epDS) ([]EP, error)
 )

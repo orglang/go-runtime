@@ -5,16 +5,15 @@ import (
 
 	"orglang/go-runtime/lib/db"
 
-	"orglang/go-runtime/adt/identity"
 	"orglang/go-runtime/adt/procexec"
 )
 
 // Port
 type Repo interface {
-	Insert(db.Source, ExecRec) error
+	InsertRec(db.Source, ExecRec) error
 	InsertLiab(db.Source, procexec.Liab) error
 	SelectRefs(db.Source) ([]ExecRef, error)
-	SelectSubs(db.Source, identity.ADT) (ExecSnap, error)
+	SelectSubs(db.Source, ExecRef) (ExecSnap, error)
 }
 
 type execRefDS struct {
@@ -23,32 +22,20 @@ type execRefDS struct {
 }
 
 type execSnapDS struct {
-	PoolID string      `db:"pool_id"`
+	ExecID string      `db:"pool_id"`
 	Title  string      `db:"title"`
 	Subs   []execRefDS `db:"subs"`
 }
 
 type execRecDS struct {
-	PoolID string         `db:"pool_id"`
+	ExecID string         `db:"pool_id"`
 	ProcID string         `db:"proc_id"`
 	SupID  sql.NullString `db:"sup_pool_id"`
-	PoolRN int64          `db:"rev"`
+	ExecRN int64          `db:"rev"`
 }
 
 type liabDS struct {
-	PoolID string `db:"pool_id"`
+	ExecID string `db:"pool_id"`
 	ProcID string `db:"proc_id"`
-	PoolRN int64  `db:"rev"`
-}
-
-type epDS struct {
-	ProcID   string  `db:"proc_id"`
-	ChnlPH   string  `db:"chnl_ph"`
-	ChnlID   string  `db:"chnl_id"`
-	StateID  string  `db:"state_id"`
-	PoolID   string  `db:"pool_id"`
-	SrvID    string  `db:"srv_id"`
-	SrvRevs  []int64 `db:"srv_revs"`
-	ClntID   string  `db:"clnt_id"`
-	ClntRevs []int64 `db:"clnt_revs"`
+	ExecRN int64  `db:"rev"`
 }

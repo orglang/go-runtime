@@ -10,7 +10,6 @@ import (
 )
 
 type StepSpec struct {
-	PoolID  identity.ADT
 	ExecRef uniqref.ADT
 	ProcES  procexp.ExpSpec
 }
@@ -23,7 +22,6 @@ type StepRec interface {
 func ChnlID(r StepRec) identity.ADT { return r.step() }
 
 type MsgRec struct {
-	PoolID  identity.ADT
 	PoolRN  revnum.ADT
 	ExecRef uniqref.ADT
 	ChnlID  identity.ADT
@@ -33,7 +31,6 @@ type MsgRec struct {
 func (r MsgRec) step() identity.ADT { return r.ChnlID }
 
 type SvcRec struct {
-	PoolID  identity.ADT
 	PoolRN  revnum.ADT
 	ExecRef uniqref.ADT
 	ChnlID  identity.ADT

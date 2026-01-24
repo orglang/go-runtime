@@ -65,8 +65,8 @@ type LinkSpec struct {
 func (s LinkSpec) Via() symbol.ADT { return "" }
 
 type FwdSpec struct {
-	CommChnlPH symbol.ADT // old via (from)
-	ContChnlPH symbol.ADT // new via (to)
+	CommChnlPH symbol.ADT // old via / from / x
+	ContChnlPH symbol.ADT // new via / to / y
 }
 
 func (s FwdSpec) Via() symbol.ADT { return s.CommChnlPH }

@@ -26,55 +26,31 @@ import (
 )
 
 type API interface {
-	Run(ExecSpec) error
 	Take(procstep.StepSpec) error
-	Retrieve(identity.ADT) (ExecSnap, error)
+	RetrieveSnap(ExecRef) (ExecSnap, error)
 }
 
 type ExecSpec struct {
-	PoolID identity.ADT
-	ExecID identity.ADT
-	ProcES procexp.ExpSpec
+	ProcQN     uniqsym.ADT
+	ValChnlIDs []identity.ADT
+	ProcES     procexp.ExpSpec
 }
 
 type ExecRef = uniqref.ADT
 
-type MainCfg struct {
-	ExecRef ExecRef
-	Bnds    map[symbol.ADT]EP2
-	Acts    map[identity.ADT]procstep.StepRec
-	PoolID  identity.ADT
-}
-
 // aka Configuration
 type ExecSnap struct {
-	ExecRef  ExecRef
-	Chnls    map[symbol.ADT]EP
-	StepRecs map[identity.ADT]procstep.StepRec
-	PoolID   identity.ADT
-	PoolRN   revnum.ADT
+	ExecRef ExecRef
+	ChnlBRs map[symbol.ADT]procbind.BindRec
+	ProcSRs map[identity.ADT]procstep.StepRec
+	PoolRN  revnum.ADT
 }
 
 type Env struct {
-	ProcDecs map[identity.ADT]procdec.DecRec
 	TypeDefs map[uniqsym.ADT]typedef.DefRec
 	TypeExps map[identity.ADT]typeexp.ExpRec
+	ProcDecs map[identity.ADT]procdec.DecRec
 	Locks    map[uniqsym.ADT]Lock
-}
-
-type EP struct {
-	ChnlPH symbol.ADT
-	ChnlID identity.ADT
-	ExpID  identity.ADT
-	// provider
-	PoolID identity.ADT
-}
-
-type EP2 struct {
-	ChnlPH symbol.ADT
-	ChnlID identity.ADT
-	// provider
-	PoolID identity.ADT
 }
 
 type Lock struct {
@@ -82,7 +58,7 @@ type Lock struct {
 	PoolRN revnum.ADT
 }
 
-func ChnlPH(rec EP) symbol.ADT { return rec.ChnlPH }
+func ChnlPH(rec procbind.BindRec) symbol.ADT { return rec.ChnlPH }
 
 // ответственность за процесс
 type Liab struct {
@@ -94,15 +70,10 @@ type Liab struct {
 }
 
 type ExecMod struct {
-	Locks []Lock
-	Bnds  []procbind.BindRec
-	Steps []procstep.StepRec
-	Liabs []Liab
-}
-
-type MainMod struct {
-	Bnds []procbind.BindRec
-	Acts []procstep.StepRec
+	Locks    []ExecRef
+	BindRecs []procbind.BindRec
+	StepRecs []procstep.StepRec
+	Liabs    []Liab
 }
 
 type service struct {
@@ -131,123 +102,8 @@ func newService(
 	return &service{procExecs, procDecs, typeDefs, typeExps, operator, l.With(name)}
 }
 
-func (s *service) Run(spec ExecSpec) (err error) {
-	idAttr := slog.Any("execID", spec.ExecID)
-	s.log.Debug("creation started", idAttr)
-	ctx := context.Background()
-	var mainCfg MainCfg
-	err = s.operator.Implicit(ctx, func(ds db.Source) error {
-		mainCfg, err = s.procExecs.SelectMain(ds, spec.ExecID)
-		return err
-	})
-	if err != nil {
-		s.log.Error("creation failed", idAttr)
-		return err
-	}
-	var mainEnv Env
-	err = s.checkType(spec.PoolID, mainEnv, mainCfg, spec.ProcES)
-	if err != nil {
-		s.log.Error("creation failed", idAttr)
-		return err
-	}
-	mainMod, err := s.createWith(mainEnv, mainCfg, spec.ProcES)
-	if err != nil {
-		s.log.Error("creation failed", idAttr)
-		return err
-	}
-	err = s.operator.Explicit(ctx, func(ds db.Source) error {
-		err = s.procExecs.UpdateMain(ds, mainMod)
-		if err != nil {
-			s.log.Error("creation failed", idAttr)
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		s.log.Error("creation failed", idAttr)
-		return err
-	}
-	return nil
-}
-
-func (s *service) Retrieve(execID identity.ADT) (_ ExecSnap, err error) {
+func (s *service) RetrieveSnap(ref ExecRef) (_ ExecSnap, err error) {
 	return ExecSnap{}, nil
-}
-
-func (s *service) checkType(
-	poolID identity.ADT,
-	mainEnv Env,
-	mainCfg MainCfg,
-	expSpec procexp.ExpSpec,
-) error {
-	chnlEP, ok := mainCfg.Bnds[expSpec.Via()]
-	if !ok {
-		panic("no via in main cfg")
-	}
-	if poolID == chnlEP.PoolID {
-		return s.checkProviderMain(poolID, mainEnv, mainCfg, expSpec)
-	} else {
-		return s.checkClientMain(poolID, mainEnv, mainCfg, expSpec)
-	}
-}
-
-func (s *service) checkProviderMain(
-	poolID identity.ADT,
-	mainEnv Env,
-	mainCfg MainCfg,
-	es procexp.ExpSpec,
-) error {
-	return nil
-}
-
-func (s *service) checkClientMain(
-	poolID identity.ADT,
-	mainEnv Env,
-	mainCfg MainCfg,
-	es procexp.ExpSpec,
-) error {
-	return nil
-}
-
-func (s *service) createWith(
-	mainEnv Env,
-	procCfg MainCfg,
-	es procexp.ExpSpec,
-) (
-	procMod MainMod,
-	_ error,
-) {
-	switch expSpec := es.(type) {
-	case procexp.CallSpec:
-		commChnlEP, ok := procCfg.Bnds[expSpec.CommChnlPH]
-		if !ok {
-			err := procdef.ErrMissingInCfg(expSpec.CommChnlPH)
-			s.log.Error("coordination failed")
-			return MainMod{}, err
-		}
-		viaAttr := slog.Any("cordID", commChnlEP.ChnlID)
-		for _, valChnlPH := range expSpec.ValChnlPHs {
-			sndrValBnd := procbind.BindRec{
-				ExecRef: ExecRef{ID: procCfg.ExecRef.ID, RN: -procCfg.ExecRef.RN.Next()},
-				ChnlPH:  valChnlPH,
-			}
-			procMod.Bnds = append(procMod.Bnds, sndrValBnd)
-		}
-		rcvrAct := procCfg.Acts[commChnlEP.ChnlID]
-		if rcvrAct == nil {
-			sndrAct := procstep.MsgRec{}
-			procMod.Acts = append(procMod.Acts, sndrAct)
-			s.log.Debug("coordination half done", viaAttr)
-			return procMod, nil
-		}
-		s.log.Debug("coordination succeed")
-		return procMod, nil
-	case procexp.SpawnSpec:
-		s.log.Debug("coordination succeed")
-		return procMod, nil
-	default:
-		panic(procexp.ErrExpTypeUnexpected(es))
-	}
 }
 
 func ErrMissingChnl(want symbol.ADT) error {
@@ -259,33 +115,32 @@ func (s *service) Take(spec procstep.StepSpec) (err error) {
 	s.log.Debug("taking started", refAttr)
 	ctx := context.Background()
 	// initial values
-	poolID := spec.PoolID
 	execRef := spec.ExecRef
 	expSpec := spec.ProcES
 	for expSpec != nil {
-		var procExec ExecSnap
+		var execSnap ExecSnap
 		err = s.operator.Implicit(ctx, func(ds db.Source) error {
-			procExec, err = s.procExecs.SelectSnap(ds, execRef)
+			execSnap, err = s.procExecs.SelectSnap(ds, execRef)
 			return err
 		})
 		if err != nil {
 			s.log.Error("taking failed", refAttr)
 			return err
 		}
-		if len(procExec.Chnls) == 0 {
-			panic("zero channels")
+		if len(execSnap.ChnlBRs) == 0 {
+			panic("zero channel binds")
 		}
 		decIDs := procexp.CollectEnv(expSpec)
-		var procDecs map[identity.ADT]procdec.DecRec
+		var procDRs map[identity.ADT]procdec.DecRec
 		err = s.operator.Implicit(ctx, func(ds db.Source) error {
-			procDecs, err = s.procDecs.SelectEnv(ds, decIDs)
+			procDRs, err = s.procDecs.SelectEnv(ds, decIDs)
 			return err
 		})
 		if err != nil {
 			s.log.Error("taking failed", refAttr, slog.Any("decs", decIDs))
 			return err
 		}
-		typeQNs := procdec.CollectEnv(maps.Values(procDecs))
+		typeQNs := procdec.CollectEnv(maps.Values(procDRs))
 		var typeDefs map[uniqsym.ADT]typedef.DefRec
 		err = s.operator.Implicit(ctx, func(ds db.Source) error {
 			typeDefs, err = s.typeDefs.SelectEnv(ds, typeQNs)
@@ -296,7 +151,7 @@ func (s *service) Take(spec procstep.StepSpec) (err error) {
 			return err
 		}
 		envIDs := typedef.CollectEnv(maps.Values(typeDefs))
-		ctxIDs := CollectCtx(maps.Values(procExec.Chnls))
+		ctxIDs := CollectCtx(maps.Values(execSnap.ChnlBRs))
 		var typeExps map[identity.ADT]typeexp.ExpRec
 		err = s.operator.Implicit(ctx, func(ds db.Source) error {
 			typeExps, err = s.typeExps.SelectEnv(ds, append(envIDs, ctxIDs...))
@@ -306,16 +161,16 @@ func (s *service) Take(spec procstep.StepSpec) (err error) {
 			s.log.Error("taking failed", refAttr, slog.Any("env", envIDs), slog.Any("ctx", ctxIDs))
 			return err
 		}
-		procEnv := Env{ProcDecs: procDecs, TypeDefs: typeDefs, TypeExps: typeExps}
-		procCtx := convertToCtx(poolID, maps.Values(procExec.Chnls), typeExps)
+		procEnv := Env{ProcDecs: procDRs, TypeDefs: typeDefs, TypeExps: typeExps}
+		procCtx := convertToCtx(maps.Values(execSnap.ChnlBRs), typeExps)
 		// type checking
-		err = s.checkState(poolID, procEnv, procCtx, procExec, expSpec)
+		err = s.checkState(procEnv, procCtx, execSnap, expSpec)
 		if err != nil {
 			s.log.Error("taking failed", refAttr)
 			return err
 		}
 		// step taking
-		nextSpec, procMod, err := s.takeWith(procEnv, procExec, expSpec)
+		nextSpec, procMod, err := s.takeWith(procEnv, execSnap, expSpec)
 		if err != nil {
 			s.log.Error("taking failed", refAttr)
 			return err
@@ -333,7 +188,6 @@ func (s *service) Take(spec procstep.StepSpec) (err error) {
 			return err
 		}
 		// next values
-		poolID = nextSpec.PoolID
 		execRef = nextSpec.ExecRef
 		expSpec = nextSpec.ProcES
 	}
@@ -352,252 +206,228 @@ func (s *service) takeWith(
 ) {
 	switch expSpec := es.(type) {
 	case procexp.CloseSpec:
-		commChnlEP, ok := execSnap.Chnls[expSpec.CommChnlPH]
+		commChnlBR, ok := execSnap.ChnlBRs[expSpec.CommChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.CommChnlPH)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaAttr := slog.Any("chnlID", commChnlEP.ChnlID)
-		sndrLock := Lock{
-			PoolID: execSnap.PoolID,
-			PoolRN: execSnap.PoolRN,
-		}
-		execMod.Locks = append(execMod.Locks, sndrLock)
-		rcvrStep := execSnap.StepRecs[commChnlEP.ChnlID]
-		if rcvrStep == nil {
-			sndrStep := procstep.MsgRec{
-				PoolID:  execSnap.PoolID,
+		viaAttr := slog.Any("chnlID", commChnlBR.ChnlID)
+		execMod.Locks = append(execMod.Locks, execSnap.ExecRef)
+		recieverSR := execSnap.ProcSRs[commChnlBR.ChnlID]
+		if recieverSR == nil {
+			senderSR := procstep.MsgRec{
 				ExecRef: execSnap.ExecRef,
-				ChnlID:  commChnlEP.ChnlID,
+				ChnlID:  commChnlBR.ChnlID,
 				PoolRN:  execSnap.PoolRN.Next(),
 				ValER: procexp.CloseRec{
 					CommChnlPH: expSpec.CommChnlPH,
 				},
 			}
-			execMod.Steps = append(execMod.Steps, sndrStep)
+			execMod.StepRecs = append(execMod.StepRecs, senderSR)
 			s.log.Debug("taking half done", viaAttr)
 			return stepSpec, execMod, nil
 		}
-		svcStep, ok := rcvrStep.(procstep.SvcRec)
+		serviceSR, ok := recieverSR.(procstep.SvcRec)
 		if !ok {
-			panic(procstep.ErrRecTypeUnexpected(rcvrStep))
+			panic(procstep.ErrRecTypeUnexpected(recieverSR))
 		}
-		switch termImpl := svcStep.ContER.(type) {
+		switch procER := serviceSR.ContER.(type) {
 		case procexp.WaitRec:
-			sndrViaBnd := procbind.BindRec{
+			senderBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
 				PoolRN:  -execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, sndrViaBnd)
-			rcvrViaBnd := procbind.BindRec{
-				ExecRef: svcStep.ExecRef,
-				ChnlPH:  termImpl.CommChnlPH,
-				PoolRN:  -svcStep.PoolRN.Next(),
+			execMod.BindRecs = append(execMod.BindRecs, senderBR)
+			recieverBR := procbind.BindRec{
+				ExecRef: serviceSR.ExecRef,
+				ChnlPH:  procER.CommChnlPH,
+				PoolRN:  -serviceSR.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrViaBnd)
+			execMod.BindRecs = append(execMod.BindRecs, recieverBR)
 			stepSpec = procstep.StepSpec{
-				PoolID:  svcStep.PoolID,
-				ExecRef: svcStep.ExecRef,
-				ProcES:  termImpl.ContES,
+				ExecRef: serviceSR.ExecRef,
+				ProcES:  procER.ContES,
 			}
 			s.log.Debug("taking succeed", viaAttr)
 			return stepSpec, execMod, nil
 		default:
-			panic(procexp.ErrRecTypeUnexpected(svcStep.ContER))
+			panic(procexp.ErrRecTypeUnexpected(serviceSR.ContER))
 		}
 	case procexp.WaitSpec:
-		commChnlEP, ok := execSnap.Chnls[expSpec.CommChnlPH]
+		commChnlBR, ok := execSnap.ChnlBRs[expSpec.CommChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.CommChnlPH)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaAttr := slog.Any("chnlID", commChnlEP.ChnlID)
-		rcvrLock := Lock{
-			PoolID: execSnap.PoolID,
-			PoolRN: execSnap.PoolRN,
-		}
-		execMod.Locks = append(execMod.Locks, rcvrLock)
-		sndrStep := execSnap.StepRecs[commChnlEP.ChnlID]
-		if sndrStep == nil {
-			rcvrStep := procstep.SvcRec{
-				PoolID:  execSnap.PoolID,
+		viaAttr := slog.Any("chnlID", commChnlBR.ChnlID)
+		execMod.Locks = append(execMod.Locks, execSnap.ExecRef)
+		senderSR := execSnap.ProcSRs[commChnlBR.ChnlID]
+		if senderSR == nil {
+			recieverSR := procstep.SvcRec{
 				ExecRef: execSnap.ExecRef,
-				ChnlID:  commChnlEP.ChnlID,
+				ChnlID:  commChnlBR.ChnlID,
 				PoolRN:  execSnap.PoolRN.Next(),
 				ContER: procexp.WaitRec{
 					CommChnlPH: expSpec.CommChnlPH,
 					ContES:     expSpec.ContES,
 				},
 			}
-			execMod.Steps = append(execMod.Steps, rcvrStep)
+			execMod.StepRecs = append(execMod.StepRecs, recieverSR)
 			s.log.Debug("taking half done", viaAttr)
 			return stepSpec, execMod, nil
 		}
-		msgStep, ok := sndrStep.(procstep.MsgRec)
+		messageSR, ok := senderSR.(procstep.MsgRec)
 		if !ok {
-			panic(procstep.ErrRecTypeUnexpected(sndrStep))
+			panic(procstep.ErrRecTypeUnexpected(senderSR))
 		}
-		switch termImpl := msgStep.ValER.(type) {
+		switch procER := messageSR.ValER.(type) {
 		case procexp.CloseRec:
-			sndrViaBnd := procbind.BindRec{
-				ExecRef: msgStep.ExecRef,
-				ChnlPH:  termImpl.CommChnlPH,
-				PoolRN:  -msgStep.PoolRN.Next(),
+			senderBR := procbind.BindRec{
+				ExecRef: messageSR.ExecRef,
+				ChnlPH:  procER.CommChnlPH,
+				PoolRN:  -messageSR.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, sndrViaBnd)
-			rcvrViaBnd := procbind.BindRec{
+			execMod.BindRecs = append(execMod.BindRecs, senderBR)
+			recieverBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
 				PoolRN:  -execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrViaBnd)
+			execMod.BindRecs = append(execMod.BindRecs, recieverBR)
 			stepSpec = procstep.StepSpec{
-				PoolID:  execSnap.PoolID,
 				ExecRef: execSnap.ExecRef,
 				ProcES:  expSpec.ContES,
 			}
 			s.log.Debug("taking succeed", viaAttr)
 			return stepSpec, execMod, nil
 		case procexp.FwdRec:
-			rcvrViaBnd := procbind.BindRec{
+			recieverBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
-				ChnlID:  termImpl.ContChnlID,
-				ExpID:   commChnlEP.ExpID,
+				ChnlID:  procER.ContChnlID,
+				ExpID:   commChnlBR.ExpID,
 				PoolRN:  execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrViaBnd)
+			execMod.BindRecs = append(execMod.BindRecs, recieverBR)
 			stepSpec = procstep.StepSpec{
-				PoolID:  execSnap.PoolID,
 				ExecRef: execSnap.ExecRef,
 				ProcES:  expSpec,
 			}
 			s.log.Debug("taking succeed", viaAttr)
 			return stepSpec, execMod, nil
 		default:
-			panic(procexp.ErrRecTypeUnexpected(msgStep.ValER))
+			panic(procexp.ErrRecTypeUnexpected(messageSR.ValER))
 		}
 	case procexp.SendSpec:
-		commChnlEP, ok := execSnap.Chnls[expSpec.CommChnlPH]
+		commChnlBR, ok := execSnap.ChnlBRs[expSpec.CommChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.CommChnlPH)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaAttr := slog.Any("chnlID", commChnlEP.ChnlID)
-		sndrLock := Lock{
-			PoolID: execSnap.PoolID,
-			PoolRN: execSnap.PoolRN,
-		}
-		execMod.Locks = append(execMod.Locks, sndrLock)
-		viaState, ok := procEnv.TypeExps[commChnlEP.ExpID]
+		viaAttr := slog.Any("chnlID", commChnlBR.ChnlID)
+		execMod.Locks = append(execMod.Locks, execSnap.ExecRef)
+		typeER, ok := procEnv.TypeExps[commChnlBR.ExpID]
 		if !ok {
-			err := typedef.ErrMissingInEnv(commChnlEP.ExpID)
+			err := typedef.ErrMissingInEnv(commChnlBR.ExpID)
 			s.log.Error("taking failed", viaAttr)
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaStateID := viaState.(typeexp.ProdRec).Next()
-		valChnl, ok := execSnap.Chnls[expSpec.ValChnlPH]
+		nextExpID := typeER.(typeexp.ProdRec).Next()
+		valueEP, ok := execSnap.ChnlBRs[expSpec.ValChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.ValChnlPH)
 			s.log.Error("taking failed", viaAttr)
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		sndrValBnd := procbind.BindRec{
+		senderBR := procbind.BindRec{
 			ExecRef: execSnap.ExecRef,
 			ChnlPH:  expSpec.ValChnlPH,
 			PoolRN:  -execSnap.PoolRN.Next(),
 		}
-		execMod.Bnds = append(execMod.Bnds, sndrValBnd)
-		rcvrStep := execSnap.StepRecs[commChnlEP.ChnlID]
-		if rcvrStep == nil {
+		execMod.BindRecs = append(execMod.BindRecs, senderBR)
+		recieverSR := execSnap.ProcSRs[commChnlBR.ChnlID]
+		if recieverSR == nil {
 			newChnlID := identity.New()
-			sndrViaBnd := procbind.BindRec{
+			senderBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
 				ChnlID:  newChnlID,
-				ExpID:   viaStateID,
+				ExpID:   nextExpID,
 				PoolRN:  execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, sndrViaBnd)
-			sndrStep := procstep.MsgRec{
-				PoolID:  execSnap.PoolID,
+			execMod.BindRecs = append(execMod.BindRecs, senderBR)
+			senderSR := procstep.MsgRec{
 				ExecRef: execSnap.ExecRef,
-				ChnlID:  commChnlEP.ChnlID,
+				ChnlID:  commChnlBR.ChnlID,
 				PoolRN:  execSnap.PoolRN.Next(),
 				ValER: procexp.SendRec{
 					CommChnlPH: expSpec.CommChnlPH,
 					ContChnlID: newChnlID,
-					ValChnlID:  valChnl.ChnlID,
-					ValExpID:   valChnl.ExpID,
+					ValChnlID:  valueEP.ChnlID,
+					ValExpID:   valueEP.ExpID,
 				},
 			}
-			execMod.Steps = append(execMod.Steps, sndrStep)
+			execMod.StepRecs = append(execMod.StepRecs, senderSR)
 			s.log.Debug("taking half done", viaAttr)
 			return stepSpec, execMod, nil
 		}
-		svcStep, ok := rcvrStep.(procstep.SvcRec)
+		serviceSR, ok := recieverSR.(procstep.SvcRec)
 		if !ok {
-			panic(procstep.ErrRecTypeUnexpected(rcvrStep))
+			panic(procstep.ErrRecTypeUnexpected(recieverSR))
 		}
-		switch termImpl := svcStep.ContER.(type) {
+		switch expRec := serviceSR.ContER.(type) {
 		case procexp.RecvRec:
-			sndrViaBnd := procbind.BindRec{
+			senderBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
-				ChnlID:  termImpl.ContChnlID,
-				ExpID:   viaStateID,
+				ChnlID:  expRec.ContChnlID,
+				ExpID:   nextExpID,
 				PoolRN:  execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, sndrViaBnd)
-			rcvrViaBnd := procbind.BindRec{
-				ExecRef: svcStep.ExecRef,
-				ChnlPH:  termImpl.CommChnlPH,
-				ChnlID:  termImpl.ContChnlID,
-				ExpID:   viaStateID,
-				PoolRN:  svcStep.PoolRN.Next(),
+			execMod.BindRecs = append(execMod.BindRecs, senderBR)
+			recieverBR := procbind.BindRec{
+				ExecRef: serviceSR.ExecRef,
+				ChnlPH:  expRec.CommChnlPH,
+				ChnlID:  expRec.ContChnlID,
+				ExpID:   nextExpID,
+				PoolRN:  serviceSR.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrViaBnd)
-			rcvrValBnd := procbind.BindRec{
-				ExecRef: svcStep.ExecRef,
-				ChnlPH:  termImpl.ValChnlPH,
-				ChnlID:  valChnl.ChnlID,
-				ExpID:   valChnl.ExpID,
-				PoolRN:  svcStep.PoolRN.Next(),
+			execMod.BindRecs = append(execMod.BindRecs, recieverBR)
+			receiverBR := procbind.BindRec{
+				ExecRef: serviceSR.ExecRef,
+				ChnlPH:  expRec.ValChnlPH,
+				ChnlID:  valueEP.ChnlID,
+				ExpID:   valueEP.ExpID,
+				PoolRN:  serviceSR.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrValBnd)
+			execMod.BindRecs = append(execMod.BindRecs, receiverBR)
 			stepSpec = procstep.StepSpec{
-				PoolID:  svcStep.PoolID,
-				ExecRef: svcStep.ExecRef,
-				ProcES:  termImpl.ContES,
+				ExecRef: serviceSR.ExecRef,
+				ProcES:  expRec.ContES,
 			}
 			s.log.Debug("taking succeed", viaAttr)
 			return stepSpec, execMod, nil
 		default:
-			panic(procexp.ErrRecTypeUnexpected(svcStep.ContER))
+			panic(procexp.ErrRecTypeUnexpected(serviceSR.ContER))
 		}
 	case procexp.RecvSpec:
-		commChnlEP, ok := execSnap.Chnls[expSpec.CommChnlPH]
+		commChnlBR, ok := execSnap.ChnlBRs[expSpec.CommChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.CommChnlPH)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaAttr := slog.Any("chnlID", commChnlEP.ChnlID)
-		rcvrLock := Lock{
-			PoolID: execSnap.PoolID,
-			PoolRN: execSnap.PoolRN,
-		}
-		execMod.Locks = append(execMod.Locks, rcvrLock)
-		sndrSemRec := execSnap.StepRecs[commChnlEP.ChnlID]
-		if sndrSemRec == nil {
-			rcvrSemRec := procstep.SvcRec{
-				PoolID:  execSnap.PoolID,
+		viaAttr := slog.Any("chnlID", commChnlBR.ChnlID)
+		execMod.Locks = append(execMod.Locks, execSnap.ExecRef)
+		senderSR := execSnap.ProcSRs[commChnlBR.ChnlID]
+		if senderSR == nil {
+			receiverSR := procstep.SvcRec{
 				ExecRef: execSnap.ExecRef,
-				ChnlID:  commChnlEP.ChnlID,
+				ChnlID:  commChnlBR.ChnlID,
 				PoolRN:  execSnap.PoolRN.Next(),
 				ContER: procexp.RecvRec{
 					CommChnlPH: expSpec.CommChnlPH,
@@ -606,40 +436,39 @@ func (s *service) takeWith(
 					ContES:     expSpec.ContES,
 				},
 			}
-			execMod.Steps = append(execMod.Steps, rcvrSemRec)
+			execMod.StepRecs = append(execMod.StepRecs, receiverSR)
 			s.log.Debug("taking half done", viaAttr)
 			return stepSpec, execMod, nil
 		}
-		sndrMsgRec, ok := sndrSemRec.(procstep.MsgRec)
+		sndrMsgRec, ok := senderSR.(procstep.MsgRec)
 		if !ok {
-			panic(procstep.ErrRecTypeUnexpected(sndrSemRec))
+			panic(procstep.ErrRecTypeUnexpected(senderSR))
 		}
 		switch termRec := sndrMsgRec.ValER.(type) {
 		case procexp.SendRec:
-			viaState, ok := procEnv.TypeExps[commChnlEP.ExpID]
+			typeER, ok := procEnv.TypeExps[commChnlBR.ExpID]
 			if !ok {
-				err := typedef.ErrMissingInEnv(commChnlEP.ExpID)
+				err := typedef.ErrMissingInEnv(commChnlBR.ExpID)
 				s.log.Error("taking failed", viaAttr)
 				return procstep.StepSpec{}, ExecMod{}, err
 			}
-			rcvrViaBnd := procbind.BindRec{
+			recieverBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
 				ChnlID:  termRec.ContChnlID,
-				ExpID:   viaState.(typeexp.ProdRec).Next(),
+				ExpID:   typeER.(typeexp.ProdRec).Next(),
 				PoolRN:  execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrViaBnd)
-			rcvrValBnd := procbind.BindRec{
+			execMod.BindRecs = append(execMod.BindRecs, recieverBR)
+			receiverBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.BindChnlPH,
 				ChnlID:  termRec.ValChnlID,
 				ExpID:   termRec.ValExpID,
 				PoolRN:  execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrValBnd)
+			execMod.BindRecs = append(execMod.BindRecs, receiverBR)
 			stepSpec = procstep.StepSpec{
-				PoolID:  execSnap.PoolID,
 				ExecRef: execSnap.ExecRef,
 				ProcES:  expSpec.ContES,
 			}
@@ -649,40 +478,35 @@ func (s *service) takeWith(
 			panic(procexp.ErrRecTypeUnexpected(sndrMsgRec.ValER))
 		}
 	case procexp.LabSpec:
-		commChnlEP, ok := execSnap.Chnls[expSpec.CommChnlPH]
+		commChnlBR, ok := execSnap.ChnlBRs[expSpec.CommChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.CommChnlPH)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaAttr := slog.Any("chnlID", commChnlEP.ChnlID)
-		sndrLock := Lock{
-			PoolID: execSnap.PoolID,
-			PoolRN: execSnap.PoolRN,
-		}
-		execMod.Locks = append(execMod.Locks, sndrLock)
-		viaState, ok := procEnv.TypeExps[commChnlEP.ExpID]
+		viaAttr := slog.Any("chnlID", commChnlBR.ChnlID)
+		execMod.Locks = append(execMod.Locks, execSnap.ExecRef)
+		typeER, ok := procEnv.TypeExps[commChnlBR.ExpID]
 		if !ok {
-			err := typedef.ErrMissingInEnv(commChnlEP.ExpID)
+			err := typedef.ErrMissingInEnv(commChnlBR.ExpID)
 			s.log.Error("taking failed", viaAttr)
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaStateID := viaState.(typeexp.SumRec).Next(expSpec.LabelQN)
-		rcvrStep := execSnap.StepRecs[commChnlEP.ChnlID]
-		if rcvrStep == nil {
+		nextExpID := typeER.(typeexp.SumRec).Next(expSpec.LabelQN)
+		recieverSR := execSnap.ProcSRs[commChnlBR.ChnlID]
+		if recieverSR == nil {
 			newViaID := identity.New()
-			sndrViaBnd := procbind.BindRec{
+			senderBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
 				ChnlID:  newViaID,
-				ExpID:   viaStateID,
+				ExpID:   nextExpID,
 				PoolRN:  execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, sndrViaBnd)
-			sndrStep := procstep.MsgRec{
-				PoolID:  execSnap.PoolID,
+			execMod.BindRecs = append(execMod.BindRecs, senderBR)
+			senderSR := procstep.MsgRec{
 				ExecRef: execSnap.ExecRef,
-				ChnlID:  commChnlEP.ChnlID,
+				ChnlID:  commChnlBR.ChnlID,
 				PoolRN:  execSnap.PoolRN.Next(),
 				ValER: procexp.LabRec{
 					CommChnlPH: expSpec.CommChnlPH,
@@ -690,61 +514,55 @@ func (s *service) takeWith(
 					LabelQN:    expSpec.LabelQN,
 				},
 			}
-			execMod.Steps = append(execMod.Steps, sndrStep)
+			execMod.StepRecs = append(execMod.StepRecs, senderSR)
 			s.log.Debug("taking half done", viaAttr)
 			return stepSpec, execMod, nil
 		}
-		svcStep, ok := rcvrStep.(procstep.SvcRec)
+		serviceSR, ok := recieverSR.(procstep.SvcRec)
 		if !ok {
-			panic(procstep.ErrRecTypeUnexpected(rcvrStep))
+			panic(procstep.ErrRecTypeUnexpected(recieverSR))
 		}
-		switch termImpl := svcStep.ContER.(type) {
+		switch expRec := serviceSR.ContER.(type) {
 		case procexp.CaseRec:
-			sndrViaBnd := procbind.BindRec{
+			senderBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
-				ChnlID:  termImpl.ContChnlID,
-				ExpID:   viaStateID,
+				ChnlID:  expRec.ContChnlID,
+				ExpID:   nextExpID,
 				PoolRN:  execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, sndrViaBnd)
-			rcvrViaBnd := procbind.BindRec{
-				ExecRef: svcStep.ExecRef,
-				ChnlPH:  termImpl.CommChnlPH,
-				ChnlID:  termImpl.ContChnlID,
-				ExpID:   viaStateID,
-				PoolRN:  svcStep.PoolRN.Next(),
+			execMod.BindRecs = append(execMod.BindRecs, senderBR)
+			recieverBR := procbind.BindRec{
+				ExecRef: serviceSR.ExecRef,
+				ChnlPH:  expRec.CommChnlPH,
+				ChnlID:  expRec.ContChnlID,
+				ExpID:   nextExpID,
+				PoolRN:  serviceSR.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrViaBnd)
+			execMod.BindRecs = append(execMod.BindRecs, recieverBR)
 			stepSpec = procstep.StepSpec{
-				PoolID:  svcStep.PoolID,
-				ExecRef: svcStep.ExecRef,
-				ProcES:  termImpl.ContESs[expSpec.LabelQN],
+				ExecRef: serviceSR.ExecRef,
+				ProcES:  expRec.ContESs[expSpec.LabelQN],
 			}
 			s.log.Debug("taking succeed", viaAttr)
 			return stepSpec, execMod, nil
 		default:
-			panic(procexp.ErrRecTypeUnexpected(svcStep.ContER))
+			panic(procexp.ErrRecTypeUnexpected(serviceSR.ContER))
 		}
 	case procexp.CaseSpec:
-		commChnlEP, ok := execSnap.Chnls[expSpec.CommChnlPH]
+		commChnlBR, ok := execSnap.ChnlBRs[expSpec.CommChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.CommChnlPH)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaAttr := slog.Any("chnlID", commChnlEP.ChnlID)
-		rcvrLock := Lock{
-			PoolID: execSnap.PoolID,
-			PoolRN: execSnap.PoolRN,
-		}
-		execMod.Locks = append(execMod.Locks, rcvrLock)
-		sndrStep := execSnap.StepRecs[commChnlEP.ChnlID]
-		if sndrStep == nil {
-			rcvrStep := procstep.SvcRec{
-				PoolID:  execSnap.PoolID,
+		viaAttr := slog.Any("chnlID", commChnlBR.ChnlID)
+		execMod.Locks = append(execMod.Locks, execSnap.ExecRef)
+		senderSR := execSnap.ProcSRs[commChnlBR.ChnlID]
+		if senderSR == nil {
+			recieverSR := procstep.SvcRec{
 				ExecRef: execSnap.ExecRef,
-				ChnlID:  commChnlEP.ChnlID,
+				ChnlID:  commChnlBR.ChnlID,
 				PoolRN:  execSnap.PoolRN.Next(),
 				ContER: procexp.CaseRec{
 					CommChnlPH: expSpec.CommChnlPH,
@@ -752,39 +570,38 @@ func (s *service) takeWith(
 					ContESs:    expSpec.ContESs,
 				},
 			}
-			execMod.Steps = append(execMod.Steps, rcvrStep)
+			execMod.StepRecs = append(execMod.StepRecs, recieverSR)
 			s.log.Debug("taking half done", viaAttr)
 			return stepSpec, execMod, nil
 		}
-		msgStep, ok := sndrStep.(procstep.MsgRec)
+		messageSR, ok := senderSR.(procstep.MsgRec)
 		if !ok {
-			panic(procstep.ErrRecTypeUnexpected(sndrStep))
+			panic(procstep.ErrRecTypeUnexpected(senderSR))
 		}
-		switch termImpl := msgStep.ValER.(type) {
+		switch procER := messageSR.ValER.(type) {
 		case procexp.LabRec:
-			viaState, ok := procEnv.TypeExps[commChnlEP.ExpID]
+			typeER, ok := procEnv.TypeExps[commChnlBR.ExpID]
 			if !ok {
-				err := typedef.ErrMissingInEnv(commChnlEP.ExpID)
+				err := typedef.ErrMissingInEnv(commChnlBR.ExpID)
 				s.log.Error("taking failed", viaAttr)
 				return procstep.StepSpec{}, ExecMod{}, err
 			}
-			rcvrViaBnd := procbind.BindRec{
+			recieverBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  expSpec.CommChnlPH,
-				ChnlID:  termImpl.ContChnlID,
-				ExpID:   viaState.(typeexp.SumRec).Next(termImpl.LabelQN),
+				ChnlID:  procER.ContChnlID,
+				ExpID:   typeER.(typeexp.SumRec).Next(procER.LabelQN),
 				PoolRN:  execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrViaBnd)
+			execMod.BindRecs = append(execMod.BindRecs, recieverBR)
 			stepSpec = procstep.StepSpec{
-				PoolID:  execSnap.PoolID,
 				ExecRef: execSnap.ExecRef,
-				ProcES:  expSpec.ContESs[termImpl.LabelQN],
+				ProcES:  expSpec.ContESs[procER.LabelQN],
 			}
 			s.log.Debug("taking succeed", viaAttr)
 			return stepSpec, execMod, nil
 		default:
-			panic(procexp.ErrRecTypeUnexpected(msgStep.ValER))
+			panic(procexp.ErrRecTypeUnexpected(messageSR.ValER))
 		}
 	case procexp.SpawnSpecOld:
 		rcvrSnap, ok := procEnv.Locks[expSpec.PoolQN]
@@ -805,79 +622,78 @@ func (s *service) takeWith(
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		rcvrTypeDef, ok := procEnv.TypeDefs[rcvrProcDec.X.TypeQN]
+		rcvrTypeDef, ok := procEnv.TypeDefs[rcvrProcDec.ProviderBS.TypeQN]
 		if !ok {
-			err := errMissingRole(rcvrProcDec.X.TypeQN)
+			err := errMissingRole(rcvrProcDec.ProviderBS.TypeQN)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
 		contChnlID := identity.New()
-		sndrViaBnd := procbind.BindRec{
+		senderBR := procbind.BindRec{
 			ExecRef: execSnap.ExecRef,
 			ChnlPH:  expSpec.X,
 			ChnlID:  contChnlID,
 			ExpID:   rcvrTypeDef.ExpID,
 			PoolRN:  execSnap.PoolRN.Next(),
 		}
-		execMod.Bnds = append(execMod.Bnds, sndrViaBnd)
-		rcvrViaBnd := procbind.BindRec{
+		execMod.BindRecs = append(execMod.BindRecs, senderBR)
+		recieverBR := procbind.BindRec{
 			ExecRef: rcvrLiab.ExecRef,
-			ChnlPH:  rcvrProcDec.X.ChnlPH,
+			ChnlPH:  rcvrProcDec.ProviderBS.ChnlPH,
 			ChnlID:  contChnlID,
 			ExpID:   rcvrTypeDef.ExpID,
 			PoolRN:  rcvrSnap.PoolRN.Next(),
 		}
-		execMod.Bnds = append(execMod.Bnds, rcvrViaBnd)
+		execMod.BindRecs = append(execMod.BindRecs, recieverBR)
 		for i, valChnlPH := range expSpec.Ys {
-			valChnlEP, ok := execSnap.Chnls[valChnlPH]
+			valChnlBR, ok := execSnap.ChnlBRs[valChnlPH]
 			if !ok {
 				err := ErrMissingChnl(valChnlPH)
 				s.log.Error("taking failed")
 				return procstep.StepSpec{}, ExecMod{}, err
 			}
-			sndrValBnd := procbind.BindRec{
+			senderBR := procbind.BindRec{
 				ExecRef: execSnap.ExecRef,
 				ChnlPH:  valChnlPH,
 				PoolRN:  -execSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, sndrValBnd)
-			rcvrValBnd := procbind.BindRec{
+			execMod.BindRecs = append(execMod.BindRecs, senderBR)
+			receiverBR := procbind.BindRec{
 				ExecRef: rcvrLiab.ExecRef,
-				ChnlPH:  rcvrProcDec.Ys[i].ChnlPH,
-				ChnlID:  valChnlEP.ChnlID,
-				ExpID:   valChnlEP.ExpID,
+				ChnlPH:  rcvrProcDec.ClientBSs[i].ChnlPH,
+				ChnlID:  valChnlBR.ChnlID,
+				ExpID:   valChnlBR.ExpID,
 				PoolRN:  rcvrSnap.PoolRN.Next(),
 			}
-			execMod.Bnds = append(execMod.Bnds, rcvrValBnd)
+			execMod.BindRecs = append(execMod.BindRecs, receiverBR)
 		}
 		stepSpec = procstep.StepSpec{
-			PoolID:  execSnap.PoolID,
 			ExecRef: execSnap.ExecRef,
 			ProcES:  expSpec.ContES,
 		}
 		s.log.Debug("taking succeed")
 		return stepSpec, execMod, nil
 	case procexp.FwdSpec:
-		commChnlEP, ok := execSnap.Chnls[expSpec.CommChnlPH]
+		commChnlBR, ok := execSnap.ChnlBRs[expSpec.CommChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.CommChnlPH)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		viaAttr := slog.Any("chnlID", commChnlEP.ChnlID)
-		commChnlER, ok := procEnv.TypeExps[commChnlEP.ExpID]
+		viaAttr := slog.Any("chnlID", commChnlBR.ChnlID)
+		commChnlER, ok := procEnv.TypeExps[commChnlBR.ExpID]
 		if !ok {
-			err := typedef.ErrMissingInEnv(commChnlEP.ExpID)
+			err := typedef.ErrMissingInEnv(commChnlBR.ExpID)
 			s.log.Error("taking failed", viaAttr)
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		valChnlEP, ok := execSnap.Chnls[expSpec.ContChnlPH]
+		valChnlBR, ok := execSnap.ChnlBRs[expSpec.ContChnlPH]
 		if !ok {
 			err := procdef.ErrMissingInCfg(expSpec.ContChnlPH)
 			s.log.Error("taking failed")
 			return procstep.StepSpec{}, ExecMod{}, err
 		}
-		commChnlSR := execSnap.StepRecs[commChnlEP.ChnlID]
+		commChnlSR := execSnap.ProcSRs[commChnlBR.ChnlID]
 		switch commChnlER.Pol() {
 		case polarity.Pos:
 			switch stepRec := commChnlSR.(type) {
@@ -885,13 +701,12 @@ func (s *service) takeWith(
 				xBnd := procbind.BindRec{
 					ExecRef: stepRec.ExecRef,
 					ChnlPH:  stepRec.ContER.Via(),
-					ChnlID:  commChnlEP.ChnlID,
-					ExpID:   commChnlEP.ExpID,
+					ChnlID:  commChnlBR.ChnlID,
+					ExpID:   commChnlBR.ExpID,
 					PoolRN:  stepRec.PoolRN.Next(),
 				}
-				execMod.Bnds = append(execMod.Bnds, xBnd)
+				execMod.BindRecs = append(execMod.BindRecs, xBnd)
 				stepSpec = procstep.StepSpec{
-					PoolID:  stepRec.PoolID,
 					ExecRef: stepRec.ExecRef,
 					ProcES:  stepRec.ContER,
 				}
@@ -901,13 +716,12 @@ func (s *service) takeWith(
 				yBnd := procbind.BindRec{
 					ExecRef: stepRec.ExecRef,
 					ChnlPH:  stepRec.ValER.Via(),
-					ChnlID:  valChnlEP.ChnlID,
-					ExpID:   valChnlEP.ExpID,
+					ChnlID:  valChnlBR.ChnlID,
+					ExpID:   valChnlBR.ExpID,
 					PoolRN:  stepRec.PoolRN.Next(),
 				}
-				execMod.Bnds = append(execMod.Bnds, yBnd)
+				execMod.BindRecs = append(execMod.BindRecs, yBnd)
 				stepSpec = procstep.StepSpec{
-					PoolID:  stepRec.PoolID,
 					ExecRef: stepRec.ExecRef,
 					ProcES:  stepRec.ValER,
 				}
@@ -919,23 +733,22 @@ func (s *service) takeWith(
 					ChnlPH:  expSpec.CommChnlPH,
 					PoolRN:  -execSnap.PoolRN.Next(),
 				}
-				execMod.Bnds = append(execMod.Bnds, xBnd)
+				execMod.BindRecs = append(execMod.BindRecs, xBnd)
 				yBnd := procbind.BindRec{
 					ExecRef: execSnap.ExecRef,
 					ChnlPH:  expSpec.ContChnlPH,
 					PoolRN:  -execSnap.PoolRN.Next(),
 				}
-				execMod.Bnds = append(execMod.Bnds, yBnd)
-				msgStep := procstep.MsgRec{
-					PoolID:  execSnap.PoolID,
+				execMod.BindRecs = append(execMod.BindRecs, yBnd)
+				messageSR := procstep.MsgRec{
 					ExecRef: execSnap.ExecRef,
-					ChnlID:  commChnlEP.ChnlID,
+					ChnlID:  commChnlBR.ChnlID,
 					PoolRN:  execSnap.PoolRN.Next(),
 					ValER: procexp.FwdRec{
-						ContChnlID: valChnlEP.ChnlID,
+						ContChnlID: valChnlBR.ChnlID,
 					},
 				}
-				execMod.Steps = append(execMod.Steps, msgStep)
+				execMod.StepRecs = append(execMod.StepRecs, messageSR)
 				s.log.Debug("taking half done", viaAttr)
 				return stepSpec, execMod, nil
 			default:
@@ -947,13 +760,12 @@ func (s *service) takeWith(
 				yBnd := procbind.BindRec{
 					ExecRef: stepRec.ExecRef,
 					ChnlPH:  stepRec.ContER.Via(),
-					ChnlID:  valChnlEP.ChnlID,
-					ExpID:   valChnlEP.ExpID,
+					ChnlID:  valChnlBR.ChnlID,
+					ExpID:   valChnlBR.ExpID,
 					PoolRN:  stepRec.PoolRN.Next(),
 				}
-				execMod.Bnds = append(execMod.Bnds, yBnd)
+				execMod.BindRecs = append(execMod.BindRecs, yBnd)
 				stepSpec = procstep.StepSpec{
-					PoolID:  stepRec.PoolID,
 					ExecRef: stepRec.ExecRef,
 					ProcES:  stepRec.ContER,
 				}
@@ -963,29 +775,27 @@ func (s *service) takeWith(
 				xBnd := procbind.BindRec{
 					ExecRef: stepRec.ExecRef,
 					ChnlPH:  stepRec.ValER.Via(),
-					ChnlID:  commChnlEP.ChnlID,
-					ExpID:   commChnlEP.ExpID,
+					ChnlID:  commChnlBR.ChnlID,
+					ExpID:   commChnlBR.ExpID,
 					PoolRN:  stepRec.PoolRN.Next(),
 				}
-				execMod.Bnds = append(execMod.Bnds, xBnd)
+				execMod.BindRecs = append(execMod.BindRecs, xBnd)
 				stepSpec = procstep.StepSpec{
-					PoolID:  stepRec.PoolID,
 					ExecRef: stepRec.ExecRef,
-					ProcES:  stepRec.ValER,
+					ProcES:  stepRec.ValER, // TODO: несовпадение типов
 				}
 				s.log.Debug("taking succeed", viaAttr)
 				return stepSpec, execMod, nil
 			case nil:
-				svcStep := procstep.SvcRec{
-					PoolID:  execSnap.PoolID,
+				serviceSR := procstep.SvcRec{
 					ExecRef: execSnap.ExecRef,
-					ChnlID:  commChnlEP.ChnlID,
+					ChnlID:  commChnlBR.ChnlID,
 					PoolRN:  execSnap.PoolRN.Next(),
 					ContER: procexp.FwdRec{
-						ContChnlID: valChnlEP.ChnlID,
+						ContChnlID: valChnlBR.ChnlID,
 					},
 				}
-				execMod.Steps = append(execMod.Steps, svcStep)
+				execMod.StepRecs = append(execMod.StepRecs, serviceSR)
 				s.log.Debug("taking half done", viaAttr)
 				return stepSpec, execMod, nil
 			default:
@@ -999,43 +809,41 @@ func (s *service) takeWith(
 	}
 }
 
-func CollectCtx(chnls iter.Seq[EP]) []identity.ADT {
+func CollectCtx(chnls iter.Seq[procbind.BindRec]) []identity.ADT {
 	return nil
 }
 
-func convertToCtx(poolID identity.ADT, chnlEPs iter.Seq[EP], typeExps map[identity.ADT]typeexp.ExpRec) typedef.Context {
+func convertToCtx(chnlBRs iter.Seq[procbind.BindRec], typeExps map[identity.ADT]typeexp.ExpRec) typedef.Context {
 	assets := make(map[symbol.ADT]typeexp.ExpRec, 1)
 	liabs := make(map[symbol.ADT]typeexp.ExpRec, 1)
-	for ep := range chnlEPs {
-		if poolID == ep.PoolID {
-			liabs[ep.ChnlPH] = typeExps[ep.ExpID]
+	for br := range chnlBRs {
+		if br.Kind == procbind.ProviderBind {
+			liabs[br.ChnlPH] = typeExps[br.ExpID]
 		} else {
-			assets[ep.ChnlPH] = typeExps[ep.ExpID]
+			assets[br.ChnlPH] = typeExps[br.ExpID]
 		}
 	}
 	return typedef.Context{Assets: assets, Liabs: liabs}
 }
 
 func (s *service) checkState(
-	poolID identity.ADT,
 	procEnv Env,
 	procCtx typedef.Context,
-	procCfg ExecSnap,
+	execSnap ExecSnap,
 	expSpec procexp.ExpSpec,
 ) error {
-	chnlEP, ok := procCfg.Chnls[expSpec.Via()]
+	chnlBR, ok := execSnap.ChnlBRs[expSpec.Via()]
 	if !ok {
-		panic("no via in proc snap")
+		panic("no comm chnl in proc snap")
 	}
-	if poolID == chnlEP.PoolID {
-		return s.checkProvider(poolID, procEnv, procCtx, procCfg, expSpec)
+	if chnlBR.Kind == procbind.ProviderBind {
+		return s.checkProvider(procEnv, procCtx, execSnap, expSpec)
 	} else {
-		return s.checkClient(poolID, procEnv, procCtx, procCfg, expSpec)
+		return s.checkClient(procEnv, procCtx, execSnap, expSpec)
 	}
 }
 
 func (s *service) checkProvider(
-	poolID identity.ADT,
 	procEnv Env,
 	procCtx typedef.Context,
 	procCfg ExecSnap,
@@ -1127,7 +935,7 @@ func (s *service) checkProvider(
 		// check cont
 		procCtx.Liabs[expSpec.CommChnlPH] = wantVia.Z
 		procCtx.Assets[expSpec.BindChnlPH] = wantVia.Y
-		return s.checkState(poolID, procEnv, procCtx, procCfg, expSpec.ContES)
+		return s.checkState(procEnv, procCtx, procCfg, expSpec.ContES)
 	case procexp.LabSpec:
 		// check via
 		gotVia, ok := procCtx.Liabs[expSpec.CommChnlPH]
@@ -1180,7 +988,7 @@ func (s *service) checkProvider(
 				return err
 			}
 			procCtx.Liabs[expSpec.CommChnlPH] = choice
-			err := s.checkState(poolID, procEnv, procCtx, procCfg, cont)
+			err := s.checkState(procEnv, procCtx, procCfg, cont)
 			if err != nil {
 				s.log.Error("checking failed")
 				return err
@@ -1224,7 +1032,6 @@ func (s *service) checkProvider(
 }
 
 func (s *service) checkClient(
-	poolID identity.ADT,
 	procEnv Env,
 	procCtx typedef.Context,
 	procCfg ExecSnap,
@@ -1251,7 +1058,7 @@ func (s *service) checkClient(
 		}
 		// check cont
 		delete(procCtx.Assets, expSpec.CommChnlPH)
-		return s.checkState(poolID, procEnv, procCtx, procCfg, expSpec.ContES)
+		return s.checkState(procEnv, procCtx, procCfg, expSpec.ContES)
 	case procexp.SendSpec:
 		// check via
 		gotVia, ok := procCtx.Assets[expSpec.CommChnlPH]
@@ -1310,7 +1117,7 @@ func (s *service) checkClient(
 		// check cont
 		procCtx.Assets[expSpec.CommChnlPH] = wantVia.Z
 		procCtx.Assets[expSpec.BindChnlPH] = wantVia.Y
-		return s.checkState(poolID, procEnv, procCtx, procCfg, expSpec.ContES)
+		return s.checkState(procEnv, procCtx, procCfg, expSpec.ContES)
 	case procexp.LabSpec:
 		// check via
 		gotVia, ok := procCtx.Assets[expSpec.CommChnlPH]
@@ -1362,7 +1169,7 @@ func (s *service) checkClient(
 				return err
 			}
 			procCtx.Assets[expSpec.CommChnlPH] = choice
-			err := s.checkState(poolID, procEnv, procCtx, procCfg, cont)
+			err := s.checkState(procEnv, procCtx, procCfg, cont)
 			if err != nil {
 				s.log.Error("checking failed")
 				return err
@@ -1377,15 +1184,15 @@ func (s *service) checkClient(
 			return err
 		}
 		// check vals
-		if len(expSpec.Ys) != len(procSig.Ys) {
-			err := fmt.Errorf("context mismatch: want %v items, got %v items", len(procSig.Ys), len(expSpec.Ys))
-			s.log.Error("checking failed", slog.Any("want", procSig.Ys), slog.Any("got", expSpec.Ys))
+		if len(expSpec.Ys) != len(procSig.ClientBSs) {
+			err := fmt.Errorf("context mismatch: want %v items, got %v items", len(procSig.ClientBSs), len(expSpec.Ys))
+			s.log.Error("checking failed", slog.Any("want", procSig.ClientBSs), slog.Any("got", expSpec.Ys))
 			return err
 		}
 		if len(expSpec.Ys) == 0 {
 			return nil
 		}
-		for i, ep := range procSig.Ys {
+		for i, ep := range procSig.ClientBSs {
 			valRole, ok := procEnv.TypeDefs[ep.TypeQN]
 			if !ok {
 				err := typedef.ErrSymMissingInEnv(ep.TypeQN)
@@ -1412,9 +1219,9 @@ func (s *service) checkClient(
 			delete(procCtx.Assets, expSpec.Ys[i])
 		}
 		// check via
-		viaRole, ok := procEnv.TypeDefs[procSig.X.TypeQN]
+		viaRole, ok := procEnv.TypeDefs[procSig.ProviderBS.TypeQN]
 		if !ok {
-			err := typedef.ErrSymMissingInEnv(procSig.X.TypeQN)
+			err := typedef.ErrSymMissingInEnv(procSig.ProviderBS.TypeQN)
 			s.log.Error("checking failed")
 			return err
 		}
@@ -1426,7 +1233,7 @@ func (s *service) checkClient(
 		}
 		// check cont
 		procCtx.Assets[expSpec.X] = wantVia
-		return s.checkState(poolID, procEnv, procCtx, procCfg, expSpec.ContES)
+		return s.checkState(procEnv, procCtx, procCfg, expSpec.ContES)
 	default:
 		panic(procexp.ErrExpTypeUnexpected(es))
 	}

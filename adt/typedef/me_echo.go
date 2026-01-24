@@ -55,7 +55,7 @@ func (h *echoController) PostSpec(c echo.Context) error {
 	if creationErr != nil {
 		return creationErr
 	}
-	h.log.Log(ctx, lf.LevelTrace, "posting succeed", slog.Any("defRef", snap.ref))
+	h.log.Log(ctx, lf.LevelTrace, "posting succeed", slog.Any("defRef", snap.DefRef))
 	return c.JSON(http.StatusCreated, MsgFromDefSnap(snap))
 }
 
@@ -106,6 +106,6 @@ func (h *echoController) PatchOne(c echo.Context) error {
 	if modificationErr != nil {
 		return modificationErr
 	}
-	h.log.Log(ctx, lf.LevelTrace, "patching succeed", slog.Any("defRef", resSnap.ref))
+	h.log.Log(ctx, lf.LevelTrace, "patching succeed", slog.Any("defRef", resSnap.DefRef))
 	return c.JSON(http.StatusOK, MsgFromDefSnap(resSnap))
 }

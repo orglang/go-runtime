@@ -9,7 +9,6 @@ import (
 
 	"orglang/go-runtime/lib/db"
 
-	"orglang/go-runtime/adt/identity"
 	"orglang/go-runtime/adt/procbind"
 	"orglang/go-runtime/adt/procstep"
 	"orglang/go-runtime/adt/revnum"
@@ -30,14 +29,6 @@ func newPgxDAO(l *slog.Logger) *pgxDAO {
 	return &pgxDAO{l.With(name)}
 }
 
-func (dao *pgxDAO) SelectMain(db.Source, identity.ADT) (MainCfg, error) {
-	return MainCfg{}, nil
-}
-
-func (dao *pgxDAO) UpdateMain(db.Source, MainMod) error {
-	return nil
-}
-
 func (dao *pgxDAO) SelectSnap(source db.Source, execRef ExecRef) (ExecSnap, error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	refAttr := slog.Any("execRef", execRef)
@@ -47,12 +38,12 @@ func (dao *pgxDAO) SelectSnap(source db.Source, execRef ExecRef) (ExecSnap, erro
 		return ExecSnap{}, err
 	}
 	defer chnlRows.Close()
-	chnlDtos, err := pgx.CollectRows(chnlRows, pgx.RowToStructByName[epDS])
+	chnlDtos, err := pgx.CollectRows(chnlRows, pgx.RowToStructByName[procbind.BindRecDS])
 	if err != nil {
 		dao.log.Error("collection failed", refAttr, slog.Any("t", reflect.TypeOf(chnlDtos)))
 		return ExecSnap{}, err
 	}
-	chnls, err := DataToEPs(chnlDtos)
+	chnls, err := procbind.DataToBindRecs(chnlDtos)
 	if err != nil {
 		dao.log.Error("conversion failed", refAttr)
 		return ExecSnap{}, err
@@ -75,8 +66,8 @@ func (dao *pgxDAO) SelectSnap(source db.Source, execRef ExecRef) (ExecSnap, erro
 	}
 	dao.log.Debug("selection succeed", refAttr)
 	return ExecSnap{
-		Chnls:    procbind.IndexBy(ChnlPH, chnls),
-		StepRecs: procbind.IndexBy(procstep.ChnlID, steps),
+		ChnlBRs: procbind.IndexBy(ChnlPH, chnls),
+		ProcSRs: procbind.IndexBy(procstep.ChnlID, steps),
 	}, nil
 }
 

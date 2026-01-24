@@ -106,6 +106,6 @@ func (p *echoPresenter) GetSnap(c echo.Context) error {
 		p.log.Error("rendering failed", slog.Any("snap", snap))
 		return renderingErr
 	}
-	p.log.Log(ctx, lf.LevelTrace, "getting succeed", slog.Any("decRef", snap.ref))
+	p.log.Log(ctx, lf.LevelTrace, "getting succeed", slog.Any("decRef", snap.DecRef))
 	return c.HTMLBlob(http.StatusOK, html)
 }
