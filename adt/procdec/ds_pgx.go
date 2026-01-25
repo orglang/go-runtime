@@ -45,9 +45,8 @@ func (dao *pgxDAO) InsertRec(source db.Source, rec DecRec) error {
 			@dec_id, @dec_rn, @title
 		)`
 	rootArgs := pgx.NamedArgs{
-		"dec_id": dto.DecID,
-		"dec_rn": dto.DecRN,
-		"title":  dto.Title,
+		"dec_id": dto.ID,
+		"dec_rn": dto.RN,
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertRoot, rootArgs)
 	if err != nil {
@@ -61,11 +60,11 @@ func (dao *pgxDAO) InsertRec(source db.Source, rec DecRec) error {
 			@dec_id, @from_rn, @to_rn, @chnl_ph, @type_qn
 		)`
 	peArgs := pgx.NamedArgs{
-		"dec_id":  dto.DecID,
-		"from_rn": dto.DecRN,
+		"dec_id":  dto.ID,
+		"from_rn": dto.RN,
 		"to_rn":   math.MaxInt64,
-		"chnl_ph": dto.X.ChnlPH,
-		"type_qn": dto.X.TypeQN,
+		"chnl_ph": dto.ProviderBS.ChnlPH,
+		"type_qn": dto.ProviderBS.TypeQN,
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertPE, peArgs)
 	if err != nil {
@@ -79,10 +78,10 @@ func (dao *pgxDAO) InsertRec(source db.Source, rec DecRec) error {
 			@dec_id, @from_rn, @to_rn, @chnl_ph, @type_qn
 		)`
 	batch := pgx.Batch{}
-	for _, ce := range dto.Ys {
+	for _, ce := range dto.ClientBSs {
 		args := pgx.NamedArgs{
-			"dec_id":  dto.DecID,
-			"from_rn": dto.DecRN,
+			"dec_id":  dto.ID,
+			"from_rn": dto.RN,
 			"to_rn":   math.MaxInt64,
 			"chnl_ph": ce.ChnlPH,
 			"type_qn": ce.TypeQN,
@@ -93,7 +92,7 @@ func (dao *pgxDAO) InsertRec(source db.Source, rec DecRec) error {
 	defer func() {
 		err = errors.Join(err, br.Close())
 	}()
-	for range dto.Ys {
+	for range dto.ClientBSs {
 		_, err = br.Exec()
 		if err != nil {
 			dao.log.Error("query execution failed", refAttr, slog.String("q", insertCE))

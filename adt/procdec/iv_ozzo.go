@@ -8,7 +8,6 @@ import (
 
 func (dto DecSpecVP) Validate() error {
 	return validation.ValidateStruct(&dto,
-		validation.Field(&dto.ProcNS, uniqsym.Required...),
-		validation.Field(&dto.ProcSN, uniqsym.Required...),
+		validation.Field(&dto.ProcQN, uniqsym.Required...),
 	)
 }

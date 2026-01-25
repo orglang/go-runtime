@@ -6,9 +6,10 @@ type BindSpecDS struct {
 }
 
 type BindRecDS struct {
-	ExecID  string
-	ExecRN  int64
-	ChnlPH  string
-	ChnlID  string
-	StateID string
+	ID     string `db:"exec_id"`
+	RN     int64  `db:"exec_rn"`
+	ChnlBS uint8  `db:"chnl_bs"`
+	ChnlPH string `db:"chnl_ph"`
+	ChnlID string `db:"chnl_id"`
+	ExpID  string `db:"exp_id"`
 }

@@ -10,7 +10,6 @@ import (
 	"orglang/go-runtime/lib/lf"
 	"orglang/go-runtime/lib/te"
 
-	"orglang/go-runtime/adt/symbol"
 	"orglang/go-runtime/adt/uniqref"
 	"orglang/go-runtime/adt/uniqsym"
 )
@@ -47,12 +46,12 @@ func (p *echoPresenter) PostSpec(c echo.Context) error {
 		p.log.Error("validation failed", slog.Any("dto", dto))
 		return validationErr
 	}
-	ns, conversionErr := uniqsym.ConvertFromString(dto.ProcNS)
+	qn, conversionErr := uniqsym.ConvertFromString(dto.ProcQN)
 	if conversionErr != nil {
 		p.log.Error("conversion failed", slog.Any("dto", dto))
 		return conversionErr
 	}
-	ref, inceptionErr := p.api.Incept(ns.New(symbol.New(dto.ProcSN)))
+	ref, inceptionErr := p.api.Incept(qn)
 	if inceptionErr != nil {
 		return inceptionErr
 	}

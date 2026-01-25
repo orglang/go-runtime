@@ -6,10 +6,10 @@ func New() ADT {
 	return ADT(1)
 }
 
-func Next(rev ADT) ADT {
-	return rev + 1
+func Next(rn ADT) ADT {
+	return rn + 1
 }
 
-func (rev ADT) Next() ADT {
-	return rev + 1
+func (rn ADT) Next() ADT {
+	return rn + 1
 }

@@ -1,22 +1,14 @@
 package poolexec
 
 import (
-	"orglang/go-runtime/adt/procexec"
-
 	"github.com/orglang/go-sdk/adt/poolexec"
 )
 
 // goverter:variables
 // goverter:output:format assign-variable
 // goverter:extend orglang/go-runtime/adt/identity:Convert.*
-var (
-	ConvertRecToRef func(ExecRec) ExecRef
-)
-
-// goverter:variables
-// goverter:output:format assign-variable
-// goverter:extend orglang/go-runtime/adt/identity:Convert.*
-// goverter:extend orglang/go-runtime/adt/procdef:Msg.*
+// goverter:extend orglang/go-runtime/adt/uniqsym:Convert.*
+// goverter:extend orglang/go-runtime/adt/uniqref:Msg.*
 var (
 	MsgToExecSpec   func(poolexec.ExecSpec) (ExecSpec, error)
 	MsgFromExecSpec func(ExecSpec) poolexec.ExecSpec
@@ -29,15 +21,20 @@ var (
 // goverter:variables
 // goverter:output:format assign-variable
 // goverter:extend orglang/go-runtime/adt/identity:Convert.*
+// goverter:extend orglang/go-runtime/adt/uniqref:Data.*
 var (
-	DataToExecRef    func(execRefDS) (ExecRef, error)
-	DataFromExecRef  func(ExecRef) execRefDS
 	DataToExecRefs   func([]execRefDS) ([]ExecRef, error)
 	DataFromExecRefs func([]ExecRef) []execRefDS
-	DataToExecRec    func(execRecDS) (ExecRec, error)
-	DataFromExecRec  func(ExecRec) execRecDS
-	DataToLiab       func(liabDS) (procexec.Liab, error)
-	DataFromLiab     func(procexec.Liab) liabDS
-	DataToExecSnap   func(execSnapDS) (ExecSnap, error)
+	// goverter:map . ExecRef
+	DataToExecRec func(execRecDS) (ExecRec, error)
+	// goverter:autoMap ExecRef
+	DataFromExecRec func(ExecRec) execRecDS
+	// goverter:map . ExecRef
+	DataToLiab func(liabDS) (Liab, error)
+	// goverter:autoMap ExecRef
+	DataFromLiab func(Liab) liabDS
+	// goverter:map . ExecRef
+	DataToExecSnap func(execSnapDS) (ExecSnap, error)
+	// goverter:autoMap ExecRef
 	DataFromExecSnap func(ExecSnap) execSnapDS
 )

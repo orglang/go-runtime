@@ -288,7 +288,7 @@ func DataToExpRef(dto *ExpRefDS) (ExpRef, error) {
 	}
 }
 
-func DataToTermRec(dto *expRecDS) (ExpRec, error) {
+func DataToExpRec(dto *expRecDS) (ExpRec, error) {
 	states := make(map[string]stateDS, len(dto.States))
 	for _, dto := range dto.States {
 		states[dto.ExpID] = dto
@@ -304,7 +304,7 @@ func DataFromExpRec(rec ExpRec) *expRecDS {
 		ExpID:  rec.Ident().String(),
 		States: nil,
 	}
-	statesFromTermRec("", rec, dto)
+	statesFromExpRec("", rec, dto)
 	return dto
 }
 
@@ -375,7 +375,7 @@ func statesToExpRec(states map[string]stateDS, st stateDS) (ExpRec, error) {
 	}
 }
 
-func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
+func statesFromExpRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 	var fromID sql.NullString
 	if len(from) > 0 {
 		fromID = sql.NullString{String: from, Valid: true}
@@ -398,11 +398,11 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 		dto.States = append(dto.States, st)
 		return stID, nil
 	case TensorRec:
-		val, err := statesFromTermRec(stID, root.Y, dto)
+		val, err := statesFromExpRec(stID, root.Y, dto)
 		if err != nil {
 			return "", err
 		}
-		cont, err := statesFromTermRec(stID, root.Z, dto)
+		cont, err := statesFromExpRec(stID, root.Z, dto)
 		if err != nil {
 			return "", err
 		}
@@ -417,11 +417,11 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 		dto.States = append(dto.States, st)
 		return stID, nil
 	case LolliRec:
-		val, err := statesFromTermRec(stID, root.Y, dto)
+		val, err := statesFromExpRec(stID, root.Y, dto)
 		if err != nil {
 			return "", err
 		}
-		cont, err := statesFromTermRec(stID, root.Z, dto)
+		cont, err := statesFromExpRec(stID, root.Z, dto)
 		if err != nil {
 			return "", err
 		}
@@ -438,7 +438,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 	case PlusRec:
 		var choices []sumDS
 		for label, choice := range root.Zs {
-			cont, err := statesFromTermRec(stID, choice, dto)
+			cont, err := statesFromExpRec(stID, choice, dto)
 			if err != nil {
 				return "", err
 			}
@@ -455,7 +455,7 @@ func statesFromTermRec(from string, r ExpRec, dto *expRecDS) (string, error) {
 	case WithRec:
 		var choices []sumDS
 		for label, choice := range root.Zs {
-			cont, err := statesFromTermRec(stID, choice, dto)
+			cont, err := statesFromExpRec(stID, choice, dto)
 			if err != nil {
 				return "", err
 			}

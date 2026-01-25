@@ -59,7 +59,7 @@ func (dao *pgxDAO) SelectSnap(source db.Source, execRef ExecRef) (ExecSnap, erro
 		dao.log.Error("collection failed", refAttr, slog.Any("t", reflect.TypeOf(stepDtos)))
 		return ExecSnap{}, err
 	}
-	steps, err := procstep.DataToSemRecs(stepDtos)
+	steps, err := procstep.DataToStepRecs(stepDtos)
 	if err != nil {
 		dao.log.Error("conversion failed", refAttr)
 		return ExecSnap{}, err
@@ -85,11 +85,11 @@ func (dao *pgxDAO) UpdateProc(source db.Source, mod ExecMod) (err error) {
 	bindReq := pgx.Batch{}
 	for _, dto := range dto.Binds {
 		args := pgx.NamedArgs{
-			"exec_id":  dto.ExecID,
-			"exec_rn":  dto.ExecRN,
+			"exec_id":  dto.ID,
+			"exec_rn":  dto.RN,
 			"chnl_ph":  dto.ChnlPH,
 			"chnl_id":  dto.ChnlID,
-			"state_id": dto.StateID,
+			"state_id": dto.ExpID,
 		}
 		bindReq.Queue(insertBind, args)
 	}

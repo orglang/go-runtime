@@ -2,7 +2,6 @@ package procbind
 
 import (
 	"orglang/go-runtime/adt/identity"
-	"orglang/go-runtime/adt/revnum"
 	"orglang/go-runtime/adt/symbol"
 	"orglang/go-runtime/adt/uniqref"
 	"orglang/go-runtime/adt/uniqsym"
@@ -16,19 +15,18 @@ type BindSpec struct {
 }
 
 type BindRec struct {
-	// процес, в рамках которого связка
+	// процесс, в рамках которого связка
 	ExecRef uniqref.ADT
 	ChnlBS  bindSide
 	ChnlPH  symbol.ADT
 	ChnlID  identity.ADT
 	ExpID   identity.ADT
-	PoolRN  revnum.ADT
 }
 
-type bindSide int
+type bindSide uint8
 
 const (
-	nonSide = bindSide(iota)
+	NonSide bindSide = iota
 	ProviderSide
 	ClientSide
 )

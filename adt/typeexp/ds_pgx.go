@@ -140,7 +140,7 @@ func (dao *pgxDAO) SelectRecsByIDs(source db.Source, termIDs []identity.ADT) (_ 
 			dao.log.Error("entity selection failed", idAttr)
 			return nil, ErrDoesNotExist(termID)
 		}
-		rec, err := DataToTermRec(&expRecDS{termID.String(), dtos})
+		rec, err := DataToExpRec(&expRecDS{termID.String(), dtos})
 		if err != nil {
 			dao.log.Error("model conversion failed", idAttr)
 			return nil, err

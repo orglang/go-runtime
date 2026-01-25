@@ -6,17 +6,8 @@ import (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/go-runtime/adt/identity:Convert.*
-var (
-	ConvertSnapToRef func(DecSnap) DecRef
-	ConvertRecToRef  func(DecRec) DecRef
-	ConvertRecToSnap func(DecRec) DecSnap
-)
-
-// goverter:variables
-// goverter:output:format assign-variable
 // goverter:extend orglang/go-runtime/adt/uniqsym:Convert.*
-// goverter:extend orglang/go-runtime/adt/termctx:Msg.*
+// goverter:extend orglang/go-runtime/adt/procbind:Msg.*
 // goverter:extend orglang/go-runtime/adt/typedef:Msg.*
 var (
 	MsgToDecSpec    func(procdec.DecSpec) (DecSpec, error)
@@ -28,10 +19,8 @@ var (
 
 // goverter:variables
 // goverter:output:format assign-variable
-// goverter:extend orglang/go-runtime/adt/identity:Convert.*
-// goverter:extend orglang/go-runtime/adt/revnum:Convert.*
-// goverter:extend orglang/go-runtime/adt/typedef:Msg.*
-// goverter:extend Msg.*
+// goverter:extend orglang/go-runtime/adt/uniqsym:Convert.*
+// goverter:extend orglang/go-runtime/adt/uniqref:Msg.*
 var (
 	ViewFromDecSnap func(DecSnap) DecSnapVP
 )
@@ -39,14 +28,17 @@ var (
 // goverter:variables
 // goverter:output:format assign-variable
 // goverter:extend orglang/go-runtime/adt/identity:Convert.*
-// goverter:extend orglang/go-runtime/adt/termctx:Data.*
-// goverter:extend orglang/go-runtime/adt/typedef:Data.*
+// goverter:extend orglang/go-runtime/adt/procbind:Data.*
 var (
-	DataToDecRec     func(decRecDS) (DecRec, error)
-	DataFromDecRec   func(DecRec) (decRecDS, error)
-	DataToDecRecs    func([]decRecDS) ([]DecRec, error)
-	DataFromDecRecs  func([]DecRec) ([]decRecDS, error)
-	DataToDecSnap    func(decSnapDS) (DecSnap, error)
+	// goverter:map . DecRef
+	DataToDecRec func(decRecDS) (DecRec, error)
+	// goverter:autoMap DecRef
+	DataFromDecRec  func(DecRec) (decRecDS, error)
+	DataToDecRecs   func([]decRecDS) ([]DecRec, error)
+	DataFromDecRecs func([]DecRec) ([]decRecDS, error)
+	// goverter:map . DecRef
+	DataToDecSnap func(decSnapDS) (DecSnap, error)
+	// goverter:autoMap DecRef
 	DataFromDecSnap  func(DecSnap) (decSnapDS, error)
 	DataToDecSnaps   func([]decSnapDS) ([]DecSnap, error)
 	DataFromDecSnaps func([]DecSnap) ([]decSnapDS, error)

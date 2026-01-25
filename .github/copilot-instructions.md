@@ -48,7 +48,7 @@ Repository structure reflects abstraction kinds.
   - `revnum`: Revision number value type
   - `symbol`: Symbol value type
   - `syndec`: Synonym declaration value type
-  - `termctx`: Term context value type
+  - `procbind`: Term context value type
   - `typedef`: Type definition aggregate type
   - `typeexp`: Type expression value type
   - `uniqref`: Unique refererence value type

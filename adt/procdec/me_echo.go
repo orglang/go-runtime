@@ -45,11 +45,11 @@ func (h *echoController) PostSpec(c echo.Context) error {
 		h.log.Error("conversion failed", slog.Any("dto", dto))
 		return conversionErr
 	}
-	snap, creationErr := h.api.Create(spec)
+	ref, creationErr := h.api.Create(spec)
 	if creationErr != nil {
 		return creationErr
 	}
-	return c.JSON(http.StatusCreated, MsgFromDecSnap(snap))
+	return c.JSON(http.StatusCreated, uniqref.MsgFromADT(ref))
 }
 
 func (h *echoController) GetSnap(c echo.Context) error {

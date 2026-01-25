@@ -1,5 +1,3 @@
-//go:build !goverter
-
 package main
 
 import (

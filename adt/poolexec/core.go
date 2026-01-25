@@ -35,7 +35,6 @@ type ExecRef = uniqref.ADT
 
 type ExecRec struct {
 	ExecRef ExecRef
-	ProcID  identity.ADT // main
 	SupID   identity.ADT
 }
 
@@ -47,6 +46,14 @@ type ExecSnap struct {
 
 type PollSpec struct {
 	ExecID identity.ADT
+}
+
+// ответственность за процесс
+type Liab struct {
+	// позитивное значение при вручении
+	// негативное значение при лишении
+	ExecRef ExecRef
+	ProcID  identity.ADT
 }
 
 type service struct {
@@ -80,21 +87,10 @@ func (s *service) Run(spec ExecSpec) (ExecRef, error) {
 	s.log.Debug("creation started", slog.Any("spec", spec))
 	execRec := ExecRec{
 		ExecRef: uniqref.New(),
-		ProcID:  identity.New(),
 		SupID:   spec.SupID,
-	}
-	liab := procexec.Liab{
-		PoolID:  execRec.ExecRef.ID,
-		PoolRN:  execRec.ExecRef.RN,
-		ExecRef: procexec.ExecRef{ID: execRec.ProcID},
 	}
 	err := s.operator.Explicit(ctx, func(ds db.Source) error {
 		err := s.poolExecs.InsertRec(ds, execRec)
-		if err != nil {
-			s.log.Error("creation failed")
-			return err
-		}
-		err = s.poolExecs.InsertLiab(ds, liab)
 		if err != nil {
 			s.log.Error("creation failed")
 			return err
@@ -106,7 +102,7 @@ func (s *service) Run(spec ExecSpec) (ExecRef, error) {
 		return ExecRef{}, err
 	}
 	s.log.Debug("creation succeed", slog.Any("execRef", execRec.ExecRef))
-	return ConvertRecToRef(execRec), nil
+	return execRec.ExecRef, nil
 }
 
 func (s *service) Poll(spec PollSpec) (procexec.ExecRef, error) {

@@ -29,7 +29,7 @@ func newPgxDAO(l *slog.Logger) *pgxDAO {
 
 func (dao *pgxDAO) InsertRecs(source db.Source, recs ...StepRec) error {
 	ds := db.MustConform[db.SourcePgx](source)
-	dtos, err := DataFromSemRecs(recs)
+	dtos, err := DataFromStepRecs(recs)
 	if err != nil {
 		dao.log.Error("conversion failed")
 		return err

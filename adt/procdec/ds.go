@@ -19,17 +19,15 @@ type Repo interface {
 type decRefDS = uniqref.Data
 
 type decRecDS struct {
-	DecID string                `db:"id"`
-	Title string                `db:"title"`
-	Ys    []procbind.BindSpecDS `db:"ys"`
-	X     procbind.BindSpecDS   `db:"x"`
-	DecRN int64                 `db:"rn"`
+	ID         string                `db:"dec_id"`
+	RN         int64                 `db:"dec_rn"`
+	ClientBSs  []procbind.BindSpecDS `db:"ys"`
+	ProviderBS procbind.BindSpecDS   `db:"x"`
 }
 
 type decSnapDS struct {
-	DecID string                `db:"id"`
-	Title string                `db:"title"`
-	Ys    []procbind.BindSpecDS `db:"ys"`
-	X     procbind.BindSpecDS   `db:"x"`
-	DecRN int64                 `db:"rn"`
+	ID         string                `db:"id"`
+	RN         int64                 `db:"rn"`
+	ClientBSs  []procbind.BindSpecDS `db:"ys"`
+	ProviderBS procbind.BindSpecDS   `db:"x"`
 }

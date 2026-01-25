@@ -19,7 +19,7 @@ type StepRec interface {
 	step() identity.ADT
 }
 
-func ChnlID(r StepRec) identity.ADT { return r.step() }
+func ChnlID(rec StepRec) identity.ADT { return rec.step() }
 
 type MsgRec struct {
 	PoolRN  revnum.ADT

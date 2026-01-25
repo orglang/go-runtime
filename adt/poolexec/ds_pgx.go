@@ -7,8 +7,6 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"orglang/go-runtime/lib/db"
-
-	"orglang/go-runtime/adt/procexec"
 )
 
 type pgxDAO struct {
@@ -29,10 +27,9 @@ func (dao *pgxDAO) InsertRec(source db.Source, rec ExecRec) (err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	dto := DataFromExecRec(rec)
 	args := pgx.NamedArgs{
-		"exec_id":     dto.ExecID,
-		"proc_id":     dto.ProcID,
+		"exec_id":     dto.ID,
+		"exec_rn":     dto.RN,
 		"sup_exec_id": dto.SupID,
-		"exec_rn":     dto.ExecRN,
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertExec, args)
 	if err != nil {
@@ -43,20 +40,20 @@ func (dao *pgxDAO) InsertRec(source db.Source, rec ExecRec) (err error) {
 	return nil
 }
 
-func (dao *pgxDAO) InsertLiab(source db.Source, liab procexec.Liab) (err error) {
+func (dao *pgxDAO) InsertLiab(source db.Source, liab Liab) (err error) {
 	ds := db.MustConform[db.SourcePgx](source)
 	dto := DataFromLiab(liab)
 	args := pgx.NamedArgs{
-		"exec_id": dto.ExecID,
+		"exec_id": dto.ID,
+		"exec_rn": dto.RN,
 		"proc_id": dto.ProcID,
-		"exec_rn": dto.ExecRN,
 	}
 	_, err = ds.Conn.Exec(ds.Ctx, insertLiab, args)
 	if err != nil {
 		dao.log.Error("execution failed")
 		return err
 	}
-	dao.log.Debug("insertion succeed", slog.Any("poolID", liab.PoolID))
+	dao.log.Debug("insertion succeed", slog.Any("execRef", liab.ExecRef))
 	return nil
 }
 

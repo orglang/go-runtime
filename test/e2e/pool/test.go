@@ -104,9 +104,9 @@ func (s *suite) createRetreive(t *testing.T) {
 		t.Fatal(err)
 	}
 	// then
-	if !slices.Contains(poolSnap1.Subs, poolRef2) {
+	if !slices.Contains(poolSnap1.SubExecs, poolRef2) {
 		t.Errorf("unexpected subs in %q; want: %+v, got: %+v",
-			poolSpec1.PoolQN, poolRef2, poolSnap1.Subs)
+			poolSpec1.PoolQN, poolRef2, poolSnap1.SubExecs)
 	}
 }
 
@@ -291,7 +291,7 @@ func (s *suite) waitClose(t *testing.T) {
 		ProcES: procexp.ExpSpec{
 			K: procexp.Close,
 			Close: &procexp.CloseSpec{
-				CommPH: closerProcDec.Spec.ProviderBS.ChnlPH,
+				CommPH: closerProcDec.ProviderBS.ChnlPH,
 			},
 		},
 	})
@@ -304,11 +304,11 @@ func (s *suite) waitClose(t *testing.T) {
 		ProcES: procexp.ExpSpec{
 			K: procexp.Wait,
 			Wait: &procexp.WaitSpec{
-				CommPH: waiterProcDec.Spec.ClientBSs[0].ChnlPH,
+				CommPH: waiterProcDec.ClientBSs[0].ChnlPH,
 				ContES: procexp.ExpSpec{
 					K: procexp.Close,
 					Close: &procexp.CloseSpec{
-						CommPH: waiterProcDec.Spec.ProviderBS.ChnlPH,
+						CommPH: waiterProcDec.ProviderBS.ChnlPH,
 					},
 				},
 			},
@@ -533,7 +533,7 @@ func (s *suite) recvSend(t *testing.T) {
 		ProcES: procexp.ExpSpec{
 			K: procexp.Recv,
 			Recv: &procexp.RecvSpec{
-				CommPH: receiverProcDec.Spec.ProviderBS.ChnlPH,
+				CommPH: receiverProcDec.ProviderBS.ChnlPH,
 				BindPH: "receiver-message-ph",
 			},
 		},
@@ -547,8 +547,8 @@ func (s *suite) recvSend(t *testing.T) {
 		ProcES: procexp.ExpSpec{
 			K: procexp.Send,
 			Send: &procexp.SendSpec{
-				CommPH: senderProcDec.Spec.ClientBSs[0].ChnlPH,
-				ValPH:  senderProcDec.Spec.ClientBSs[1].ChnlPH,
+				CommPH: senderProcDec.ClientBSs[0].ChnlPH,
+				ValPH:  senderProcDec.ClientBSs[1].ChnlPH,
 			},
 		},
 	})
@@ -594,8 +594,9 @@ func (s *suite) caseLab(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
+	followerProcQN := "follower-proc-qn"
 	followerProcDec, err := s.procDecAPI.Create(procdec.DecSpec{
-		ProcQN: "follower-proc-qn",
+		ProcQN: followerProcQN,
 		ProviderBS: procbind.BindSpec{
 			ChnlPH: "follower-provider-ph",
 			TypeQN: withType.Spec.TypeQN,
@@ -605,9 +606,10 @@ func (s *suite) caseLab(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	deciderProcDec, err := s.procDecAPI.Create(procdec.DecSpec{
-		ProcQN:    "decider-proc-qn",
-		ClientBSs: []procbind.BindSpec{followerProcDec.Spec.ProviderBS},
+	deciderProcQN := "decider-proc-qn"
+	_, err = s.procDecAPI.Create(procdec.DecSpec{
+		ProcQN:    deciderProcQN,
+		ClientBSs: []procbind.BindSpec{followerProcDec.ProviderBS},
 		ProviderBS: procbind.BindSpec{
 			ChnlPH: "decider-provider-ph",
 			TypeQN: oneType.Spec.TypeQN,
@@ -623,7 +625,7 @@ func (s *suite) caseLab(t *testing.T) {
 		PoolES: poolexp.ExpSpec{
 			K: poolexp.Hire,
 			Hire: &poolexp.HireSpec{
-				ProcQN: followerProcDec.Spec.ProcQN,
+				ProcQN: followerProcQN,
 			},
 		},
 	})
@@ -636,7 +638,7 @@ func (s *suite) caseLab(t *testing.T) {
 			K: poolexp.Spawn,
 			Spawn: &poolexp.SpawnSpec{
 				BindPH: poolFollowerPH,
-				ProcQN: followerProcDec.Spec.ProcQN,
+				ProcQN: followerProcQN,
 			},
 		},
 	})
@@ -650,7 +652,7 @@ func (s *suite) caseLab(t *testing.T) {
 		PoolES: poolexp.ExpSpec{
 			K: poolexp.Hire,
 			Hire: &poolexp.HireSpec{
-				ProcQN: deciderProcDec.Spec.ProcQN,
+				ProcQN: deciderProcQN,
 			},
 		},
 	})
@@ -663,7 +665,7 @@ func (s *suite) caseLab(t *testing.T) {
 			K: poolexp.Spawn,
 			Spawn: &poolexp.SpawnSpec{
 				BindPH: poolDeciderPH,
-				ProcQN: deciderProcDec.Spec.ProcQN,
+				ProcQN: deciderProcQN,
 				ValPHs: []string{poolFollowerPH},
 			},
 		},
@@ -732,8 +734,9 @@ func (s *suite) call(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	injecteeProcDec, err := s.procDecAPI.Create(procdec.DecSpec{
-		ProcQN: "injectee-proc-qn",
+	injecteeProcQN := "injectee-proc-qn"
+	_, err = s.procDecAPI.Create(procdec.DecSpec{
+		ProcQN: injecteeProcQN,
 		ProviderBS: procbind.BindSpec{
 			ChnlPH: "injectee-provider-ph",
 			TypeQN: oneType.Spec.TypeQN,
@@ -748,7 +751,7 @@ func (s *suite) call(t *testing.T) {
 		PoolES: poolexp.ExpSpec{
 			K: poolexp.Hire,
 			Hire: &poolexp.HireSpec{
-				ProcQN: injecteeProcDec.Spec.ProcQN,
+				ProcQN: injecteeProcQN,
 			},
 		},
 	})
@@ -763,7 +766,7 @@ func (s *suite) call(t *testing.T) {
 			K: poolexp.Spawn,
 			Spawn: &poolexp.SpawnSpec{
 				BindPH: poolInjecteePH,
-				ProcQN: injecteeProcDec.Spec.ProcQN,
+				ProcQN: injecteeProcQN,
 			},
 		},
 	})
@@ -771,8 +774,9 @@ func (s *suite) call(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
+	callerProcQN := "caller-proc-qn"
 	callerProcDec, err := s.procDecAPI.Create(procdec.DecSpec{
-		ProcQN: "caller-proc-qn",
+		ProcQN: callerProcQN,
 		ProviderBS: procbind.BindSpec{
 			ChnlPH: "caller-provider-ph",
 			TypeQN: oneType.Spec.TypeQN,
@@ -790,7 +794,7 @@ func (s *suite) call(t *testing.T) {
 		PoolES: poolexp.ExpSpec{
 			K: poolexp.Hire,
 			Hire: &poolexp.HireSpec{
-				ProcQN: callerProcDec.Spec.ProcQN,
+				ProcQN: callerProcQN,
 			},
 		},
 	})
@@ -804,7 +808,7 @@ func (s *suite) call(t *testing.T) {
 			K: poolexp.Spawn,
 			Spawn: &poolexp.SpawnSpec{
 				BindPH: "pool-caller-ph",
-				ProcQN: callerProcDec.Spec.ProcQN,
+				ProcQN: callerProcQN,
 				ValPHs: []string{poolInjecteePH},
 			},
 		},
@@ -813,8 +817,9 @@ func (s *suite) call(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
-	calleeProcDec, err := s.procDecAPI.Create(procdec.DecSpec{
-		ProcQN: "callee-proc-qn",
+	calleeProcQN := "callee-proc-qn"
+	_, err = s.procDecAPI.Create(procdec.DecSpec{
+		ProcQN: calleeProcQN,
 		ProviderBS: procbind.BindSpec{
 			ChnlPH: "callee-provider-ph",
 			TypeQN: oneType.Spec.TypeQN,
@@ -835,8 +840,8 @@ func (s *suite) call(t *testing.T) {
 			K: procexp.Call,
 			Call: &procexp.CallSpec{
 				BindPH: callerCalleePH,
-				ProcQN: calleeProcDec.Spec.ProcQN,
-				ValPHs: []string{callerProcDec.Spec.ClientBSs[0].ChnlPH},
+				ProcQN: calleeProcQN,
+				ValPHs: []string{callerProcDec.ClientBSs[0].ChnlPH},
 				ContES: procexp.ExpSpec{
 					K: procexp.Wait,
 					Wait: &procexp.WaitSpec{
@@ -844,7 +849,7 @@ func (s *suite) call(t *testing.T) {
 						ContES: procexp.ExpSpec{
 							K: procexp.Close,
 							Close: &procexp.CloseSpec{
-								CommPH: callerProcDec.Spec.ProviderBS.ChnlPH,
+								CommPH: callerProcDec.ProviderBS.ChnlPH,
 							},
 						},
 					},
@@ -878,8 +883,9 @@ func (s *suite) fwd(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
+	closerProcQN := "closer-proc-qn"
 	closerProcDec, err := s.procDecAPI.Create(procdec.DecSpec{
-		ProcQN: "closer-proc-qn",
+		ProcQN: closerProcQN,
 		ProviderBS: procbind.BindSpec{
 			ChnlPH: "closer-provider-ph",
 			TypeQN: oneType.Spec.TypeQN,
@@ -889,8 +895,9 @@ func (s *suite) fwd(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
+	forwarderProcQN := "forwarder-proc-qn"
 	forwarderProcDec, err := s.procDecAPI.Create(procdec.DecSpec{
-		ProcQN: "forwarder-proc-qn",
+		ProcQN: forwarderProcQN,
 		ProviderBS: procbind.BindSpec{
 			ChnlPH: "forwarder-provider-ph",
 			TypeQN: oneType.Spec.TypeQN,
@@ -903,8 +910,9 @@ func (s *suite) fwd(t *testing.T) {
 		t.Fatal(err)
 	}
 	// and
+	waiterProcQN := "waiter-proc-qn"
 	waiterProcDec, err := s.procDecAPI.Create(procdec.DecSpec{
-		ProcQN: "waiter-proc-qn",
+		ProcQN: waiterProcQN,
 		ProviderBS: procbind.BindSpec{
 			ChnlPH: "waiter-provider-ph",
 			TypeQN: oneType.Spec.TypeQN,
@@ -922,7 +930,7 @@ func (s *suite) fwd(t *testing.T) {
 		PoolES: poolexp.ExpSpec{
 			K: poolexp.Hire,
 			Hire: &poolexp.HireSpec{
-				ProcQN: closerProcDec.Spec.ProcQN,
+				ProcQN: closerProcQN,
 			},
 		},
 	})
@@ -937,7 +945,7 @@ func (s *suite) fwd(t *testing.T) {
 			K: poolexp.Spawn,
 			Spawn: &poolexp.SpawnSpec{
 				BindPH: poolCloserPH,
-				ProcQN: closerProcDec.Spec.ProcQN,
+				ProcQN: closerProcQN,
 			},
 		},
 	})
@@ -950,7 +958,7 @@ func (s *suite) fwd(t *testing.T) {
 		PoolES: poolexp.ExpSpec{
 			K: poolexp.Hire,
 			Hire: &poolexp.HireSpec{
-				ProcQN: forwarderProcDec.Spec.ProcQN,
+				ProcQN: forwarderProcQN,
 			},
 		},
 	})
@@ -965,7 +973,7 @@ func (s *suite) fwd(t *testing.T) {
 			K: poolexp.Spawn,
 			Spawn: &poolexp.SpawnSpec{
 				BindPH: poolForwarderPH,
-				ProcQN: forwarderProcDec.Spec.ProcQN,
+				ProcQN: forwarderProcQN,
 				ValPHs: []string{poolCloserPH},
 			},
 		},
@@ -979,7 +987,7 @@ func (s *suite) fwd(t *testing.T) {
 		PoolES: poolexp.ExpSpec{
 			K: poolexp.Hire,
 			Hire: &poolexp.HireSpec{
-				ProcQN: waiterProcDec.Spec.ProcQN,
+				ProcQN: waiterProcQN,
 			},
 		},
 	})
@@ -992,7 +1000,7 @@ func (s *suite) fwd(t *testing.T) {
 			K: poolexp.Spawn,
 			Spawn: &poolexp.SpawnSpec{
 				BindPH: "pool-waiter-ph",
-				ProcQN: waiterProcDec.Spec.ProcQN,
+				ProcQN: waiterProcQN,
 				ValPHs: []string{poolForwarderPH},
 			},
 		},
@@ -1006,7 +1014,7 @@ func (s *suite) fwd(t *testing.T) {
 		ProcES: procexp.ExpSpec{
 			K: procexp.Close,
 			Close: &procexp.CloseSpec{
-				CommPH: closerProcDec.Spec.ProviderBS.ChnlPH,
+				CommPH: closerProcDec.ProviderBS.ChnlPH,
 			},
 		},
 	})
@@ -1019,8 +1027,8 @@ func (s *suite) fwd(t *testing.T) {
 		ProcES: procexp.ExpSpec{
 			K: procexp.Fwd,
 			Fwd: &procexp.FwdSpec{
-				CommPH: forwarderProcDec.Spec.ProviderBS.ChnlPH,
-				ContPH: forwarderProcDec.Spec.ClientBSs[0].ChnlPH,
+				CommPH: forwarderProcDec.ProviderBS.ChnlPH,
+				ContPH: forwarderProcDec.ClientBSs[0].ChnlPH,
 			},
 		},
 	})
@@ -1033,11 +1041,11 @@ func (s *suite) fwd(t *testing.T) {
 		ProcES: procexp.ExpSpec{
 			K: procexp.Wait,
 			Wait: &procexp.WaitSpec{
-				CommPH: waiterProcDec.Spec.ClientBSs[0].ChnlPH,
+				CommPH: waiterProcDec.ClientBSs[0].ChnlPH,
 				ContES: procexp.ExpSpec{
 					K: procexp.Close,
 					Close: &procexp.CloseSpec{
-						CommPH: waiterProcDec.Spec.ProviderBS.ChnlPH,
+						CommPH: waiterProcDec.ProviderBS.ChnlPH,
 					},
 				},
 			},

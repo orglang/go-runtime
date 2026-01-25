@@ -5,7 +5,7 @@ vars:
   IMAGE: orglang/app
   CID:
     sh: >-
-      find ../avt .
+      find ../adt .
       -name "*.go" -exec md5sum {} + -o
       -name "Dockerfile" -exec md5sum {} +
       | LC_ALL=C sort -k 2

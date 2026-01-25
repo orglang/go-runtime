@@ -18,9 +18,7 @@ var (
 // goverter:output:format assign-variable
 // goverter:extend orglang/go-runtime/adt/identity:Convert.*
 // goverter:extend orglang/go-runtime/adt/revnum:Convert.*
-// goverter:extend data.*
-// goverter:extend DataToTermRef
-// goverter:extend DataFromTermRef
+// goverter:extend Data.*
 var (
 	DataToExpRefs   func([]*ExpRefDS) ([]ExpRef, error)
 	DataFromExpRefs func([]ExpRef) []*ExpRefDS
