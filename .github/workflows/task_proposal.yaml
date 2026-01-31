@@ -32,9 +32,11 @@ jobs:
         with:
           repository: orglang/go-runtime
           path: go-runtime
-      - name: Setup gear
-        uses: ./.github/actions/setup-gear
+      - name: Setup go
+        uses: actions/setup-go@v6.2.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          go-version: '1.25'
+      - name: Setup task
+        uses: go-task/setup-task@v1
       - name: Check sources
         run: task sources
