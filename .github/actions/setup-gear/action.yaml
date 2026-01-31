@@ -2,28 +2,12 @@
 name: Setup gear
 description: Setup gear
 inputs:
-  devenv:
-    description: Env name
-    required: true
   token:
     description: Github token
     required: true
 runs:
   using: "composite"
   steps:
-    - shell: bash
-      run: |
-        cat /etc/docker/daemon.json | jq '. + {"userns-remap": "runner"}' | sudo tee /etc/docker/daemon.json
-        sudo sed -i -e "1i runner:$(getent group docker | cut -d: -f3):1" /etc/subgid
-        sudo sed -i -e "1i runner:$(id -u):1" /etc/subuid
-        sudo systemctl restart docker
-        docker network create gear
-    - uses: docker/setup-buildx-action@v3.12.0
-    - uses: docker/login-action@v3.1.0
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ inputs.token }}
     - uses: actions/setup-go@v6.2.0
       with:
         go-version: '1.25'
