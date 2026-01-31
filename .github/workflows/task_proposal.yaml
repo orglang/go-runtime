@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  sources:
+  binaries:
     name: Make binaries
     timeout-minutes: 10
     permissions:
@@ -18,8 +18,20 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sources
+      - name: Checkout workspace repo
         uses: actions/checkout@v6
+        with:
+          repository: orglang/workspace
+      - name: Checkout sdk repo
+        uses: actions/checkout@v6
+        with:
+          repository: orglang/go-sdk
+          path: go-sdk
+      - name: Checkout runtime repo
+        uses: actions/checkout@v6
+        with:
+          repository: orglang/go-runtime
+          path: go-runtime
       - name: Setup gear
         uses: ./.github/actions/setup-gear
         with:
